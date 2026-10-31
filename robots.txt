@@ -1,18 +1,4 @@
+# STAGING — сайт полностью закрыт от индексации.
+# Боевой robots.txt лежит в robots.prod.txt — при переносе на прод верните его на место.
 User-agent: *
-Disallow: /impulsemanager/
-Disallow: /assets/components/
-Disallow: /core/
-Disallow: /connectors/
-Disallow: /index.php
-Disallow: *?
-Disallow: /rezultatyi-poiska
-Allow: /images/
-Allow: /*.js
-Allow: /*.css
-Allow: /*.jpg
-Allow: /*.gif
-Allow: /*.png
-
-Host: https://impulse-design.com.ua
-Sitemap: https://impulse-design.com.ua/sitemap.xml
-Sitemap: https://impulse-design.com.ua/ua/sitemap.xml
+Disallow: /

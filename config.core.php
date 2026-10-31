@@ -1,9 +1,7 @@
 <?php
 /*
- * This file is managed by the installation process.  Any modifications to it may get overwritten.
- * Add customizations to the $config_options array in `core/config/config.inc.php`.
- *
+ * Путь к core вычисляется от расположения файла — работает и локально, и на хостинге
+ * без правок под конкретный сервер.
  */
-define('MODX_CORE_PATH', '/home/ti061721/touchit.vinnica.ua/stage-impulsedesign/core/');
+define('MODX_CORE_PATH', __DIR__ . '/core/');
 define('MODX_CONFIG_KEY', 'config');
-?>

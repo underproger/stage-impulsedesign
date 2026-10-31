@@ -11,6 +11,15 @@
 RewriteEngine On
 RewriteBase /
 
+# ===== Закрытие от индексации: все домены, кроме боевого impulse-design.com.ua =====
+# На стейдже заголовок отдаётся для всех ответов (HTML, картинки, PDF), на проде — не срабатывает.
+<If "%{HTTP_HOST} !~ /^(www\.)?impulse-design\.com\.ua$/i">
+    <IfModule mod_headers.c>
+        Header always set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex"
+    </IfModule>
+</If>
+# ===================================================================================
+
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.php
 RewriteRule ^index\.php$ / [L,R=301]
 
