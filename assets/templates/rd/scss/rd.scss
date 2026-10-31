@@ -1,0 +1,7 @@
+// Редизайн Impulse Design — точка входа.
+// Сборка: npx sass assets/templates/rd/scss/rd.scss assets/templates/rd/css/rd.css --style=compressed --no-source-map
+@use "fonts";
+@use "layout";
+@use "header";
+@use "hero";
+@use "services";

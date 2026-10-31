@@ -1,0 +1,88 @@
+// ===== Redesign: базовые токены и утилиты =====
+// Макеты: 1920 / 1600 (десктоп), 768 / 360 (планшет/телефон).
+// Между макетами значения интерполируются через fl() — тот же vw-подход, но без скачков.
+
+@use "sass:math";
+
+$bp-desktop: 1200px; // от этой ширины — десктопная шапка и раскладка
+$bp-tablet: 600px;   // планшетная раскладка hero (кнопка «Останні роботи» справа)
+
+$black: #14141a;
+$black-2: #1f1f26;
+$gray: #9da0a6;
+$gold: #bfa660;
+$gold-2: #bfab73;
+$gold-grad: linear-gradient(77deg, $gold 0%, $gold-2 100%);
+$line-light: rgba(20, 20, 26, 0.08);
+$line-dark: rgba(255, 255, 255, 0.04);
+
+// Плавное значение между двумя макетами: $min при $vmin, $max при $vmax, дальше — упор.
+@function fl($min, $max, $vmin: 1600px, $vmax: 1920px) {
+  @if $min == $max {
+    @return $min;
+  }
+  $slope: math.div($max - $min, $vmax - $vmin);
+  $base: $min - $slope * $vmin;
+  $lo: math.min($min, $max);
+  $hi: math.max($min, $max);
+  @return clamp(#{$lo}, #{$base} + #{$slope * 100vw}, #{$hi});
+}
+
+// Десктоп: 1600 → 1920
+@function fd($v1600, $v1920) {
+  @return fl($v1600, $v1920, 1600px, 1920px);
+}
+
+// Мобайл: 360 → 768
+@function fm($v360, $v768) {
+  @return fl($v360, $v768, 360px, 768px);
+}
+
+@mixin desktop {
+  @media (min-width: $bp-desktop) {
+    @content;
+  }
+}
+
+@mixin mobile {
+  @media (max-width: $bp-desktop - 1px) {
+    @content;
+  }
+}
+
+@mixin tablet-up {
+  @media (min-width: $bp-tablet) {
+    @content;
+  }
+}
+
+@mixin phone {
+  @media (max-width: $bp-tablet - 1px) {
+    @content;
+  }
+}
+
+@mixin hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @content;
+    }
+  }
+}
+
+@mixin gold-text {
+  background: $gold-grad;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: $gold;
+}
+
+@mixin grid-bg {
+  background-color: $black;
+  background-image:
+    linear-gradient(to right, $line-dark 1px, transparent 1px),
+    linear-gradient(to bottom, $line-dark 1px, transparent 1px);
+  background-size: 100px 100px;
+  background-position: 0 0;
+}

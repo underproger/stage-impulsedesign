@@ -1,0 +1,268 @@
+@use "base" as *;
+
+// ===== «Як ми розвиваємо ваш бізнес» =====
+.rd-services {
+  padding-block: fm(80px, 110px);
+  background: #fff;
+  color: $black;
+
+  @include desktop {
+    padding-block: fd(130px, 180px);
+  }
+
+  &__wrap {
+    display: flex;
+    flex-direction: column;
+    gap: fm(48px, 64px);
+
+    @include mobile {
+      padding-inline: 0; // строки услуг на мобайле — во всю ширину
+    }
+
+    @include desktop {
+      gap: fd(64px, 80px);
+    }
+  }
+
+  &__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    @include mobile {
+      padding-inline: fm(20px, 30px);
+    }
+
+    @include desktop {
+      max-width: fd(787px, 980px);
+    }
+  }
+
+  // h2 глобально стилизован старым CSS — перебиваем явно
+  &__title {
+    font-family: inherit;
+    font-size: fm(36px, 48px);
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: $black;
+
+    @include desktop {
+      font-size: fd(60px, 72px);
+      line-height: 1.1;
+    }
+
+    span {
+      @include gold-text;
+    }
+  }
+
+  &__text {
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.6;
+
+    b,
+    strong {
+      white-space: nowrap; // «WOW-результатів» не рвём по дефису
+    }
+
+    @include desktop {
+      font-size: fd(18px, 20px);
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+// Строка услуги
+.rd-service {
+  --rd-pad: #{fm(24px, 32px)};
+  position: relative;
+  padding: 33px var(--rd-pad);
+  border-radius: 24px;
+  background-color: transparent;
+  transition: background-color 0.35s ease;
+
+  @include desktop {
+    --rd-pad: 32px;
+  }
+
+  // разделители — внутри паддинга строки, как в макете
+  &::before,
+  &:last-child::after {
+    content: "";
+    position: absolute;
+    left: var(--rd-pad);
+    right: var(--rd-pad);
+    height: 1px;
+    background: $line-light;
+    transition: opacity 0.35s ease;
+  }
+
+  &::before {
+    top: 0;
+  }
+
+  &:last-child::after {
+    bottom: 0;
+  }
+
+  &__row {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+
+    @include tablet-up {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 96px;
+    }
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+    flex: 1 1 auto;
+    min-width: 0;
+
+    @include desktop {
+      flex-direction: row;
+      align-items: center;
+      gap: 224px;
+      align-self: center;
+    }
+  }
+
+  &__head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-weight: 700;
+
+    @include desktop {
+      flex: 1 1 0;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 16px;
+      min-width: 0;
+    }
+  }
+
+  &__num {
+    font-size: 14px;
+    line-height: 1.5;
+    @include gold-text;
+
+    @include desktop {
+      line-height: 1.7;
+    }
+  }
+
+  &__title {
+    font-family: inherit;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: $black;
+    margin: 0;
+    transition: color 0.35s ease;
+
+    @include desktop {
+      font-size: 30px;
+    }
+
+    // вся строка кликабельна
+    a::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+  }
+
+  &__desc {
+    font-size: fm(14px, 16px);
+    font-weight: 300;
+    line-height: 1.7;
+    transition: color 0.35s ease;
+
+    @include desktop {
+      flex: 1 1 0;
+      min-width: 0;
+      font-size: fd(16px, 18px);
+    }
+
+    p {
+      margin: 0;
+    }
+
+    b,
+    strong {
+      font-weight: 700;
+    }
+  }
+
+  &__arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: fm(62px, 62px);
+    height: fm(62px, 62px);
+    border-radius: 50%;
+    background: $gold-grad;
+
+    @include desktop {
+      width: 68px;
+      height: 68px;
+    }
+
+    img {
+      width: 30px;
+      height: 30px;
+      transition: transform 0.35s ease;
+
+      @include desktop {
+        width: 36px;
+        height: 36px;
+      }
+    }
+  }
+
+  // Наведение (десктоп): тёмная плашка, белый текст, золотые акценты, стрелка крупнее
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      z-index: 1;
+      background-color: $black-2;
+
+      &::before,
+      &::after,
+      & + .rd-service::before {
+        opacity: 0;
+      }
+
+      .rd-service__title {
+        color: #fff;
+      }
+
+      .rd-service__desc {
+        color: #fff;
+
+        b,
+        strong {
+          @include gold-text;
+        }
+      }
+
+      .rd-service__arrow img {
+        transform: scale(1.5); // 36 → 54 px
+      }
+    }
+  }
+}

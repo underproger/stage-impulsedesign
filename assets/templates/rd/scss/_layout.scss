@@ -1,0 +1,179 @@
+@use "base" as *;
+
+.rd-container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: fm(20px, 30px);
+
+  @include desktop {
+    width: min(#{fd(1200px, 1500px)}, calc(100% - 80px));
+    padding-inline: 0;
+  }
+}
+
+// Общие сбросы только внутри новых блоков — старая вёрстка их не видит.
+// :where() обнуляет специфичность, чтобы классы блоков (.rd-hero__title и т.п.) всегда побеждали.
+.rd-header,
+.rd-hero,
+.rd-services {
+  font-family: "Roboto Flex Wide", "Gotham Pro", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+:where(.rd-header, .rd-hero, .rd-services) {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  img,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin: 0;
+    font-family: inherit;
+    font-weight: inherit;
+    color: inherit;
+  }
+
+  b,
+  strong {
+    font-weight: 700;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid $gold;
+    outline-offset: 3px;
+  }
+}
+
+// Кнопка с золотой обводкой («Обговорити проект», «Завантажити бриф» в бургере)
+.rd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 38px; // + 2px рамка = 22 / 40 по макету
+  border: 2px solid $gold;
+  border-radius: 40px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: normal;
+  color: #fff;
+  white-space: nowrap;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+
+  img {
+    width: 24px;
+    height: 24px;
+    flex: none;
+    transition: transform 0.25s ease;
+  }
+
+  @include hover {
+    background-color: rgba($gold, 0.14);
+
+    img {
+      transform: translate(2px, -2px);
+    }
+  }
+}
+
+// Соцсети (иконки 20×20)
+.rd-social {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+
+  a {
+    display: flex;
+    width: 20px;
+    height: 20px;
+    opacity: 1;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+
+    @include hover {
+      opacity: 0.7;
+    }
+  }
+
+  img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// «Завантажити бриф» — ссылка с иконкой
+.rd-brief {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: normal;
+  color: #fff;
+
+  img {
+    width: 24px;
+    height: 24px;
+    flex: none;
+  }
+
+  span {
+    position: relative;
+    transition: color 0.25s ease;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 100%;
+    height: 2px;
+    background: $gold-grad;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  @include hover {
+    span {
+      @include gold-text;
+    }
+
+    &::after {
+      transform: scaleX(1);
+    }
+  }
+}

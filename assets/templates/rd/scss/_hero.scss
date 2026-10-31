@@ -1,0 +1,288 @@
+@use "base" as *;
+
+// ===== Первый экран =====
+.rd-hero {
+  position: relative;
+  overflow: hidden;
+  @include grid-bg;
+  color: #fff;
+
+  @include desktop {
+    display: flex;
+    flex-direction: column;
+    min-height: fd(800px, 1000px);
+  }
+
+  // шапка лежит внутри hero и прозрачна, сетка фона идёт под ней
+  > .rd-header {
+    flex: none;
+  }
+
+  &__inner {
+    position: relative;
+    padding-top: fm(60px, 80px);
+
+    @include desktop {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      padding-top: fd(115px, 176px);
+      padding-bottom: fd(48px, 64px);
+    }
+  }
+
+  &__content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 48px;
+
+    @include desktop {
+      width: 720px;
+    }
+  }
+
+  &__heading {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    gap: fd(24px, 32px);
+
+    @include mobile {
+      gap: 24px;
+    }
+  }
+
+  // Заголовок: размер по макету, но уменьшается, если самое длинное слово не влезает
+  // (--rd-longest — длина самого длинного слова, считается в шаблоне; 0.8em — средняя ширина буквы;
+  // если слово всё равно не влезло — rd.js уменьшит шрифт точно по ширине)
+  &__title {
+    --rd-title-max: #{fm(40px, 72px)};
+    --rd-title-box: calc(100vw - 2 * #{fm(20px, 30px)});
+    font-size: min(var(--rd-title-max), calc(var(--rd-title-box) / (var(--rd-longest, 10) * 0.8)));
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    width: 100%;
+    min-width: 0;
+    padding-top: fm(5px, 7px);
+
+    @include desktop {
+      --rd-title-max: #{fd(72px, 80px)};
+      --rd-title-box: 720px;
+      padding-top: fd(7px, 0px);
+    }
+  }
+
+  &__last {
+    white-space: nowrap;
+  }
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: top;
+    width: 1.6em; // 64×32 при 40px (360)
+    height: 0.8em;
+    margin-top: 0.1em;
+    margin-right: 0.15em;
+    border-radius: 50px;
+    background: $gold-grad;
+
+    img {
+      width: 0.7em;
+      height: auto;
+    }
+
+    @include tablet-up {
+      width: 1.46em; // 105×53 при 72px (768 / 1600)
+      height: 0.74em;
+      margin-top: 0.125em;
+      margin-right: 0.12em;
+
+      img {
+        width: 0.555em;
+      }
+    }
+
+    @include desktop {
+      width: 1.5em; // 120×60 при 80px (1920)
+      height: 0.75em;
+      margin-top: 0.11em;
+
+      img {
+        width: 0.5em;
+      }
+    }
+  }
+
+  &__text {
+    max-width: 550px;
+    font-size: fd(18px, 20px);
+    font-weight: 300;
+    line-height: 1.6;
+
+    @include mobile {
+      font-size: 18px;
+    }
+  }
+
+  &__btn {
+    @include phone {
+      width: 100%;
+    }
+  }
+
+  // Низ экрана: соцсети и бриф (только десктоп — на мобайле они в меню)
+  &__bottom {
+    display: none;
+
+    @include desktop {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 40px;
+    }
+  }
+
+  // ----- Визуал: золотой объект + кнопка «Останні роботи» -----
+  &__visual {
+    position: relative;
+    pointer-events: none;
+
+    picture {
+      display: contents;
+    }
+
+    @include tablet-up {
+      position: static; // кнопка позиционируется от .rd-hero__inner
+    }
+
+    @include desktop {
+      position: absolute;
+      inset: 0;
+    }
+  }
+
+  &__blob {
+    display: block;
+    width: fm(320px, 480px);
+    height: auto;
+    aspect-ratio: 1;
+    margin: 28px auto 140px;
+    object-fit: contain;
+
+    @include tablet-up {
+      width: 480px;
+      margin: 9px auto 0;
+    }
+
+    @include desktop {
+      position: absolute;
+      top: 50%;
+      right: 0;
+      width: fd(480px, 600px);
+      margin: 0;
+      // центр по высоте всего экрана (вместе с шапкой)
+      transform: translateY(calc(-50% - #{fd(50px, 60px)}));
+    }
+  }
+}
+
+// Круглая кнопка «Останні роботи» с вращающейся надписью
+.rd-works {
+  position: absolute;
+  z-index: 3;
+  display: block;
+  width: 189px;
+  height: 189px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: auto;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+
+  // телефон — по центру поверх объекта (223px от верха объекта + его отступ 28px)
+  top: 251px;
+  left: 50%;
+  margin-left: -94.5px;
+
+  @include tablet-up {
+    top: 344.5px;
+    left: auto;
+    right: fm(20px, 30px);
+    margin-left: 0;
+  }
+
+  @include desktop {
+    top: fd(369.5px, 469px); // 469.5 / 589 от верха экрана минус высота шапки
+    right: calc(-1 * #{fd(0px, 25px)});
+    width: fd(189px, 210px);
+    height: fd(189px, 210px);
+  }
+
+  &__disc {
+    position: absolute;
+    inset: 11.9%;
+    border-radius: 50%;
+    background: $gold-grad;
+  }
+
+  &__ring {
+    position: absolute;
+    inset: 11.9%;
+    width: 76.2%;
+    height: 76.2%;
+    animation: rd-spin 16s linear infinite;
+
+    text {
+      font-family: "Roboto Flex Wide", Arial, sans-serif; // размер — атрибутом font-size из шаблона
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      fill: #fff;
+    }
+
+    circle {
+      fill: #fff;
+    }
+  }
+
+  &__arrow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 36px;
+    height: 36px;
+    margin: -18px 0 0 -18px;
+    transition: transform 0.35s ease;
+  }
+
+  @include hover {
+    .rd-works__arrow {
+      transform: scale(1.47); // 36 → 53 px, как во втором состоянии макета
+    }
+
+    .rd-works__ring {
+      animation-duration: 8s;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__ring {
+      animation: none;
+    }
+  }
+}
+
+@keyframes rd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
