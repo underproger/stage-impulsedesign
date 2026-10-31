@@ -1,0 +1,153 @@
+# MODX supports Friendly URLs via this .htaccess file. You must serve web
+# pages via Apache with mod_rewrite to use this functionality, and you must
+# change the file name from ht.access to .htaccess.
+#
+# Make sure RewriteBase points to the directory where you installed MODX.
+# E.g., "/modx" if your installation is in a "modx" subdirectory.
+#
+# You may choose to make your URLs non-case-sensitive by adding a NC directive
+# to your rule: RewriteRule ^(.*)$ index.php?q=$1 [L,QSA,NC]
+
+RewriteEngine On
+RewriteBase /
+
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.php
+RewriteRule ^index\.php$ / [L,R=301]
+
+# любой файл не содержащий точку и не заканчивающийся на слеш переписывается
+RewriteCond %{REQUEST_URI} !(/$|\.) 
+RewriteRule (.*) %{REQUEST_URI}.html [R=301,L]
+
+RewriteCond %{REQUEST_URI} ^index\.php$
+RewriteCond %{QUERY_STRING} ^(.*)&?id=1&?(.*)$ [NC]
+RewriteRule ^index\.php$ /?%1%2 [L,R=301]
+
+RewriteCond %{REQUEST_URI} ^/$
+RewriteCond %{QUERY_STRING} ^(.*)&?id=1&?(.*)$ [NC]
+RewriteRule ^$ /?%1%2 [R=301,L]
+
+RewriteRule ^zakazat-sayt.html$ https://impulse-design.com.ua/ [R=301,L]
+RewriteRule ^uznat-stoimost-sajta.html$ https://impulse-design.com.ua/rastsenki.html [R=301,L]
+RewriteRule ^sozdanie-prodayushchej-stranitsy.html$ https://impulse-design.com.ua/landing-page.html [R=301,L]
+RewriteRule ^sozdanie-sajta-nedorogo.html$ https://impulse-design.com.ua/ [R=301,L]
+RewriteRule ^kakie-oshibki-podsteregayut-novichka-v-veb-razrabotke-pri-sozdanii-sajta.html$ https://impulse-design.com.ua/20-oshibok-pri-sozdanii-sajta.html [R=301,L]
+RewriteRule ^sozdanie-landing-page-dlya-kompanii-sk-professional.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sozdanie-landing-page-dlya-bust-club.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sozdanie-landing-page-dlya-kompanii-premium-furs.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sozdanie-landing-page-dlya-kompanii-mobile-stand.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sozdanie-landing-page-dlya-prilozheniya-jurnez.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^internet-magazin-detskikh-igrushek-vladka-toys.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sozdanie-sajta-dlya-stroitelnoj-kompanii-rodnoj-dom.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sozdanie-landing-page-dlya-kompanii-zdorovyj-klimat-4.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sozdanie-landing-page-dlya-kompanii-zdorovyj-klimat-2.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sajt-kompanii-diamant-agro.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sajt-kompanii-zabor-ua.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sajt-kompanii-zabor-plus.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sajt-muzykalnoj-gruppy-pur-pur.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^sozdanie-landing-page-dlya-kompanii-zdorovyj-klimat.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^8-osnovnaya/20-sajt-bystryj-start.html$ https://impulse-design.com.ua/sajt-katalog.html [R=301,L]
+RewriteRule ^blog/87-primery-lendingov-s-krutym-dizajnom-dlya-vdokhnoveniya-i-svezhikh-idej.html$ https://impulse-design.com.ua/primery-prodayushchikh-landing-page.html [R=301,L]
+RewriteRule ^blog/138-vybor-tsveta-dlya-sajta.html$ https://impulse-design.com.ua/vybor-tsveta-dlya-sajta.html [R=301,L]
+RewriteRule ^17-primerov-luchshikh-sajtov-.html$ https://impulse-design.com.ua/sozdanie-promo-sajta.html [R=301,L]
+RewriteRule ^landing-page.html/$ https://impulse-design.com.ua/landing-page.html [R=301,L]
+RewriteRule ^8-osnovnaya/22-sozdanie-eksklyuzivnogo-sajta.html$ https://impulse-design.com.ua/sozdanie-promo-sajta.html [R=301,L]
+RewriteRule ^blog/157-7-otlichnykh-primerov-lendingov-mobilnykh-prilozhenij.html$ https://impulse-design.com.ua/7-otlichnykh-primerov-lendingov-mobilnykh-prilozhenij.html [R=301,L]
+RewriteRule ^landing-page.html/$ https://impulse-design.com.ua/landing-page.html [R=301,L]
+RewriteRule ^blog/86-gde-zakazat-sajt-pod-klyuch-v-ukraine.html$ https://impulse-design.com.ua/gde-zakazat-sajt-pod-klyuch.html [R=301,L]
+RewriteRule ^sozdanie-sajtov/61-kak-sozdat-svoj-sajt.html$ https://impulse-design.com.ua/kak-sozdat-svoj-sajt.html [R=301,L]
+RewriteRule ^8-osnovnaya/23-internet-magazin.html$ https://impulse-design.com.ua/seo-prodvizhenie-sajta.html [R=301,L]
+RewriteRule ^8-osnovnaya/30-zakazat-zvonok.html$ https://impulse-design.com.ua/sajt-kompanii-pandora-property.html [R=301,L]
+RewriteRule ^blog/172-sozdanie-sajta-avtoservisa-s-uporom-na-seo.html$ https://impulse-design.com.ua/sozdanie-sajta-avtoservisa-s-uporom-na-seo.html [R=301,L]
+RewriteRule ^8-osnovnaya/21-sozdanie-korporativnogo-sajta.html$ https://impulse-design.com.ua/prodayushchij-sajt.html [R=301,L]
+RewriteRule ^portfolio/razrabotka-korporativnogo-sajta-akari.html$ https://impulse-design.com.ua/portfolio.html [R=301,L]
+RewriteRule ^kakie-vakansii-v-didzhital-sfere-sejchas-vostrebovany.html$ https://impulse-design.com.ua/blog.html [R=301,L]
+RewriteRule ^modules/mod_jux_mega$ https://impulse-design.com.ua/ [R=301,L]
+RewriteRule ^modules/mod_jux_mega.html$ https://impulse-design.com.ua/ [R=301,L]
+RewriteRule ^top-7-luchshikh-primerov-sajtov-$ https://impulse-design.com.ua/ [R=301,L]
+RewriteRule ^top-7-luchshikh-primerov-sajtov-.html$ https://impulse-design.com.ua/ [R=301,L]
+RewriteRule ^kak-zakazat-sajt-i-ostatsya-d$ https://impulse-design.com.ua/ [R=301,L]
+RewriteRule ^kak-zakazat-sajt-i-ostatsya-d.html$ https://impulse-design.com.ua/ [R=301,L]
+RewriteRule ^osnovnye-$ https://impulse-design.com.ua/ [R=301,L]
+RewriteRule ^osnovnye-.html$ https://impulse-design.com.ua/ [R=301,L]
+RewriteRule ^\ osnovnye-trendy-veb-dizajna-2018.html$ https://impulse-design.com.ua/ [R=301,L]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(ru|ua)/favicon.ico$ favicon.ico [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(ru|ua)/assets(.*)$ assets$2 [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(ru|ua)?/?(.*)$ index.php?cultureKey=$1&q=$2 [L,QSA]
+
+# Rewrite www.domain.com -> domain.com -- used with SEO Strict URLs plugin
+#RewriteCond %{HTTP_HOST} .
+#RewriteCond %{HTTP_HOST} ^www.(.*)$ [NC]
+#RewriteRule ^(.*)$ http://%1/$1 [R=301,L]
+#
+# or for the opposite domain.com -> www.domain.com use the following
+# DO NOT USE BOTH
+#
+#RewriteCond %{HTTP_HOST} !^$
+#RewriteCond %{HTTP_HOST} !^www\. [NC]
+#RewriteCond %{HTTP_HOST} (.+)$
+#RewriteRule ^(.*)$ http://www.%1/$1 [R=301,L] .
+
+
+
+# Rewrite secure requests properly to prevent SSL cert warnings, e.g. prevent 
+# https://www.domain.com when your cert only allows https://secure.domain.com
+#RewriteCond %{SERVER_PORT} !^443
+#RewriteRule (.*) https://example-domain-please-change.com/$1 [R=301,L]
+
+
+
+# The Friendly URLs part
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
+
+
+# сжатие text, html, javascript, css, xml:
+<ifModule mod_deflate.c>
+AddOutputFilterByType DEFLATE text/html text/plain text/xml application/xml application/xhtml+xml text/css text/javascript application/javascript application/x-javascript image/svg+xml
+</ifModule>
+
+# кеш браузера
+<ifModule mod_expires.c>
+ExpiresActive On
+ 
+#по умолчанию кеш в 5 секунд
+ExpiresDefault "access plus 1 days"
+ 
+# Включаем кэширование изображений и флэш на месяц
+ExpiresByType image/x-icon "access plus 1 month"
+ExpiresByType image/jpeg "access plus 4 weeks"
+ExpiresByType image/webp "access plus 4 weeks"
+ExpiresByType image/png "access plus 30 days"
+ExpiresByType image/gif "access plus 43829 minutes"
+ExpiresByType application/x-shockwave-flash "access plus 2592000 seconds"
+ 
+# Включаем кэширование css, javascript и текстовых файлов на одну неделю
+ExpiresByType text/css "access plus 604800 seconds"
+ExpiresByType text/javascript "access plus 604800 seconds"
+ExpiresByType application/javascript "access plus 604800 seconds"
+ExpiresByType application/x-javascript "access plus 604800 seconds"
+ 
+# Включаем кэширование html и htm файлов на один день
+ExpiresByType text/html "access plus 43200 seconds"
+ 
+# Включаем кэширование xml файлов на десять минут
+ExpiresByType application/xhtml+xml "access plus 600 seconds"
+ 
+# Нестандартные шрифты сайта 
+ExpiresByType application/x-font-ttf "access plus 1 month"
+ExpiresByType font/opentype "access plus 1 month"
+ExpiresByType application/x-font-woff "access plus 1 month"
+ExpiresByType image/svg+xml "access plus 1 month"
+ExpiresByType application/vnd.ms-fontobject "access plus 1 month"
+</ifModule>
+
