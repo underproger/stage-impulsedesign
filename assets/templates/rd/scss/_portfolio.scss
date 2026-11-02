@@ -649,11 +649,7 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     }
   }
 
-  // курсор над картинкой кейса — золотой круг «дивитись» (точка прячется, чтобы не резать надпись)
-  &.rd-cursor-view .rd-cursor {
-    opacity: 0;
-  }
-
+  // курсор над картинкой кейса — золотой круг «дивитись» (точку прячет общее правило .rd-cursor-label в _wow.scss)
   .rd-cursor-ring.is-view {
     &::before {
       transform: scale(2.6);

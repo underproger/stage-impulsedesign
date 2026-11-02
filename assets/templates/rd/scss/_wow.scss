@@ -338,9 +338,23 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
       transform: scale(0.75);
     }
 
-    &.is-hidden::before {
-      transform: scale(0);
+  }
+
+  // над кнопками (.rd-btn, стрелки услуг, круглые .rd-works) курсора нет — кнопка сама «курсор»
+  &.rd-cursor-on.rd-cursor-btn {
+    .rd-cursor,
+    .rd-cursor-ring {
+      opacity: 0;
     }
+
+    .rd-cursor-ring::before {
+      transform: scale(0.4);
+    }
+  }
+
+  // в круге надпись («клік», «дивитись») — точка не режет текст
+  &.rd-cursor-on.rd-cursor-label .rd-cursor {
+    opacity: 0;
   }
 
   // ================= МЕНЮ =================

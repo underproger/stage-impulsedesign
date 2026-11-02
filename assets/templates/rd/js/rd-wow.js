@@ -454,6 +454,7 @@
     document.body.appendChild(cursor);
 
     var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about';
+    var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
     var labelNow = 'click';
@@ -472,8 +473,10 @@
       root.classList.toggle('rd-cursor-on', !!inScope);
       ring.classList.toggle('is-view', overCase);
       root.classList.toggle('rd-cursor-view', overCase);
-      ring.classList.toggle('is-link', !!t.closest('a, button') && !t.closest('.rd-works') && !overCase);
-      ring.classList.toggle('is-hidden', !!t.closest('.rd-works'));
+      // над кнопками курсор исчезает — кнопка сама едет за мышью (магнит) и становится «курсором»
+      var overBtn = !!t.closest(cursorBtns);
+      root.classList.toggle('rd-cursor-btn', overBtn);
+      ring.classList.toggle('is-link', !!t.closest('a, button') && !overBtn && !overCase);
       var want = overCase ? 'view' : 'click';
       if (want !== labelNow) {
         labelNow = want;
@@ -488,6 +491,8 @@
         overBlob = gx * gx + gy * gy < Math.pow(g.width * 0.36, 2);
       }
       ring.classList.toggle('is-blob', overBlob);
+      // в круге надпись («клік» / «дивитись») — точку прячем, чтобы не резала текст
+      root.classList.toggle('rd-cursor-label', overBlob || overCase);
 
       if (hero) {
         var r = hero.getBoundingClientRect();
@@ -509,11 +514,15 @@
     document.addEventListener('pointerup', function () { ring.classList.remove('is-down'); });
   }
 
-  /* ---------- «Магниты»: кнопка и стрелки услуг ---------- */
+  /* ---------- «Магниты»: кнопки .rd-btn, стрелки услуг, телефон в шапке ---------- */
+  // круглые .rd-works тянет rd.js ([data-rd-magnet])
   var magnets = [];
   if (fine) {
-    Array.prototype.forEach.call(document.querySelectorAll('.rd-hero__btn, .rd-service__arrow, .rd-header__phone'), function (el) {
-      magnets.push({ el: el, x: 0, y: 0, tx: 0, ty: 0, k: el.classList.contains('rd-header__phone') ? 0.2 : 0.35 });
+    Array.prototype.forEach.call(document.querySelectorAll('.rd-btn, .rd-service__arrow, .rd-header__phone'), function (el) {
+      if (el.closest('.rd-mobile')) return; // кнопки мобильного меню — не для мыши
+      var phone = el.classList.contains('rd-header__phone');
+      // у вытянутых кнопок зона — прямоугольник кнопки (+14px), у круглых — круг
+      magnets.push({ el: el, x: 0, y: 0, tx: 0, ty: 0, k: phone ? 0.2 : 0.35, rect: el.classList.contains('rd-btn'), set: false });
     });
   }
 
@@ -571,10 +580,23 @@
       var cy = r.top + r.height / 2 - mg.y;
       var dx = mouse.x - cx;
       var dy = mouse.y - cy;
-      var zone = Math.max(r.width, r.height) / 2 + 30;
-      if (dx * dx + dy * dy < zone * zone) { mg.tx = dx * mg.k; mg.ty = dy * mg.k; } else { mg.tx = 0; mg.ty = 0; }
+      var near;
+      if (mg.rect) {
+        near = Math.abs(dx) < r.width / 2 + 14 && Math.abs(dy) < r.height / 2 + 14;
+      } else {
+        var zone = Math.max(r.width, r.height) / 2 + 30;
+        near = dx * dx + dy * dy < zone * zone;
+      }
+      if (near) { mg.tx = dx * mg.k; mg.ty = dy * mg.k; } else { mg.tx = 0; mg.ty = 0; }
       mg.x = lerp(mg.x, mg.tx, 0.15);
       mg.y = lerp(mg.y, mg.ty, 0.15);
+      if (!near && Math.abs(mg.x) < 0.05 && Math.abs(mg.y) < 0.05) {
+        if (mg.set) { mg.el.style.transform = ''; mg.set = false; }
+        mg.x = 0;
+        mg.y = 0;
+        continue;
+      }
+      mg.set = true;
       mg.el.style.transform = 'translate3d(' + mg.x.toFixed(2) + 'px,' + mg.y.toFixed(2) + 'px,0)';
     }
 
