@@ -74,7 +74,8 @@
     <div class="rd-about__bottom">
       <div class="rd-about__say">
         {if $people || $r['about_people_text']}
-          <div class="rd-about__people">
+          {* --n — сколько фото после первого: на наведении фото расходятся, подпись отъезжает на столько же *}
+          <div class="rd-about__people" style="--n: {$people ? (($people | length) - 1) : 0}">
             {if $people}
               <span class="rd-about__faces">
                 {foreach $people as $i => $p}

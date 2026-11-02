@@ -245,6 +245,7 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     align-items: center;
     gap: 12px;
+    width: fit-content; // наведение — только на фото и подпись, не на пустую строку
   }
 
   &__faces {
@@ -831,10 +832,11 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay: calc(var(--i, 0) * 110ms), 0s;
   }
 
+  // появление — translate (с задержкой), отъезд на наведении — transform (без задержки)
   .rd-about__people-text {
     opacity: 0;
     translate: 16px 0;
-    transition: opacity 0.9s $ease-expo 0.4s, translate 1s $ease-expo 0.4s;
+    transition: opacity 0.9s $ease-expo 0.4s, translate 1s $ease-expo 0.4s, transform 0.6s $ease-expo;
   }
 
   .rd-about__people.is-in {
@@ -848,9 +850,16 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     }
   }
 
+  // наведение на фото или подпись: фото расходятся, подпись отъезжает ровно на расхождение последнего фото
   @media (hover: hover) and (pointer: fine) {
-    .rd-about__faces:hover .rd-about__face {
-      translate: calc(var(--i, 0) * 12px) -3px;
+    .rd-about__people:hover {
+      .rd-about__face {
+        translate: calc(var(--i, 0) * 12px) -3px;
+      }
+
+      .rd-about__people-text {
+        transform: translateX(calc(var(--n, 0) * 12px));
+      }
     }
   }
 
