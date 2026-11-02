@@ -26,14 +26,15 @@
 .rd-seo,
 .rd-footer,
 .rd-float,
-.rd-what {
+.rd-what,
+.rd-cause {
   font-family: "Roboto Flex Wide", "Gotham Pro", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-:where(.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what) {
+:where(.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause) {
   *,
   *::before,
   *::after {

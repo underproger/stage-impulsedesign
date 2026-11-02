@@ -479,7 +479,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
@@ -1703,4 +1703,40 @@
 
   // золотые «линзы» вставлены — выравниваем все сетки фона в такт (rd.js)
   if (window.rdSyncGrids) window.rdSyncGrids();
+  /* ================= «… незамінний, якщо» (страница услуги) ================= */
+  // Слова заголовка из размытия; номер пункта выезжает из-под маски, строки всплывают — по колонкам слева направо (--c).
+  var causeSec = document.querySelector('.rd-cause');
+  if (causeSec) {
+    var causeTitle = causeSec.querySelector('.rd-cause__title');
+    if (causeTitle) splitWords(causeTitle);
+    var causeItems = Array.prototype.slice.call(causeSec.querySelectorAll('.rd-cause__item'));
+    var causeCols = function () {
+      var row = {};
+      causeItems.forEach(function (it) {
+        var t = it.offsetTop;
+        row[t] = row[t] || 0;
+        it.style.setProperty('--c', row[t]++);
+      });
+    };
+    causeCols();
+    var causeT = 0;
+    window.addEventListener('resize', function () {
+      clearTimeout(causeT);
+      causeT = setTimeout(causeCols, 150);
+    });
+    var causeTargets = (causeTitle ? [causeTitle] : []).concat(causeItems);
+    if ('IntersectionObserver' in window) {
+      var causeIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) {
+            en.target.classList.add('is-in');
+            causeIo.unobserve(en.target);
+          }
+        });
+      }, { threshold: 0.2, rootMargin: '0px 0px -6% 0px' });
+      causeTargets.forEach(function (el) { causeIo.observe(el); });
+    } else {
+      causeTargets.forEach(function (el) { el.classList.add('is-in'); });
+    }
+  }
 })();

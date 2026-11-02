@@ -45,14 +45,8 @@
       {set $title = $title | strip_tags : '<span><br>' | trim}
       {* в заголовке нет <span> — золотым становится первое слово («Переваги наших …») *}
       {if !($title | preg_match : '~<span~')}{set $title = $title | preg_replace : '~^(\S+)~u' : '<span>$1</span>'}{/if}
-      {* самое длинное слово (перенос возможен и после дефиса) — на телефоне шрифт уменьшается, чтобы оно влезло *}
-      {set $longest = 0}
-      {set $words = $title | strip_tags | preg_split : '~[\s\x{00A0}]+|(?<=-)~u'}
-      {foreach $words as $w}
-        {set $len = $w | length}
-        {if $len > $longest}{set $longest = $len}{/if}
-      {/foreach}
-      <h2 class="rd-gar__title" style="--rd-longest: {$longest}">{$title}</h2>
+      {* data-rd-fit: длинное слово («ПРЕИМУЩЕСТВА») не влезает — rd.js уменьшает кегль *}
+      <h2 class="rd-gar__title" data-rd-fit>{$title}</h2>
     {/if}
 
     {if $ctaUrl}

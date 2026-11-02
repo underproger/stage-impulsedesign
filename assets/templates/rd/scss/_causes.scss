@@ -1,0 +1,219 @@
+@use "base" as *;
+
+// ===== «… незамінний, якщо» — section 4 страницы услуги =====
+// Белый фон, заголовок с золотым словом, 6 пунктов: золотой номер сверху, жирная строка и продолжение — с отступом
+// справа от номера. Десктоп — 3 колонки, планшет — 2, телефон — столбик. Отступы сняты с service_*.pdf.
+
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-io: cubic-bezier(0.77, 0, 0.18, 1);
+
+.rd-cause {
+  position: relative;
+  padding: fm(80px, 110px) 0 fm(82px, 112.5px);
+  background: #fff;
+  color: $black;
+
+  @include desktop {
+    padding-top: fd(130px, 196px);
+    padding-bottom: fd(128.5px, 180.5px);
+  }
+
+  &__title {
+    margin: 0 0 fm(55.2px, 70.6px);
+    font-size: fm(36px, 48px); // длинное слово не влезает — rd.js уменьшает кегль ([data-rd-fit])
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: $black;
+
+    span {
+      @include gold-text;
+    }
+
+    @include desktop {
+      max-width: fd(1100px, 1200px);
+      margin-bottom: fd(70px, 86.4px);
+      font-size: fd(60px, 72px);
+    }
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: fm(43px, 53.5px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @include tablet-up {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 30px;
+    }
+
+    @include desktop {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: fd(40px, 60px);
+      row-gap: fd(69.5px, 86.5px);
+    }
+  }
+
+  &__item {
+    min-width: 0;
+  }
+
+  &__num {
+    display: block;
+    width: max-content;
+    font-size: fm(26px, 32px);
+    font-weight: 700;
+    line-height: 1;
+
+    @include desktop {
+      font-size: fd(32px, 36px);
+    }
+  }
+
+  &__num-in {
+    display: block;
+    @include gold-text;
+  }
+
+  &__name,
+  &__text {
+    margin-left: fm(45px, 55px);
+
+    @include desktop {
+      margin-left: fd(55px, 66px);
+    }
+  }
+
+  &__name {
+    margin-top: fm(-4px, -6px);
+    font-size: fm(18px, 20px);
+    font-weight: 700;
+    line-height: 1.2;
+
+    @include desktop {
+      margin-top: fd(2px, -2px);
+      font-size: fd(20px, 24px);
+    }
+  }
+
+  &__text {
+    margin-top: fm(9px, 11.5px);
+    font-size: fm(14px, 16px);
+    font-weight: 300;
+    line-height: 1.7;
+
+    @include desktop {
+      margin-top: fd(12.5px, 12px);
+      font-size: fd(16px, 18px);
+    }
+  }
+}
+
+// ================= «Вау» (html.rd-wow-js, модуль «незамінний, якщо» в rd-wow.js) =================
+.rd-wow-js {
+  // слова заголовка из размытия; золотое слово переливается
+  .rd-cause__title {
+    .rd-wd {
+      display: inline-block;
+      opacity: 0;
+      translate: 0 0.6em;
+      filter: blur(10px);
+      transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+      transition-delay: calc(var(--i, 0) * 80ms);
+    }
+
+    // после splitWords каждое слово — span: золото только у бывшего <span> (.rd-wd--el)
+    .rd-wd:not(.rd-wd--el) {
+      background: none;
+      -webkit-text-fill-color: currentColor;
+      color: $black;
+    }
+
+    .rd-wd--el {
+      background: linear-gradient(110deg, $gold 0%, $gold 38%, #f7e8b6 50%, $gold 62%, $gold-2 100%);
+      background-size: 260% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rd-wow-shimmer 4.5s $ease infinite;
+    }
+
+    &.is-in .rd-wd {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0);
+    }
+  }
+
+  // номер выезжает снизу из-под маски, строки пункта всплывают; по колонкам — слева направо (--c)
+  .rd-cause__num {
+    overflow: hidden;
+  }
+
+  .rd-cause__num-in {
+    translate: 0 105%;
+    transition: translate 1s $ease-expo;
+    transition-delay: calc(var(--c, 0) * 130ms);
+  }
+
+  .rd-cause__name,
+  .rd-cause__text {
+    opacity: 0;
+    translate: 0 18px;
+    transition: opacity 0.9s $ease-expo, translate 1s $ease-expo, color 0.4s $ease;
+  }
+
+  .rd-cause__name {
+    transition-delay: calc(var(--c, 0) * 130ms + 140ms), calc(var(--c, 0) * 130ms + 140ms), 0s;
+  }
+
+  .rd-cause__text {
+    transition-delay: calc(var(--c, 0) * 130ms + 240ms), calc(var(--c, 0) * 130ms + 240ms), 0s;
+  }
+
+  .rd-cause__item.is-in {
+    .rd-cause__num-in {
+      translate: 0 0;
+    }
+
+    .rd-cause__name,
+    .rd-cause__text {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  // наведение: номер «прокручивается» (уходит вверх, приходит снизу), строка золотится
+  @media (hover: hover) and (pointer: fine) {
+    .rd-cause__item.is-in:hover {
+      .rd-cause__num-in {
+        animation: rd-cause-roll 0.75s $ease-io both;
+      }
+
+      .rd-cause__name {
+        color: $gold;
+      }
+    }
+  }
+}
+
+@keyframes rd-cause-roll {
+  0% {
+    translate: 0 0;
+  }
+
+  45% {
+    translate: 0 -105%;
+  }
+
+  46% {
+    translate: 0 105%;
+  }
+
+  100% {
+    translate: 0 0;
+  }
+}

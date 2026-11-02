@@ -38,6 +38,27 @@
   syncGrids();
   window.addEventListener('load', syncGrids);
 
+  /* ---------- Заголовки [data-rd-fit]: длинное слово не вылезает за край — кегль уменьшается (только если вылезает) ---------- */
+  var fitEls = document.querySelectorAll('[data-rd-fit]');
+  if (fitEls.length) {
+    var fitAll = function () {
+      Array.prototype.forEach.call(fitEls, function (t) {
+        t.style.fontSize = '';
+        if (t.scrollWidth - t.clientWidth > 1) {
+          var size = parseFloat(getComputedStyle(t).fontSize);
+          t.style.fontSize = (Math.floor(size * t.clientWidth / t.scrollWidth * 10) / 10) + 'px';
+        }
+      });
+    };
+    fitAll();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+    var fitAllT;
+    window.addEventListener('resize', function () {
+      clearTimeout(fitAllT);
+      fitAllT = setTimeout(fitAll, 100);
+    });
+  }
+
   /* ---------- 3D-объекты (первый экран главной, узел услуги, спираль section 6, икосаэдр section 9): один WebGL-модуль, грузится после загрузки страницы ---------- */
   var glob = document.querySelector('[data-rd-glob], [data-rd-knot], [data-rd-3d], [data-rd-ico]');
   if (glob && glob.dataset.src && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {

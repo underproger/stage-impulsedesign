@@ -65,9 +65,7 @@ $gar-glow: #cdb167;
   &__title {
     grid-area: title;
     font-family: inherit;
-    // длинное слово («ПРЕИМУЩЕСТВА», «КОРПОРАТИВНИХ») не вылезает за край: шрифт по самому длинному слову
-    // (--rd-longest считает шаблон; 0.86em — ширина прописной буквы с запасом)
-    font-size: min(#{fm(36px, 48px)}, calc((100vw - 2 * #{fm(20px, 30px)}) / (var(--rd-longest, 10) * 0.86)));
+    font-size: fm(36px, 48px); // длинное слово не влезает — rd.js уменьшает кегль ([data-rd-fit])
     font-weight: 700;
     line-height: 1.1;
     text-transform: uppercase;
