@@ -569,6 +569,67 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   }
 }
 
+// ================= ПЕРЕХОДЫ МЕЖДУ СТРАНИЦАМИ =================
+// Клик по внутренней ссылке: из точки клика расходится золотой круг, за ним — тёмный с логотипом,
+// после — переход. Новая страница стартует закрытой (html.rd-pt-in ставит инлайн-скрипт в head)
+// и открывается из центра: тёмный круг «прорезается», за ним — золотая кайма (rd-wow.js).
+.rd-pt-in body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: $black url("../img/logo.svg") center / #{fw(167px)} auto no-repeat;
+}
+
+.rd-pt {
+  --rd-cell: #{fw(100px)};
+  position: fixed;
+  inset: 0;
+  z-index: 2147483001;
+  visibility: hidden;
+  pointer-events: none;
+
+  &.is-on {
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  &__gold,
+  &__dark {
+    position: absolute;
+    inset: 0;
+  }
+
+  &__gold {
+    background: $gold-grad;
+  }
+
+  &__dark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    @include grid-bg;
+  }
+
+  &__logo {
+    width: fw(167px);
+    height: auto;
+    opacity: 0;
+    transition: opacity 0.35s $ease;
+  }
+
+  &.is-logo .rd-pt__logo {
+    opacity: 1;
+    animation: rd-pt-pulse 1.4s $ease 0.7s infinite alternate; // страница грузится долго — логотип «дышит»
+  }
+}
+
+@keyframes rd-pt-pulse {
+  to {
+    opacity: 0.45;
+  }
+}
+
 // ================= БЛОК «САЙТИ ДЛЯ БІЗНЕСУ» (Mind Control 2.0) =================
 .rd-wow-js {
   // слова, склеенные &nbsp; (splitWords), не разрываются; группа сама не золотится

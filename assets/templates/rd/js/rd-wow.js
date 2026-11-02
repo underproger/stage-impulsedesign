@@ -130,6 +130,124 @@
     return words;
   }
 
+  /* ================= Переходы между страницами ================= */
+  // Клик по внутренней ссылке: золотой и тёмный круги расходятся из точки клика на весь экран,
+  // затем переход. Новая страница открывается из центра (если пришли переходом — html.rd-pt-in).
+  (function () {
+    var pt = document.createElement('div');
+    pt.className = 'rd-pt';
+    pt.setAttribute('aria-hidden', 'true');
+    pt.innerHTML = '<div class="rd-pt__gold"></div><div class="rd-pt__dark"><img class="rd-pt__logo" src="/assets/templates/rd/img/logo.svg" width="167" height="27" alt=""></div>';
+    document.body.appendChild(pt);
+    var gold = pt.firstChild;
+    var dark = pt.lastChild;
+    var busy = false;
+    var ease = function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+    var radius = function (x, y) {
+      var w = window.innerWidth, h = window.innerHeight;
+      return Math.hypot(Math.max(x, w - x), Math.max(y, h - y)) + 2;
+    };
+    var setCircle = function (el, r, x, y) {
+      el.style.clipPath = 'circle(' + r.toFixed(1) + 'px at ' + x.toFixed(0) + 'px ' + y.toFixed(0) + 'px)';
+    };
+    var setHole = function (el, r, x, y) {
+      var m = r <= 0 ? 'none' : 'radial-gradient(circle at ' + x.toFixed(0) + 'px ' + y.toFixed(0) + 'px, transparent ' + r.toFixed(1) + 'px, #000 ' + (r + 1).toFixed(1) + 'px)';
+      el.style.webkitMaskImage = m;
+      el.style.maskImage = m;
+    };
+    var reset = function () {
+      pt.classList.remove('is-on', 'is-logo');
+      [gold, dark].forEach(function (el) {
+        el.style.clipPath = '';
+        el.style.webkitMaskImage = '';
+        el.style.maskImage = '';
+      });
+      busy = false;
+    };
+    // анимация двух слоёв: draw(el, t) для каждого, второй стартует с задержкой
+    var run = function (dur, lag, draw, done) {
+      var t0 = performance.now(); // по часам, а не от первого кадра: при занятом потоке анимация не опаздывает
+      var step = function (now) {
+        var a = clamp((now - t0) / dur, 0, 1);
+        var b = clamp((now - t0 - lag) / dur, 0, 1);
+        draw(ease(a), ease(b));
+        if (b < 1) raf(step); else if (done) done();
+      };
+      raf(step);
+    };
+
+    // закрытие: круги из точки клика
+    var leave = function (url, x, y) {
+      busy = true;
+      var R = radius(x, y);
+      setCircle(gold, 0, x, y);
+      setCircle(dark, 0, x, y);
+      pt.classList.add('is-on');
+      run(560, 120, function (a, b) {
+        setCircle(gold, R * a, x, y);
+        setCircle(dark, R * b, x, y);
+        if (b > 0.7) pt.classList.add('is-logo');
+      }, function () {
+        try { sessionStorage.setItem('rd-pt', String(Date.now())); } catch (e) { /* без метки страница откроется как обычно */ }
+        window.location.href = url;
+        setTimeout(reset, 5000); // переход не случился (например, отдали файл) — открываем страницу обратно
+      });
+    };
+
+    // открытие: тёмный слой «прорезается» из центра, за ним — золотой (видна золотая кайма)
+    var enter = function () {
+      busy = true;
+      var x = window.innerWidth / 2;
+      var y = window.innerHeight / 2;
+      var R = radius(x, y);
+      pt.classList.add('is-on', 'is-logo');
+      root.classList.remove('rd-pt-in');
+      setTimeout(function () { pt.classList.remove('is-logo'); }, 60);
+      run(720, 130, function (a, b) {
+        setHole(dark, R * a, x, y);
+        setHole(gold, R * b, x, y);
+      }, reset);
+    };
+
+    if (root.classList.contains('rd-pt-in')) enter();
+
+    // страница из кэша «назад/вперёд» — снять занавес
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted && pt.classList.contains('is-on')) reset();
+    });
+
+    // ссылка, которую можно открыть переходом (внутренняя страница, не файл, не якорь, не новая вкладка)
+    var pageUrl = function (a) {
+      if (!a || a.hasAttribute('download') || a.hasAttribute('data-rd-no-pt') || (a.target && a.target !== '_self')) return null;
+      var href = a.getAttribute('href');
+      if (!href || href.charAt(0) === '#' || /^(mailto|tel|javascript|viber|tg|skype):/i.test(href)) return null;
+      var url;
+      try { url = new URL(a.href, window.location.href); } catch (err) { return null; }
+      if (url.origin !== window.location.origin) return null;
+      if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return null; // якорь на этой же странице
+      if (/\.(pdf|zip|rar|docx?|xlsx?|pptx?|jpe?g|png|webp|gif|svg|mp4|mp3)$/i.test(url.pathname)) return null; // файлы
+      if (/\/(impulsemanager|connectors|assets)\//.test(url.pathname)) return null;
+      return url;
+    };
+
+    // предзагрузку (prefetch) не делаем: страницы отдаются с Cache-Control: no-store — браузер её не переиспользует
+
+    document.addEventListener('click', function (e) {
+      if (busy || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest && e.target.closest('a[href]');
+      var url = pageUrl(a);
+      if (!url) return;
+      e.preventDefault();
+      var x = e.clientX, y = e.clientY;
+      if (!e.detail || (!x && !y)) { // клавиатура — из центра ссылки
+        var r = a.getBoundingClientRect();
+        x = r.left + r.width / 2;
+        y = r.top + r.height / 2;
+      }
+      leave(url.href, x, y);
+    });
+  })();
+
   /* ================= Первый экран ================= */
 
   var hero = document.querySelector('.rd-hero');
