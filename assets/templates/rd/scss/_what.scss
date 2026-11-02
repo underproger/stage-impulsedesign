@@ -1,0 +1,434 @@
+@use "base" as *;
+
+// ===== Блок «Що таке …» страницы услуги (chunks/rd/what.tpl) =====
+// Слева — заголовок (золото в <span>), подзаголовок и тёмная карточка с тремя кольцами и текстом;
+// справа — пункты: «таблетка» с иконкой + заголовок, ниже текст. Мобайл — всё столбиком.
+// Размеры — по PDF service_1920/1600/768/360 (у текста — от верха строки).
+
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+.rd-what {
+  --rd-r: #{fm(20px, 24px)};
+  position: relative;
+  padding: fm(74px, 102.6px) 0 fm(82px, 139.5px);
+  background: #fff;
+  color: $black;
+
+  @include desktop {
+    --rd-r: #{fw(24px)};
+    padding: fd(121px, 168.4px) 0 fd(131px, 180px);
+  }
+
+  &__grid {
+    display: flex;
+    flex-direction: column;
+
+    @include desktop {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) fd(580px, 720px);
+      column-gap: fd(40px, 60px);
+      align-items: start;
+    }
+  }
+
+  // кегль по макету, но меньше, если самое длинное слово (--rd-longest, считает шаблон) не влезает в колонку
+  &__title {
+    --rd-tmax: #{fm(36px, 48px)};
+    --rd-tbox: calc(100vw - 2 * #{fm(20px, 30px)});
+    font-family: "Roboto Flex Wide", "Gotham Pro", Arial, sans-serif;
+    font-size: min(var(--rd-tmax), calc(var(--rd-tbox) / (var(--rd-longest, 8) * 0.8)));
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: $black;
+    overflow-wrap: break-word;
+
+    @include desktop {
+      --rd-tmax: #{fd(60px, 72px)};
+      --rd-tbox: calc(min(#{fd(1200px, 1500px)}, 100vw - 80px) - #{fd(580px, 720px)} - #{fd(40px, 60px)});
+    }
+
+    > span:not(.rd-wd) {
+      color: $gold;
+    }
+  }
+
+  &__sub {
+    margin-top: fm(27.6px, 29.2px);
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.6;
+
+    @include desktop {
+      margin-top: fd(26.6px, 32.6px);
+      font-size: fd(18px, 20px);
+    }
+
+    b,
+    strong {
+      font-weight: 700;
+    }
+  }
+
+  // ----- тёмная карточка с кольцами -----
+  &__card {
+    --rd-cw: 160px; // сторона блока с кольцами
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr;
+    row-gap: 21.2px;
+    margin-top: fm(50.4px, 66.6px);
+    padding: 24.8px 24px 26px;
+    border-radius: var(--rd-r);
+    color: #fff;
+    @include grid-bg-move;
+
+    @include tablet-up {
+      grid-template-columns: var(--rd-cw) minmax(0, 1fr);
+      column-gap: 31.2px;
+      align-items: start;
+      padding: 40.8px 40px 39.2px 40.8px;
+    }
+
+    @include desktop {
+      --rd-cw: #{fd(160px, 200px)};
+      --rd-cell: #{fw(100px)};
+      width: fd(550px, 690px);
+      column-gap: fd(31.2px, 47px);
+      margin-top: fd(66.6px, 83px);
+      padding: fd(40.8px, 49px) fd(24px, 56px) fd(39.2px, 47px) fd(40.8px, 57px);
+    }
+  }
+
+  &__chart {
+    position: relative;
+    width: var(--rd-cw);
+    aspect-ratio: 1;
+  }
+
+  &__rings {
+    display: block;
+    width: 100%;
+    height: 100%;
+    rotate: -90deg; // дуги начинаются сверху
+    overflow: visible;
+  }
+
+  &__track,
+  &__arc {
+    fill: none;
+    stroke-width: 13.5;
+  }
+
+  &__track {
+    stroke: rgba(255, 255, 255, 0.07);
+  }
+
+  // дуга = доля --v круга (pathLength = 1)
+  &__arc {
+    stroke-linecap: round;
+    stroke-dasharray: var(--v) 1;
+    stroke-dashoffset: 0;
+
+    &--1 {
+      stroke: url(#rd-what-g);
+    }
+
+    &--2 {
+      stroke: $gold;
+      opacity: 0.62;
+    }
+
+    &--3 {
+      stroke: $gold;
+      opacity: 0.38;
+    }
+  }
+
+  &__stat {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  &__stat-label {
+    font-size: calc(var(--rd-cw) * 0.07);
+    font-weight: 700;
+    line-height: 1.2;
+    color: #5d5d64;
+  }
+
+  &__stat-value {
+    font-size: calc(var(--rd-cw) * 0.12);
+    font-weight: 700;
+    line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__card-text {
+    font-size: fm(14px, 16px);
+    font-weight: 300;
+    line-height: 1.7;
+
+    @include tablet-up {
+      margin-top: -3.3px;
+    }
+
+    @include desktop {
+      margin-top: fd(-3.3px, -3.5px);
+      font-size: fd(16px, 18px);
+    }
+
+    p + p {
+      margin-top: 20px;
+
+      @include desktop {
+        margin-top: fd(20px, 25px);
+      }
+    }
+
+    b,
+    strong,
+    span {
+      font-weight: 700;
+      color: $gold;
+    }
+  }
+
+  // ----- пункты справа -----
+  &__items {
+    display: flex;
+    flex-direction: column;
+    gap: fm(53px, 50.5px);
+    margin-top: fm(48px, 64px);
+
+    @include desktop {
+      gap: fd(50.5px, 66.5px);
+      margin-top: 0;
+      padding-top: fd(9px, 11.6px);
+    }
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  &__pill {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 121.7px;
+    height: 60px;
+    border-radius: 60px;
+    background: $black-2;
+    color: $gold;
+
+    svg {
+      width: 38px;
+      height: 38px;
+      overflow: visible;
+    }
+  }
+
+  &__item-title {
+    max-width: 300px;
+    font-family: "Roboto Flex Wide", "Gotham Pro", Arial, sans-serif;
+    font-size: fm(18px, 20px);
+    font-weight: 700;
+    line-height: 1.2;
+    color: $black;
+    transition: color $dur $ease;
+
+    @include desktop {
+      max-width: fd(300px, 360px);
+      font-size: fd(20px, 24px);
+    }
+  }
+
+  &__item-text {
+    margin-top: 21.5px;
+    font-size: fm(14px, 16px);
+    font-weight: 300;
+    line-height: 1.7;
+
+    @include desktop {
+      font-size: fd(16px, 18px);
+    }
+
+    p + p {
+      margin-top: 0.8em;
+    }
+
+    b,
+    strong {
+      font-weight: 700;
+    }
+  }
+}
+
+// ================= «Вау» (html.rd-wow-js, модуль «Що таке» в rd-wow.js) =================
+.rd-wow-js {
+  // слова заголовка — из размытия, золотое переливается
+  .rd-what__title .rd-wd {
+    display: inline-block;
+    opacity: 0;
+    translate: 0 0.6em;
+    filter: blur(10px);
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+    transition-delay: calc(var(--i) * 80ms);
+  }
+
+  .rd-what__title .rd-wd:not(.rd-wd--el) {
+    color: $black;
+  }
+
+  .rd-what__title .rd-wd--el {
+    background: linear-gradient(110deg, $gold 0%, $gold 38%, #f7e8b6 50%, $gold 62%, $gold-2 100%);
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rd-wow-shimmer 4.5s $ease infinite;
+  }
+
+  .rd-what__sub,
+  .rd-what__card,
+  .rd-what__item {
+    opacity: 0;
+    translate: 0 40px;
+    transition: opacity 1s $ease-expo, translate 1.2s $ease-expo;
+  }
+
+  .rd-what__sub {
+    transition-delay: 0.35s;
+  }
+
+  .rd-what__card {
+    transition-delay: 0.5s;
+  }
+
+  .rd-what__item {
+    transition-delay: calc(var(--i) * 140ms + 0.25s);
+  }
+
+  // кольца прорисовываются по очереди, иконки — линией
+  .rd-what__arc {
+    stroke-dasharray: 0 1;
+    transition: stroke-dasharray 1.8s $ease-expo;
+  }
+
+  .rd-what__arc--1 {
+    transition-delay: 0.8s;
+  }
+
+  .rd-what__arc--2 {
+    transition-delay: 0.95s;
+  }
+
+  .rd-what__arc--3 {
+    transition-delay: 1.1s;
+  }
+
+  .rd-what__pill svg > * {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 1.2s $ease-expo;
+    transition-delay: calc(var(--i) * 140ms + 0.55s);
+  }
+
+  .rd-what.is-in {
+    .rd-what__title .rd-wd {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0);
+    }
+
+    .rd-what__sub,
+    .rd-what__card,
+    .rd-what__item {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    .rd-what__arc {
+      stroke-dasharray: var(--v) 1;
+    }
+
+    .rd-what__pill svg > * {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  // «таблетка»: золото заливает слева, иконка темнеет; заголовок пункта золотится
+  .rd-what__pill::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: inherit;
+    background: $gold-grad;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.6s $ease-fly;
+  }
+
+  .rd-what__pill {
+    transition: color 0.45s $ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rd-what__item:hover {
+      .rd-what__pill {
+        color: $black;
+      }
+
+      .rd-what__pill::before {
+        transform: scaleX(1);
+      }
+
+      .rd-what__item-title {
+        color: $gold;
+      }
+
+      .rd-what__pill svg {
+        animation: rd-what-wiggle 0.7s $ease;
+      }
+    }
+
+    // карточка: кольца чуть поворачиваются
+    .rd-what__rings {
+      transition: rotate 1.2s $ease-expo;
+    }
+
+    .rd-what__card:hover .rd-what__rings {
+      rotate: -60deg;
+    }
+  }
+}
+
+@keyframes rd-what-wiggle {
+  0%,
+  100% {
+    scale: 1;
+  }
+
+  40% {
+    scale: 1.15;
+  }
+
+  70% {
+    scale: 0.95;
+  }
+}

@@ -479,7 +479,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
@@ -1662,6 +1662,42 @@
         if (tkx <= -tkHalf) tkx += tkHalf;
         tkTrack.style.transform = 'translate3d(' + tkx.toFixed(2) + 'px,0,0)';
       };
+    }
+  }
+
+  /* ================= «Що таке …» (страница услуги) ================= */
+  // Слова заголовка из размытия, подзаголовок/карточка/пункты поднимаются, кольца прорисовываются,
+  // число в кольцах досчитывается от нуля, иконки пунктов рисуются линией (CSS по .is-in).
+  var what = document.querySelector('[data-rd-what]');
+  if (what) {
+    var whTitle = what.querySelector('.rd-what__title');
+    if (whTitle) splitWords(whTitle);
+    var whStat = what.querySelector('.rd-what__stat-value');
+    var whCount = function () {
+      if (!whStat) return;
+      var m = (whStat.textContent || '').match(/^(\D*)(\d[\d\s]*)(.*)$/);
+      if (!m) return;
+      var to = parseInt(m[2].replace(/\s/g, ''), 10);
+      var fin = whStat.textContent;
+      if (!to) return;
+      var t0 = null;
+      var step = function (t) {
+        if (t0 === null) t0 = t;
+        var p = clamp((t - t0) / 1800, 0, 1);
+        whStat.textContent = m[1] + Math.round(to * (1 - Math.pow(1 - p, 4))) + m[3];
+        if (p < 1) raf(step); else whStat.textContent = fin;
+      };
+      whStat.textContent = m[1] + '0' + m[3];
+      setTimeout(function () { raf(step); }, 850);
+    };
+    var whReveal = function () { what.classList.add('is-in'); whCount(); };
+    if ('IntersectionObserver' in window) {
+      var whIo = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) { whReveal(); whIo.disconnect(); }
+      }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+      whIo.observe(what);
+    } else {
+      whReveal();
     }
   }
 
