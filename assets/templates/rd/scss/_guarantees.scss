@@ -65,7 +65,9 @@ $gar-glow: #cdb167;
   &__title {
     grid-area: title;
     font-family: inherit;
-    font-size: fm(36px, 48px);
+    // длинное слово («ПРЕИМУЩЕСТВА», «КОРПОРАТИВНИХ») не вылезает за край: шрифт по самому длинному слову
+    // (--rd-longest считает шаблон; 0.86em — ширина прописной буквы с запасом)
+    font-size: min(#{fm(36px, 48px)}, calc((100vw - 2 * #{fm(20px, 30px)}) / (var(--rd-longest, 10) * 0.86)));
     font-weight: 700;
     line-height: 1.1;
     text-transform: uppercase;
@@ -234,6 +236,23 @@ $gar-glow: #cdb167;
   @media (hover: hover) and (pointer: fine) {
     &:not(.rd-gar-card--gold):hover .rd-gar-card__title {
       color: $gold;
+    }
+  }
+}
+
+// ----- вариант для страницы услуги: «Переваги наших …» (guarantees.tpl src='bl12') -----
+// Десктоп по макету услуги: заголовок в 2 строки, кольцо приподнято над его верхом на 23–25px, плашка — на обычный
+// отступ ниже кольца (на главной кольцо вровень с верхом трёхстрочного заголовка). Планшет и телефон — как на главной
+// (в макете услуги на 768/360 в карточках тексты гарантий главной, отступы там непоследовательны).
+.rd-gar--advantages {
+  @include desktop {
+    .rd-gar__cta.rd-works--inline {
+      margin-top: calc(-1 * #{fd(23px, 25px)});
+    }
+
+    // на 1600 в макете услуги заголовок карточки ниже иконки на 40 (как на 1920), на главной — 32
+    .rd-gar-card__title {
+      margin-top: fw(40px);
     }
   }
 }
