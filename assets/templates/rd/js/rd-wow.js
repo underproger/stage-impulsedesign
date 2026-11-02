@@ -397,7 +397,14 @@
     if (pill) pill.setAttribute('data-wow-skip', '');
     titleChars = splitChars(title);
     titleChars.forEach(function (c) { c.setAttribute('aria-hidden', 'true'); });
-    if (pill) pill.style.setProperty('--i', titleChars.length - 7);
+    // таблетка раскрывается вместе с буквой, перед которой стоит (на главной — последнее слово, у услуги — «під ключ»)
+    if (pill) {
+      var pillAt = titleChars.length - 7;
+      for (var pi = 0; pi < titleChars.length; pi++) {
+        if (pill.compareDocumentPosition(titleChars[pi]) & Node.DOCUMENT_POSITION_FOLLOWING) { pillAt = Math.max(0, pi - 1); break; }
+      }
+      pill.style.setProperty('--i', pillAt);
+    }
     window.dispatchEvent(new Event('resize')); // перепроверка ширины заголовка (rd.js)
   }
 
@@ -418,7 +425,7 @@
   }
 
   // объект: если WebGL так и не запустился — показываем PNG
-  var glob = document.querySelector('[data-rd-glob]');
+  var glob = document.querySelector('[data-rd-glob], [data-rd-knot]');
   if (glob) {
     setTimeout(function () {
       if (!glob.classList.contains('is-webgl')) glob.classList.add('is-fallback');

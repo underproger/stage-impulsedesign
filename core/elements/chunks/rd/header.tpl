@@ -2,6 +2,8 @@
   Редизайн: шапка + мега-меню «Послуги» + мобильное меню.
   Подключается чанком [[$header]] → {include 'file:chunks/rd/header.tpl'}
   Меню строится из дерева ресурсов текущего контекста (web = ru, uk = ua).
+  {include 'file:chunks/rd/header.tpl' light=1} — шапка на белом (страница услуги): вверху страницы текст тёмный,
+  после прокрутки и с открытым меню — как обычно, светлый на тёмном.
 *}
 {set $ctx = $_modx->context.key}
 {set $isRu = $ctx == 'web'}
@@ -61,7 +63,7 @@
   ['url' => ('facebook_messenger' | option), 'icon' => 'soc-messenger.svg', 'label' => 'Messenger']
 ]}
 
-<header class="rd-header" data-rd-header>
+<header class="rd-header{if $light?} rd-header--light{/if}" data-rd-header>
   <span class="rd-header__probe" aria-hidden="true"></span>
 
   {* ===== Мега-меню (десктоп) ===== *}
@@ -93,6 +95,7 @@
   <div class="rd-container rd-header__bar">
     <a class="rd-header__logo" href="{$_modx->config.site_url}" aria-label="{$t.home}">
       <img src="{$img}logo.svg" width="167" height="27" alt="Impulse Design" loading="eager">
+      {if $light?}<img class="rd-header__logo-dark" src="{$img}logo-dark.svg" width="167" height="27" alt="" aria-hidden="true" loading="eager">{/if}
     </a>
 
     <nav class="rd-nav" aria-label="{$t.nav}">

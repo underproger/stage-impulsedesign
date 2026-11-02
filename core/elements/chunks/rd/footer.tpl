@@ -118,8 +118,8 @@
           {if $email}<li><a class="rd-footer__link rd-footer__mail" href="mailto:{$email}">{$email}</a></li>{/if}
         </ul>
         {if $brief}
-          <a class="rd-footer__brief" href="{$brief}" download>
-            <img src="{$img}download-cloud.svg" width="24" height="24" alt="">
+          <a class="rd-footer__brief rd-dl" href="{$brief}" download>
+            {include 'file:chunks/rd/icon-download.tpl' id='rd-dl-foot'}
             <span>{$t.brief}</span>
           </a>
         {/if}
@@ -127,8 +127,8 @@
 
       {* на телефоне бриф — отдельной строкой под колонками (в макете слева), в колонке «Контакти» он скрыт *}
       {if $brief}
-        <a class="rd-footer__brief rd-footer__brief--solo" href="{$brief}" download>
-          <img src="{$img}download-cloud.svg" width="24" height="24" alt="">
+        <a class="rd-footer__brief rd-footer__brief--solo rd-dl" href="{$brief}" download>
+          {include 'file:chunks/rd/icon-download.tpl' id='rd-dl-foot2'}
           <span>{$t.brief}</span>
         </a>
       {/if}

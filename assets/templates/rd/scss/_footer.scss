@@ -265,8 +265,7 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
       line-height: fw(24px);
     }
 
-    img {
-      flex: none;
+    .rd-dl__icon {
       width: 24px;
       height: 24px;
 
@@ -453,29 +452,9 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
       }
     }
 
-    // бриф: облако «подпрыгивает», стрелка в нём бьёт вниз
-    .rd-footer__brief:hover img {
-      animation: rd-foot-drop 0.8s $ease both;
-    }
-
     // бегущая строка под курсором: e-mail темнеет (сама строка замедляется — rd-wow.js)
     .rd-ticker:hover .rd-ticker__mail {
       color: $black;
     }
-  }
-}
-
-@keyframes rd-foot-drop {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-
-  35% {
-    translate: 0 4px;
-  }
-
-  60% {
-    translate: 0 -2px;
   }
 }

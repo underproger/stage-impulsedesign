@@ -1,0 +1,220 @@
+@use "base" as *;
+
+// ===== Первый экран страницы услуги: .rd-hero.rd-hero--svc (chunks/rd/svc-hero.tpl) =====
+// Тот же блок, что на главной (общая хореография «вау», прожектор, подгонка заголовка — rd.js / rd-wow.js).
+// Отличия: тёмная карточка под светлой шапкой (десктоп — поля 30px и скругление 24px, мобайл — во всю ширину),
+// хлебные крошки, свои кегли, золотой 3D-узел (src/knot.js) вместо объекта главной, без нижней строки.
+// Размеры и отступы — по PDF макета (service_1920/1600/768/360), у текста — от верха строки (line box).
+
+.rd-hero--svc {
+  --rd-gw: #{fm(320px, 480px)}; // сторона узла (нужна и колонке текста, и визуалу)
+
+  @include tablet-up {
+    --rd-gw: 480px;
+  }
+
+  @include desktop {
+    --rd-gw: #{fd(480px, 600px)};
+    min-height: fd(700px, 750px);
+    margin-inline: fw(30px);
+    border-radius: fw(24px);
+  }
+
+  .rd-hero__inner {
+    padding-top: fm(64.8px, 79.6px);
+
+    @include desktop {
+      padding-top: fd(120.6px, 134.6px);
+      padding-bottom: 0;
+    }
+  }
+
+  // колонка текста не заходит под узел (видимая часть узла начинается с 17% его ширины)
+  .rd-hero__content {
+    gap: fm(51px, 50.5px);
+
+    @include desktop {
+      width: min(#{fw(720px)}, calc(100% - var(--rd-gw) * 0.85));
+      gap: fd(50.5px, 51px);
+    }
+  }
+
+  .rd-hero__heading {
+    gap: 0;
+  }
+
+  .rd-hero__title {
+    --rd-title-max: #{fm(36px, 60px)};
+    // на телефоне колонка заголовка уже экрана (как в макете: «LANDING / PAGE ПІД / КЛЮЧ»), на 768 — во всю ширину
+    --rd-title-box: calc(100vw - 2 * #{fm(20px, 30px)} - #{fm(20px, 0px)});
+    max-width: var(--rd-title-box);
+    padding-top: 0;
+
+    @include desktop {
+      --rd-title-max: #{fd(68px, 72px)};
+      // ширина колонки: контейнер внутри карточки минус видимая часть узла
+      --rd-title-box: min(#{fw(720px)}, calc(min(#{fd(1200px, 1500px)}, 100vw - 2 * #{fw(30px)} - 80px) - var(--rd-gw) * 0.85));
+      max-width: none;
+      padding-top: 0;
+    }
+  }
+
+  // таблетка с «{✓}»: сидит ниже, чем на главной (по нижнему краю строки)
+  .rd-hero__pill {
+    width: 1.78em; // 64×32 при 36px (360)
+    height: 0.89em;
+    margin-top: 0.19em;
+    margin-right: 0.15em;
+
+    svg {
+      width: fm(39px, 54.5px);
+      flex: none;
+    }
+
+    @include tablet-up {
+      width: 1.433em; // 86×48 при 60px (768)
+      height: 0.8em;
+      margin-top: 0.233em;
+      margin-right: 0.12em;
+    }
+
+    @include desktop {
+      width: 1.45em; // 105×53 при 72px (1920), 98×51 при 68px (1600)
+      height: 0.745em;
+      margin-top: 0.264em;
+
+      svg {
+        width: fw(54.5px);
+      }
+    }
+  }
+
+  .rd-hero__text {
+    max-width: 440px;
+    margin-top: fm(27px, 30.5px);
+    font-size: fm(16px, 18px);
+
+    @include desktop {
+      max-width: fd(640px, 720px);
+      margin-top: fd(44.5px, 40px);
+      font-size: fd(18px, 20px);
+    }
+
+    b,
+    strong,
+    span {
+      color: $gold;
+      font-weight: 700;
+    }
+  }
+
+  // ----- узел и кнопка-кольцо -----
+  .rd-hero__visual {
+    --rd-gw: inherit; // перебивает размеры объекта главной
+  }
+
+  .rd-hero__glob {
+    // телефон: сразу под кнопкой, ниже — место под кольцо (оно на 60.9% высоты узла)
+    margin: 0 0 calc(237px - var(--rd-gw) * 0.391) calc(50% - var(--rd-gw) / 2);
+
+    @include tablet-up {
+      margin: 0 0 0 calc(50% - var(--rd-gw) / 2); // низ узла = низ блока
+    }
+
+    @include desktop {
+      top: 50%;
+      right: fd(0px, 26px);
+      margin: 0;
+      transform: translateY(calc(-50% - #{fd(0px, 10px)}));
+    }
+  }
+
+  .rd-works {
+    top: calc(var(--rd-gw, 320px) * 0.609);
+
+    @include tablet-up {
+      top: 375px;
+      right: fm(20px, 30px);
+    }
+
+    @include desktop {
+      top: fd(439.5px, 464px);
+      right: 0;
+    }
+  }
+
+  // галочка в таблетке прорисовывается заново раз в несколько секунд (как мигающая каретка на главной)
+  .rd-hero__check {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+
+    @media (prefers-reduced-motion: no-preference) {
+      animation: rd-check 3.6s $ease-fly infinite;
+    }
+  }
+}
+
+@keyframes rd-check {
+  0%,
+  8% {
+    stroke-dashoffset: 1;
+  }
+
+  30%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+// ----- хлебные крошки (на тёмном) -----
+.rd-crumbs {
+  margin-bottom: fm(22.8px, 18.6px);
+  font-size: fm(12px, 14px);
+  font-weight: 300;
+  line-height: 1.2;
+  color: $gray;
+
+  @include desktop {
+    margin-bottom: fd(16.6px, 24.6px);
+    font-size: fw(14px);
+  }
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 4px;
+  }
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+
+    // разделитель — золотая точка
+    & + &::before {
+      content: "";
+      flex: none;
+      width: 3px;
+      height: 3px;
+      margin: 0 fm(10px, 12px);
+      border-radius: 50%;
+      background: $gold;
+
+      @include desktop {
+        margin: 0 fw(12px);
+      }
+    }
+
+    &--current {
+      color: $gold;
+    }
+  }
+
+  &__link {
+    transition: color $dur $ease;
+
+    @include hover {
+      color: $gold;
+    }
+  }
+}

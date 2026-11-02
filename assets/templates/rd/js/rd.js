@@ -38,8 +38,8 @@
   syncGrids();
   window.addEventListener('load', syncGrids);
 
-  /* ---------- 3D-объекты (первый экран, спираль section 6, икосаэдр section 9): один WebGL-модуль, грузится после загрузки страницы ---------- */
-  var glob = document.querySelector('[data-rd-glob], [data-rd-3d], [data-rd-ico]');
+  /* ---------- 3D-объекты (первый экран главной, узел услуги, спираль section 6, икосаэдр section 9): один WebGL-модуль, грузится после загрузки страницы ---------- */
+  var glob = document.querySelector('[data-rd-glob], [data-rd-knot], [data-rd-3d], [data-rd-ico]');
   if (glob && glob.dataset.src && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     var loadBlob = function () {
       var s = document.createElement('script');

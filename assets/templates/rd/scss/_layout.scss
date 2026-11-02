@@ -168,15 +168,10 @@
   color: #fff;
 
   img,
-  &__icon {
+  .rd-dl__icon {
     width: fw(24px);
     height: fw(24px);
     flex: none;
-  }
-
-  &__icon {
-    color: $gold;
-    overflow: hidden;
   }
 
   span {
@@ -184,27 +179,31 @@
     transition: color $dur $ease;
   }
 
-  // без подчёркивания: текст золотится, стрелка в облаке «скачивается» (уходит вниз и снова выезжает из облака),
-  // облако чуть пружинит — пока курсор на кнопке
+  // без подчёркивания: текст золотится, стрелка в облаке «скачивается» (.rd-dl ниже)
   @include hover {
     span {
       color: $gold;
     }
-
-    .rd-brief__down {
-      animation: rd-brief-down 1.5s $ease-fly infinite;
-    }
-
-    .rd-brief__cloud {
-      animation: rd-brief-cloud 1.5s $ease infinite;
-    }
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .rd-brief__down,
-  .rd-brief__cloud {
-    animation: none !important;
+// Ссылка «скачать» с иконкой облака (chunks/rd/icon-download.tpl): пока курсор на ссылке, стрелка уходит вниз
+// и снова выезжает из облака, облако чуть пружинит. Баннер, футер.
+.rd-dl__icon {
+  flex: none;
+  color: $gold;
+  overflow: hidden;
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .rd-dl:hover {
+    .rd-dl__down {
+      animation: rd-brief-down 1.5s $ease-fly infinite;
+    }
+
+    .rd-dl__cloud {
+      animation: rd-brief-cloud 1.5s $ease infinite;
+    }
   }
 }
 

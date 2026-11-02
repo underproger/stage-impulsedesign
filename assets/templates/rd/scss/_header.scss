@@ -593,3 +593,44 @@
 .rd-lock {
   overflow: hidden !important;
 }
+
+// ===== Шапка на белом (страница услуги): .rd-header--light =====
+// Вверху страницы — тёмный текст, бургер и логотип; после прокрутки (тёмное «стекло»), с открытым мега-меню
+// или мобильным меню — как обычно, светлое на тёмном. Логотипы меняются плавно (тёмный лежит поверх).
+.rd-header__logo {
+  position: relative;
+
+  img {
+    transition: opacity 0.45s $ease;
+  }
+}
+
+.rd-header__logo-dark {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.rd-header--light {
+  transition: color 0.45s $ease;
+
+  .rd-burger span {
+    transition: transform $dur $ease, top $dur $ease, background-color 0.45s $ease;
+  }
+
+  &:not(.is-scrolled):not(.is-mega-open):not(.is-menu-open) {
+    color: $black;
+
+    .rd-header__logo img {
+      opacity: 0;
+    }
+
+    .rd-header__logo .rd-header__logo-dark {
+      opacity: 1;
+    }
+
+    .rd-burger span {
+      background-color: $black;
+    }
+  }
+}

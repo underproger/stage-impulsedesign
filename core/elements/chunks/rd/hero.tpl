@@ -103,12 +103,8 @@
         {/foreach}
       </ul>
       {if $brief}
-        <a class="rd-brief" href="{$brief}" download>
-          <svg class="rd-brief__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <defs><clipPath id="rd-brief-clip"><rect x="0" y="9.5" width="24" height="15"/></clipPath></defs>
-            <path class="rd-brief__cloud" d="M20 16.743A5.5 5.5 0 0 0 16.5 7c-.218 0-.423-.114-.534-.302A7.5 7.5 0 1 0 4.187 15.794"/>
-            <g clip-path="url(#rd-brief-clip)"><path class="rd-brief__down" d="M8 17l4 4 4-4M12 21v-9"/></g>
-          </svg>
+        <a class="rd-brief rd-dl" href="{$brief}" download>
+          {include 'file:chunks/rd/icon-download.tpl' id='rd-dl-hero'}
           <span>{$isRu ? 'Скачать бриф' : 'Завантажити бриф'}</span>
         </a>
       {/if}
