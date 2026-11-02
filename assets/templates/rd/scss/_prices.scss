@@ -117,7 +117,7 @@ $price-glow: #cdb167;
     }
   }
 
-  > :not(.rd-price__fill) {
+  > :not(.rd-price__fill):not(.rd-price__aglow):not(.rd-price__glow) {
     position: relative;
     z-index: 1;
   }
@@ -224,15 +224,18 @@ $price-glow: #cdb167;
     }
 
     // свечение (в макете — размытая картинка): центр на 29px левее правого края и 296px ниже верха,
-    // одинаково на всех ширинах; rd-wow.js может вести центр за курсором (--gx/--gy)
-    &::after {
-      content: "";
+    // одинаково на всех ширинах; круг 600px двигается только transform'ом (rd-wow.js ведёт его за курсором)
+    .rd-price__aglow {
       position: absolute;
       z-index: 0;
-      inset: 0;
-      background: radial-gradient(circle var(--gr, #{fw(300px)}) at var(--gx, calc(100% - #{fw(29px)})) var(--gy, #{fw(296px)}),
+      left: calc(100% - #{fw(29px)} - #{fw(300px)});
+      top: calc(#{fw(296px)} - #{fw(300px)});
+      width: fw(600px);
+      height: fw(600px);
+      background: radial-gradient(closest-side,
         rgba($price-glow, 0.8) 0%, rgba($price-glow, 0.74) 20%, rgba($price-glow, 0.53) 42%,
         rgba($price-glow, 0.15) 70%, rgba($price-glow, 0) 100%);
+      will-change: transform;
       pointer-events: none;
     }
 

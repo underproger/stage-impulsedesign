@@ -130,6 +130,55 @@
     return words;
   }
 
+  /* ================= Прожектор и свет за курсором ================= */
+  // Всё двигается transform'ом (без перерисовки): раньше маска/градиент на весь блок
+  // пересчитывались на каждое движение мыши — блок тормозил.
+
+  // Золотая сетка под курсором: круг-«линза» с неподвижной маской едет за курсором,
+  // сетка внутри едет обратно — остаётся на месте относительно блока.
+  function makeSpot(box) {
+    var spot = document.createElement('div');
+    spot.className = 'rd-wow-spot';
+    spot.setAttribute('aria-hidden', 'true');
+    spot.innerHTML = '<div class="rd-wow-spot__lens"><div class="rd-wow-spot__in"><div class="rd-wow-spot__grid"></div></div></div>';
+    var lens = spot.firstChild;
+    var inner = lens.firstChild;
+    var size = function () {
+      inner.style.width = box.offsetWidth + 'px';
+      inner.style.height = box.offsetHeight + 'px';
+    };
+    size();
+    window.addEventListener('resize', size);
+    return {
+      el: spot,
+      size: size,
+      move: function (x, y) {
+        lens.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)';
+        inner.style.transform = 'translate3d(' + (-x).toFixed(1) + 'px,' + (-y).toFixed(1) + 'px,0)';
+      }
+    };
+  }
+
+  // Свет за курсором внутри элемента: круг с градиентом (.rd-light) двигается transform'ом.
+  // wrapCls — обёртка-маска (если сам элемент не обрезает содержимое), cls — модификатор размера/цвета.
+  function addLight(box, cls, before, wrapCls) {
+    var light = document.createElement('span');
+    light.className = 'rd-light ' + cls;
+    var node = light;
+    if (wrapCls) {
+      node = document.createElement('span');
+      node.className = wrapCls;
+      node.appendChild(light);
+    }
+    node.setAttribute('aria-hidden', 'true');
+    box.insertBefore(node, before || null);
+    box.addEventListener('pointermove', function (e) {
+      var r = box.getBoundingClientRect();
+      light.style.transform = 'translate3d(' + (e.clientX - r.left).toFixed(1) + 'px,' + (e.clientY - r.top).toFixed(1) + 'px,0)';
+    });
+    return node;
+  }
+
   /* ================= Плавная прокрутка колесом ================= */
   // Колесо мыши / тачпад: страница едет к цели с инерцией (тач и клавиатура — как обычно).
   // Не трогаем: Ctrl+колесо (зум), горизонтальную прокрутку, области со своей прокруткой
@@ -339,14 +388,14 @@
   });
 
   // слои прожектора: золотая сетка под курсором + мягкий свет
+  var heroSpot = null;
+  var heroGlow = null;
   if (hero) {
-    var spot = document.createElement('div');
-    spot.className = 'rd-wow-spot';
-    spot.innerHTML = '<div class="rd-wow-spot__grid"></div>';
-    var glow = document.createElement('div');
-    glow.className = 'rd-wow-glow';
-    hero.insertBefore(glow, hero.firstChild);
-    hero.insertBefore(spot, hero.firstChild);
+    heroSpot = makeSpot(hero);
+    heroGlow = document.createElement('div');
+    heroGlow.className = 'rd-wow-glow';
+    hero.insertBefore(heroGlow, hero.firstChild);
+    hero.insertBefore(heroSpot.el, hero.firstChild);
   }
 
   // объект: если WebGL так и не запустился — показываем PNG
@@ -485,10 +534,10 @@
       var ly = mouse.y - hr.top;
       light.x = lerp(light.x, lx, 0.12);
       light.y = lerp(light.y, ly, 0.12);
-      hero.style.setProperty('--mx', lx.toFixed(1) + 'px');
-      hero.style.setProperty('--my', ly.toFixed(1) + 'px');
-      hero.style.setProperty('--lx', light.x.toFixed(1) + 'px');
-      hero.style.setProperty('--ly', light.y.toFixed(1) + 'px');
+      if (mouse.inHero) {
+        heroSpot.move(lx, ly);
+        heroGlow.style.transform = 'translate3d(' + light.x.toFixed(1) + 'px,' + light.y.toFixed(1) + 'px,0)';
+      }
 
       // параллакс: текст — чуть против мыши, объект — за мышью
       var k = mouse.inHero ? 1 : 0;
@@ -593,17 +642,7 @@
     if (sTitle) splitWords(sTitle);
     Array.prototype.forEach.call(services.querySelectorAll('.rd-service'), function (row, i) {
       row.style.setProperty('--i', i);
-      var g = document.createElement('span');
-      g.className = 'rd-service__glow';
-      g.setAttribute('aria-hidden', 'true');
-      row.insertBefore(g, row.querySelector('.rd-service__row'));
-      if (fine) {
-        row.addEventListener('pointermove', function (e) {
-          var r = row.getBoundingClientRect();
-          row.style.setProperty('--gx', (e.clientX - r.left) + 'px');
-          row.style.setProperty('--gy', (e.clientY - r.top) + 'px');
-        });
-      }
+      if (fine) addLight(row, 'rd-light--srv', row.querySelector('.rd-service__row'), 'rd-service__glow');
     });
 
     var reveal = function (el) { el.classList.add('is-in'); };
@@ -656,6 +695,7 @@
     var PF_MIN_K = 0.62;
     var pfMeasure = function () {
       pf.classList.remove('is-pinned');
+      if (pfPin) pfPin.style.paddingTop = '';
       pf.style.height = '';
       pf.style.removeProperty('--rd-pf-k');
       pfTrack.style.transform = '';
@@ -665,8 +705,11 @@
       if (!media) return;
 
       pf.classList.add('is-pinned'); // меряем уже в закреплённой раскладке
+      var probe = document.querySelector('.rd-header__probe');
+      var headH = probe ? probe.offsetHeight : 0; // закреплённая шапка (компактная) не должна закрывать ленту
+      pfPin.style.paddingTop = headH + 'px';
       var vh = window.innerHeight;
-      var avail = vh - 2 * Math.max(40, vh * 0.06);
+      var avail = vh - headH - 2 * Math.max(40, vh * 0.06);
       var k = 1;
       var fits = false;
       for (var i = 0; i < 5; i++) {
@@ -681,6 +724,7 @@
       var dist = pfTrack.scrollWidth - pfVp.clientWidth;
       if (!fits || dist < 40) {
         pf.classList.remove('is-pinned');
+        pfPin.style.paddingTop = '';
         pf.style.removeProperty('--rd-pf-k');
         return;
       }
@@ -841,12 +885,8 @@
     Array.prototype.forEach.call(mind.querySelectorAll('.rd-mind-card'), function (c, i) { c.style.setProperty('--i', i); });
 
     if (mCards && fine) {
-      mCards.addEventListener('pointermove', function (e) {
-        var r = mCards.getBoundingClientRect();
-        mCards.style.setProperty('--gx', (e.clientX - r.left).toFixed(0) + 'px');
-        mCards.style.setProperty('--gy', (e.clientY - r.top).toFixed(0) + 'px');
-        mCards.classList.add('is-lit');
-      });
+      addLight(mCards, 'rd-light--mind rd-mind__light', mCards.firstChild);
+      mCards.addEventListener('pointerenter', function () { mCards.classList.add('is-lit'); });
       mCards.addEventListener('pointerleave', function () { mCards.classList.remove('is-lit'); });
     }
 
@@ -905,27 +945,19 @@
     Array.prototype.forEach.call(gar.querySelectorAll('.rd-gar-card'), function (c, i) { c.style.setProperty('--i', i); });
 
     if (fine) {
-      var gSpot = document.createElement('div');
-      gSpot.className = 'rd-wow-spot';
-      gSpot.setAttribute('aria-hidden', 'true');
-      gSpot.innerHTML = '<div class="rd-wow-spot__grid"></div>';
-      gar.insertBefore(gSpot, gar.firstChild);
-
+      var gSpot = makeSpot(gar);
+      gar.insertBefore(gSpot.el, gar.firstChild);
       gar.addEventListener('pointermove', function (e) {
         var r = gar.getBoundingClientRect();
-        gar.style.setProperty('--mx', (e.clientX - r.left).toFixed(0) + 'px');
-        gar.style.setProperty('--my', (e.clientY - r.top).toFixed(0) + 'px');
-        gar.classList.add('is-lit');
+        gSpot.move(e.clientX - r.left, e.clientY - r.top);
+        if (!gar.classList.contains('is-lit')) gar.classList.add('is-lit');
       });
       gar.addEventListener('pointerleave', function () { gar.classList.remove('is-lit'); });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(gSpot.size);
 
       if (gPanel) {
-        gPanel.addEventListener('pointermove', function (e) {
-          var r = gPanel.getBoundingClientRect();
-          gPanel.style.setProperty('--gx', (e.clientX - r.left).toFixed(0) + 'px');
-          gPanel.style.setProperty('--gy', (e.clientY - r.top).toFixed(0) + 'px');
-          gPanel.classList.add('is-lit');
-        });
+        addLight(gPanel, 'rd-light--gar rd-gar__light', gPanel.firstChild);
+        gPanel.addEventListener('pointerenter', function () { gPanel.classList.add('is-lit'); });
         gPanel.addEventListener('pointerleave', function () { gPanel.classList.remove('is-lit'); });
       }
 
@@ -997,25 +1029,22 @@
       c.style.setProperty('--i', i);
       if (!fine || !c.hasAttribute('href')) return;
       if (c !== accent) {
-        var g = document.createElement('span');
-        g.className = 'rd-price__glow';
-        g.setAttribute('aria-hidden', 'true');
         var fill = c.querySelector('.rd-price__fill');
-        c.insertBefore(g, fill ? fill.nextSibling : c.firstChild);
+        addLight(c, 'rd-light--price rd-price__glow', fill ? fill.nextSibling : c.firstChild);
+        return;
       }
       c.addEventListener('pointermove', function (e) {
         var r = c.getBoundingClientRect();
-        var x = e.clientX - r.left;
-        var y = e.clientY - r.top;
-        if (c === accent) { ag.tx = x; ag.ty = y; ag.on = true; return; }
-        c.style.setProperty('--gx', x.toFixed(0) + 'px');
-        c.style.setProperty('--gy', y.toFixed(0) + 'px');
+        ag.tx = e.clientX - r.left;
+        ag.ty = e.clientY - r.top;
+        ag.on = true;
       });
-      if (c === accent) c.addEventListener('pointerleave', function () { ag.on = false; });
+      c.addEventListener('pointerleave', function () { ag.on = false; });
     });
 
     // свечение тёмной карточки: по умолчанию — правый нижний угол (как в CSS), на наведении — к курсору
-    if (accent && fine) {
+    var accentGlow = accent && accent.querySelector('.rd-price__aglow');
+    if (accent && accentGlow && fine) {
       var home = function () {
         var r = accent.getBoundingClientRect();
         var g = window.innerWidth > 1920 ? window.innerWidth / 1920 : 1; // как fw(): шире 1920 — пропорционально
@@ -1034,15 +1063,14 @@
         ag.y = lerp(ag.y, ty, 0.08);
         ag.r = lerp(ag.r, tr, 0.08);
         if (!ag.on && Math.abs(ag.x - h.x) < 0.5 && Math.abs(ag.y - h.y) < 0.5 && Math.abs(ag.r - h.r) < 0.5) {
-          if (ag.s) { ['--gx', '--gy', '--gr'].forEach(function (k) { accent.style.removeProperty(k); }); ag.s = ''; }
+          if (ag.s) { accentGlow.style.transform = ''; ag.s = ''; }
           ag.x = h.x; ag.y = h.y; ag.r = h.r;
           return;
         }
-        var st = ag.x.toFixed(1) + '|' + ag.y.toFixed(1) + '|' + ag.r.toFixed(1);
+        // сдвиг и масштаб относительно места по умолчанию (как в CSS) — только transform
+        var st = 'translate3d(' + (ag.x - h.x).toFixed(1) + 'px,' + (ag.y - h.y).toFixed(1) + 'px,0) scale(' + (ag.r / h.r).toFixed(3) + ')';
         if (st !== ag.s) {
-          accent.style.setProperty('--gx', ag.x.toFixed(1) + 'px');
-          accent.style.setProperty('--gy', ag.y.toFixed(1) + 'px');
-          accent.style.setProperty('--gr', ag.r.toFixed(1) + 'px');
+          accentGlow.style.transform = st;
           ag.s = st;
         }
       };

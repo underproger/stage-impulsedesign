@@ -326,6 +326,7 @@
     width: 76.2%;
     height: 76.2%;
     animation: rd-spin 10s linear infinite;
+    will-change: transform; // отдельный слой: вращается без перерисовки текста
 
     text {
       font-family: "Roboto Flex Wide", Arial, sans-serif; // размер — атрибутом font-size из шаблона

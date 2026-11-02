@@ -1,29 +1,90 @@
 @use "base" as *;
 
 // ===== Шапка =====
+// Закреплена (fixed) на всём сайте: место в потоке держит сам .rd-header (min-height),
+// вверху страницы шапка прозрачная, после прокрутки — компактнее, на тёмном «стекле» (rd.js ставит is-scrolled).
 .rd-header {
+  --rd-bar: #{fm(80px, 100px)};   // высота вверху страницы
+  --rd-bar-s: #{fm(64px, 76px)};  // после прокрутки
+  --rd-h: var(--rd-bar);
   position: relative;
-  z-index: 100;
+  z-index: 900;
+  min-height: var(--rd-bar);
   color: #fff;
 
+  @include desktop {
+    --rd-bar: #{fd(100px, 120px)};
+    --rd-bar-s: #{fd(72px, 84px)};
+  }
+
+  &.is-scrolled {
+    --rd-h: var(--rd-bar-s);
+  }
+
+  // открытое мобильное меню — шапка снова полной высоты (ровно над верхней строкой меню)
+  &.is-menu-open {
+    --rd-h: var(--rd-bar);
+  }
+
   &__bar {
-    position: relative;
+    position: fixed;
     z-index: 5; // на мобайле — над открытым меню (бургер превращается в крестик)
+    top: 0;
+    left: 0;
+    right: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: fm(80px, 100px);
+    height: var(--rd-h);
     pointer-events: none;
+    transition: height 0.45s $ease;
 
     > * {
       pointer-events: auto;
     }
 
+    // «стекло» на всю ширину окна (сама полоса — шириной контейнера)
+    &::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 100vw;
+      transform: translateX(-50%);
+      background: rgba($black, 0.78);
+      border-bottom: 1px solid $line-dark;
+      -webkit-backdrop-filter: blur(16px) saturate(140%);
+      backdrop-filter: blur(16px) saturate(140%);
+      opacity: 0;
+      transition: opacity 0.45s $ease;
+      pointer-events: none;
+    }
+
+    .rd-header.is-scrolled & {
+      pointer-events: auto;
+
+      &::before {
+        opacity: 1;
+      }
+    }
+
     @include desktop {
       z-index: 3; // над мега-меню
-      height: fd(100px, 120px);
       padding-top: 2px;
     }
+  }
+
+  // мерка высоты компактной шапки (rd-wow.js: отступ закреплённой ленты портфолио)
+  &__probe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: var(--rd-bar-s);
+    visibility: hidden;
+    pointer-events: none;
   }
 
   &__logo {
@@ -152,13 +213,13 @@
 
 // ===== Мега-меню «Послуги» (десктоп) =====
 .rd-mega {
-  position: absolute;
+  position: fixed; // вместе с закреплённой шапкой
   z-index: 2;
   top: 0;
   left: 0;
   width: 100%;
-  height: fd(547px, 636px);
-  padding-top: fd(165px, 185px);
+  height: calc(var(--rd-h) + #{fd(447px, 516px)});
+  padding-top: calc(var(--rd-h) + #{fw(65px)});
   background: $black-2;
   opacity: 0;
   visibility: hidden;
@@ -171,7 +232,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: fd(100px, 120px);
+    top: var(--rd-h);
     height: 1px;
     background: $line-dark;
   }

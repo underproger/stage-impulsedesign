@@ -39,6 +39,7 @@
         {set $tag = $link ? 'a' : 'div'}
         <{$tag} class="rd-price{if $i == $last} rd-price--accent{/if}"{if $link} href="{$link}"{/if}>
           <span class="rd-price__fill" aria-hidden="true"><span></span></span>
+          {if $i == $last}<span class="rd-price__aglow" aria-hidden="true"></span>{/if}
           <span class="rd-price__num">{($i + 1) < 10 ? '0' ~ ($i + 1) : ($i + 1)}</span>
           <span class="rd-price__title">{$item.title | strip_tags : '<br>'}</span>
           <span class="rd-price__cost">

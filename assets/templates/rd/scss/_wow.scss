@@ -142,15 +142,35 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   }
 
   // ----- прожектор: золотая сетка под курсором -----
+  // Линза 520px с неподвижной маской едет за курсором (transform), сетка внутри — обратно (makeSpot в rd-wow.js)
   .rd-wow-spot {
     position: absolute;
     z-index: 0;
     inset: 0;
+    overflow: hidden;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.8s $ease;
-    -webkit-mask: radial-gradient(circle 260px at var(--mx, -999px) var(--my, -999px), #000 0%, rgba(0, 0, 0, 0.35) 45%, transparent 75%);
-    mask: radial-gradient(circle 260px at var(--mx, -999px) var(--my, -999px), #000 0%, rgba(0, 0, 0, 0.35) 45%, transparent 75%);
+  }
+
+  .rd-wow-spot__lens {
+    position: absolute;
+    left: -260px;
+    top: -260px;
+    width: 520px;
+    height: 520px;
+    overflow: hidden;
+    -webkit-mask: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, 0.35) 45%, transparent 75%);
+    mask: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, 0.35) 45%, transparent 75%);
+    transform: translate3d(-999px, -999px, 0);
+    will-change: transform;
+  }
+
+  .rd-wow-spot__in {
+    position: absolute;
+    left: 260px;
+    top: 260px;
+    will-change: transform;
   }
 
   .rd-wow-spot__grid {
@@ -177,7 +197,8 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     margin: -450px 0 0 -450px;
     border-radius: 50%;
     background: radial-gradient(circle, rgba($gold, 0.16) 0%, rgba($gold, 0.05) 35%, transparent 65%);
-    transform: translate3d(var(--lx, -2000px), var(--ly, -2000px), 0);
+    transform: translate3d(-2000px, -2000px, 0); // дальше — rd-wow.js
+    will-change: transform;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.8s $ease;
@@ -535,13 +556,13 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
       }
     }
 
-    // свечение за курсором внутри тёмной плашки
+    // свечение за курсором внутри тёмной плашки: обёртка обрезает, круг (.rd-light) едет за курсором
     &__glow {
       position: absolute;
       inset: 0;
       z-index: 0;
+      overflow: hidden;
       border-radius: inherit;
-      background: radial-gradient(circle 320px at var(--gx, 50%) var(--gy, 50%), rgba($gold, 0.26), rgba($gold, 0.06) 45%, transparent 70%);
       opacity: 0;
       transition: opacity 0.6s $ease;
       pointer-events: none;
@@ -565,6 +586,55 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
           translate: 14px 0;
         }
       }
+    }
+  }
+}
+
+// ================= СВЕТ ЗА КУРСОРОМ (.rd-light) =================
+// Круг с градиентом, центр — в точке transform (addLight в rd-wow.js); размер/яркость — модификатором.
+// Тот же вид, что radial-gradient(circle R at X Y, a, b 45%, transparent 70%), но без перерисовки.
+.rd-wow-js {
+  .rd-light {
+    position: absolute;
+    left: calc(var(--rd-lr) * -1);
+    top: calc(var(--rd-lr) * -1);
+    width: calc(var(--rd-lr) * 2);
+    height: calc(var(--rd-lr) * 2);
+    transform: translate3d(-9999px, -9999px, 0);
+    opacity: 0;
+    transition: opacity 0.6s $ease;
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  .rd-service__glow .rd-light {
+    opacity: 1; // видимость — у обёртки
+  }
+
+  .rd-light--srv {
+    --rd-lr: 320px;
+    background: radial-gradient(closest-side, rgba($gold, 0.26), rgba($gold, 0.06) 45%, transparent 70%);
+  }
+
+  .rd-light--mind {
+    --rd-lr: 360px;
+    background: radial-gradient(closest-side, rgba($gold, 0.2), rgba($gold, 0.05) 45%, transparent 70%);
+  }
+
+  .rd-light--gar {
+    --rd-lr: 340px;
+    z-index: 0;
+    background: radial-gradient(closest-side, rgba($gold, 0.16), rgba($gold, 0.04) 45%, transparent 70%);
+  }
+
+  .rd-light--price {
+    --rd-lr: 300px;
+    background: radial-gradient(closest-side, rgba($gold, 0.26), rgba($gold, 0.06) 45%, transparent 70%);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rd-price[href]:hover .rd-price__glow {
+      opacity: 1;
     }
   }
 }
@@ -772,16 +842,9 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     opacity: 0;
     transition: clip-path 1.2s $ease-expo, opacity 0.8s $ease;
 
-    // мягкий золотой свет за курсором
-    &::before {
-      content: "";
-      position: absolute;
-      inset: 0;
+    // мягкий золотой свет за курсором (.rd-light, двигает rd-wow.js)
+    .rd-mind__light {
       z-index: -1;
-      background: radial-gradient(circle 360px at var(--gx, 50%) var(--gy, 50%), rgba($gold, 0.2), rgba($gold, 0.05) 45%, transparent 70%);
-      opacity: 0;
-      transition: opacity 0.6s $ease;
-      pointer-events: none;
     }
 
     &.is-in {
@@ -789,7 +852,7 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
       opacity: 1;
     }
 
-    &.is-lit::before {
+    &.is-lit .rd-mind__light {
       opacity: 1;
     }
   }
@@ -957,19 +1020,8 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     translate: 0 60px;
     transition: opacity 1s $ease-expo, translate 1.2s $ease-expo;
 
-    // золотой свет за курсором
-    &::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      background: radial-gradient(circle 340px at var(--gx, 50%) var(--gy, 50%), rgba($gold, 0.16), rgba($gold, 0.04) 45%, transparent 70%);
-      opacity: 0;
-      transition: opacity 0.6s $ease;
-      pointer-events: none;
-    }
-
-    &.is-lit::before {
+    // золотой свет за курсором (.rd-light, двигает rd-wow.js)
+    &.is-lit .rd-gar__light {
       opacity: 1;
     }
 
@@ -1157,16 +1209,9 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
       scale: 1;
     }
 
-    // свет за курсором — поверх тёмной заливки
-    &__glow {
-      position: absolute;
-      inset: 0;
+    // свет за курсором — поверх тёмной заливки (.rd-light, карточка обрезает)
+    .rd-price__glow {
       z-index: 0;
-      border-radius: inherit;
-      background: radial-gradient(circle 300px at var(--gx, 50%) var(--gy, 50%), rgba($gold, 0.26), rgba($gold, 0.06) 45%, transparent 70%);
-      opacity: 0;
-      transition: opacity 0.6s $ease;
-      pointer-events: none;
     }
 
     &__title {

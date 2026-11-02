@@ -62,6 +62,7 @@
 ]}
 
 <header class="rd-header" data-rd-header>
+  <span class="rd-header__probe" aria-hidden="true"></span>
 
   {* ===== Мега-меню (десктоп) ===== *}
   <div class="rd-mega" id="rd-mega" data-rd-mega>

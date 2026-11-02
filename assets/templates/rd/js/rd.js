@@ -149,6 +149,27 @@
   }
 
   var header = document.querySelector('[data-rd-header]');
+
+  /* ---------- Закреплённая шапка: после прокрутки — компактная, на тёмном «стекле» ---------- */
+  if (header) {
+    var scrolled = null;
+    var scrollTick = false;
+    var onScroll = function () {
+      scrollTick = false;
+      var s = window.scrollY > 8;
+      if (s !== scrolled) {
+        scrolled = s;
+        header.classList.toggle('is-scrolled', s);
+      }
+    };
+    window.addEventListener('scroll', function () {
+      if (!scrollTick) {
+        scrollTick = true;
+        requestAnimationFrame(onScroll);
+      }
+    }, { passive: true });
+    onScroll();
+  }
   if (!header) return;
 
   var desktop = window.matchMedia('(min-width: 1200px)');
