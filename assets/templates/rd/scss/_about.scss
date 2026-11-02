@@ -76,6 +76,28 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     width: 100%;
     height: 100%;
     transform: rotate(-60deg);
+    transition: opacity 0.6s ease, visibility 0s linear 0.6s;
+
+    .is-webgl & {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  // 3D-спираль (rd-blob.js): канвас больше блока, размер задаёт скрипт; картинка — заглушка до первого кадра
+  &__canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    max-width: none; // старый CSS сайта ограничивает canvas шириной родителя — спираль сплющивалась
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+
+    .is-webgl & {
+      opacity: 1;
+    }
   }
 
   &__intro {
@@ -537,6 +559,8 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     margin: 0;
     line-height: 1;
     white-space: nowrap;
+    // у Roboto Flex цифры по умолчанию моноширинные: «1» шириной с «0» — в макете цифры пропорциональные
+    font-variant-numeric: proportional-nums;
   }
 
   // цифры в макете сидят ниже своей строки — сдвиг только визуальный (строка и подпись на месте)
@@ -547,19 +571,21 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
 
-  // «1» с широким полем слева — оптически по линии подписи (как в макете)
+  // «1» с полем слева — левый край по линии подписи (как в макете)
   &__val--one {
-    margin-left: -0.122em;
+    margin-left: -0.05em;
   }
 
   &__val {
     font-size: 63px;
     font-weight: 700;
     line-height: 1;
+    letter-spacing: 0.04em; // в макете цифры чуть разрежены (на мобайле — заметнее)
     @include gold-text;
 
     @include desktop {
       font-size: fw(90px);
+      letter-spacing: 0.02em;
     }
   }
 
@@ -592,13 +618,14 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     }
   }
 
-  // «+» — крупно и тонко, вплотную к числу
+  // «+» — крупно и тонко, с небольшим зазором от числа (как в макете)
   &__suf--sign {
-    margin-left: -0.045em;
+    margin-left: 0;
     font-size: 63px;
     font-weight: 200;
 
     @include desktop {
+      margin-left: -0.03em;
       font-size: fw(90px);
     }
   }

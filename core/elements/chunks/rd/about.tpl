@@ -4,7 +4,8 @@
     display_bl_about   — показывать блок
     about_title        — заголовок (золотое слово оберните в <span>)
     about_text         — подзаголовок (золотой акцент — <b>)
-    about_img          — 3D-объект слева (PNG/WebP с прозрачным фоном, квадрат; пусто — золотая спираль)
+    about_img          — объект слева (PNG/WebP с прозрачным фоном, квадрат; пусто — золотая 3D-спираль на WebGL,
+                         картинка spiral.webp — её заглушка до загрузки и без WebGL)
     about_stats        — MIGX «rd_about_stats»: value (число), prefix («топ»), suffix («+», «років»), text
     about_people       — MIGX «rd_about_people»: image (фото, квадрат), name (подпись для alt)
     about_people_text  — подпись рядом с фото (перенос строки — <br>)
@@ -42,7 +43,7 @@
 <section class="rd-about" id="about">
   <div class="rd-container rd-about__wrap">
     <div class="rd-about__head">
-      <div class="rd-about__obj" aria-hidden="true">
+      <div class="rd-about__obj" aria-hidden="true"{if !$r['about_img']} data-rd-3d data-src="/assets/templates/rd/js/rd-blob.js?v={$.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/js/rd-blob.js')}"{/if}>
         <span class="rd-about__float"><img class="rd-about__spiral" src="{$obj}" width="600" height="600" alt="" draggable="false"></span>
       </div>
       <div class="rd-about__intro">

@@ -1147,6 +1147,86 @@
     };
     Array.prototype.forEach.call(about.querySelectorAll('.rd-stat__val'), odometer);
 
+    // «150+» (число со знаком «+») после прокрутки медленно считает дальше, пока плашка на экране:
+    // +1 раз в 2.6–4.4 с, меняющиеся разряды докручиваются, ширина колонки плавно подстраивается под цифру
+    var abCount = [];
+    Array.prototype.forEach.call(about.querySelectorAll('.rd-stat'), function (st) {
+      var val = st.querySelector('.rd-stat__val.is-odo');
+      var sign = st.querySelector('.rd-stat__suf--sign');
+      if (!val || !sign || sign.textContent.trim() !== '+') return;
+      var text = val.getAttribute('aria-label') || '';
+      if (!/^\d+$/.test(text)) return;
+      abCount.push({ el: val, n: +text, cols: null });
+    });
+    var COUNT_EASE = 'cubic-bezier(.65,0,.35,1)';
+    var odoCol = function (box) {
+      return { box: box, ph: box.querySelector('.rd-odo__ph'), strip: box.querySelector('.rd-odo__strip') };
+    };
+    var odoAddCol = function (c) { // разрядов стало больше (999 → 1000): новая колонка слева
+      var box = document.createElement('span');
+      box.className = 'rd-odo';
+      box.setAttribute('aria-hidden', 'true');
+      box.innerHTML = '<span class="rd-odo__ph">0</span><span class="rd-odo__strip"><span>0</span></span>';
+      c.el.insertBefore(box, c.el.firstChild);
+      var col = odoCol(box);
+      col.strip.style.transition = 'none';
+      col.strip.style.transform = 'translateY(0)';
+      col.d = 0;
+      c.cols.unshift(col);
+    };
+    var odoRoll = function (col, to) {
+      var from = col.d;
+      if (from === to) return;
+      col.d = to;
+      var w0 = col.box.getBoundingClientRect().width;
+      col.ph.textContent = to;
+      var w1 = col.box.getBoundingClientRect().width;
+      col.strip.style.transition = 'none';
+      col.strip.innerHTML = '<span>' + from + '</span><span>' + to + '</span>';
+      col.strip.style.transform = 'translateY(0)';
+      col.box.style.transition = 'none';
+      col.box.style.width = w0 + 'px';
+      void col.strip.offsetWidth;
+      col.strip.style.transition = 'transform .9s ' + COUNT_EASE;
+      col.strip.style.transform = 'translateY(-1em)';
+      col.box.style.transition = 'width .9s ' + COUNT_EASE;
+      col.box.style.width = w1 + 'px';
+      clearTimeout(col.t);
+      col.t = setTimeout(function () {
+        col.box.style.transition = '';
+        col.box.style.width = '';
+      }, 950);
+    };
+    var abPlateOn = false;
+    var countStep = function () {
+      if (abPlateOn && !document.hidden) {
+        abCount.forEach(function (c) {
+          if (!c.cols) { // после «прокрутки» забираем колонки: в ленте остаётся одна цифра, без CSS-перехода
+            c.cols = Array.prototype.map.call(c.el.querySelectorAll('.rd-odo'), function (box, k) {
+              var col = odoCol(box);
+              col.d = +String(c.n).charAt(k);
+              col.strip.style.transition = 'none';
+              col.strip.innerHTML = '<span>' + col.d + '</span>';
+              col.strip.style.transform = 'translateY(0)';
+              return col;
+            });
+          }
+          c.n += 1;
+          var s = String(c.n);
+          while (c.cols.length < s.length) odoAddCol(c);
+          c.cols.forEach(function (col, k) { odoRoll(col, +s.charAt(k)); });
+          c.el.setAttribute('aria-label', s);
+          c.el.classList.toggle('rd-stat__val--one', s.charAt(0) === '1');
+        });
+      }
+      setTimeout(countStep, 2600 + Math.random() * 1800);
+    };
+    var countStart = function () {
+      if (!abCount.length || countStart.done) return;
+      countStart.done = true;
+      setTimeout(countStep, 3400); // после «прокрутки» одометра
+    };
+
     // «20%» досчитывается от нуля
     var abPct = about.querySelector('.rd-about__pct');
     var countPct = function () {
@@ -1189,7 +1269,7 @@
 
     var abQuote = about.querySelector('.rd-about__quote p');
     var abWords = abQuote ? splitFlow(abQuote) : [];
-    var abObj = about.querySelector('.rd-about__spiral');
+    var abObj = about.querySelector('.rd-about__float'); // и картинка, и 3D-канвас внутри
     var abPlate = about.querySelector('.rd-about__plate');
     var abCard = about.querySelector('.rd-about__card');
     var ab = { q: -1, s: '', mx: 0, my: 0, tx: 0, ty: 0, os: '' };
@@ -1237,6 +1317,7 @@
 
     var abReveal = function (el) {
       el.classList.add('is-in');
+      if (el === abPlate) countStart();
       if (el === abCard) {
         countPct();
         if (abMotion && abMotion.beginElement) setTimeout(function () { try { abMotion.beginElement(); } catch (e) { } }, 1900);
@@ -1251,8 +1332,15 @@
         });
       }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
       abTargets.forEach(function (el) { abIo.observe(el); });
+      // счёт «150+» идёт, только пока плашка видна
+      if (abPlate && abCount.length) {
+        new IntersectionObserver(function (entries) {
+          abPlateOn = entries[0].isIntersecting;
+        }).observe(abPlate);
+      }
     } else {
       abTargets.forEach(abReveal);
+      abPlateOn = true;
     }
   }
 })();

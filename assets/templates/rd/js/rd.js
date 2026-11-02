@@ -23,8 +23,8 @@
     });
   }
 
-  /* ---------- Золотой объект: WebGL-модуль грузится после загрузки страницы ---------- */
-  var glob = document.querySelector('[data-rd-glob]');
+  /* ---------- 3D-объекты (первый экран, спираль section 6): один WebGL-модуль, грузится после загрузки страницы ---------- */
+  var glob = document.querySelector('[data-rd-glob], [data-rd-3d]');
   if (glob && glob.dataset.src && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     var loadBlob = function () {
       var s = document.createElement('script');
