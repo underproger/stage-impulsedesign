@@ -82,13 +82,11 @@
 .rd-service {
   --rd-pad: #{fm(24px, 32px)};
   position: relative;
-  padding: 33px var(--rd-pad);
-  border-radius: 24px;
-  background-color: transparent;
-  transition: background-color 0.6s $ease;
+  padding: fw(33px) var(--rd-pad);
+  border-radius: fw(24px);
 
   @include desktop {
-    --rd-pad: 32px;
+    --rd-pad: #{fw(32px)};
   }
 
   // разделители — внутри паддинга строки, как в макете
@@ -119,7 +117,7 @@
     @include tablet-up {
       flex-direction: row;
       align-items: flex-start;
-      gap: 96px;
+      gap: fw(96px);
     }
   }
 
@@ -127,14 +125,14 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 16px;
+    gap: fw(16px);
     flex: 1 1 auto;
     min-width: 0;
 
     @include desktop {
       flex-direction: row;
       align-items: center;
-      gap: 224px;
+      gap: fw(224px);
       align-self: center;
     }
   }
@@ -149,13 +147,13 @@
       flex: 1 1 0;
       flex-direction: row;
       align-items: flex-start;
-      gap: 16px;
+      gap: fw(16px);
       min-width: 0;
     }
   }
 
   &__num {
-    font-size: 14px;
+    font-size: fw(14px);
     line-height: 1.5;
     @include gold-text;
 
@@ -174,7 +172,7 @@
     transition: color $dur $ease;
 
     @include desktop {
-      font-size: 30px;
+      font-size: fw(30px);
     }
 
     // вся строка кликабельна
@@ -220,27 +218,73 @@
     background: $gold-grad;
 
     @include desktop {
-      width: 68px;
-      height: 68px;
+      width: fw(68px);
+      height: fw(68px);
     }
 
-    img {
+    .rd-arrow {
       width: 30px;
       height: 30px;
-      transition: transform $dur $ease;
 
       @include desktop {
-        width: 36px;
-        height: 36px;
+        width: fw(36px);
+        height: fw(36px);
       }
     }
+  }
+
+  // Тёмная заливка: въезжает слева, на уходе курсора уезжает вправо.
+  // Внешний слой скругляет углы, внутренний масштабируется (углы не искажаются).
+  &__fill {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+
+    span {
+      position: absolute;
+      inset: 0;
+      background: $black-2;
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 0.7s $ease-fly;
+    }
+  }
+
+  &__row {
+    position: relative;
+    z-index: 1;
+  }
+
+  // текст темнеет обратно по мере того, как заливка уходит вправо
+  &__title {
+    transition-delay: 0s;
+  }
+
+  &__desc {
+    transition-delay: 0.22s;
   }
 
   // Наведение (десктоп): тёмная плашка, белый текст, золотые акценты, стрелка крупнее
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       z-index: 1;
-      background-color: $black-2;
+
+      .rd-service__fill span {
+        transform: scaleX(1);
+        transform-origin: left center;
+      }
+
+      // белеет, когда до текста доходит заливка
+      .rd-service__title {
+        transition-delay: 0.08s;
+      }
+
+      .rd-service__desc {
+        transition-delay: 0.25s;
+      }
 
       &::before,
       &::after,
@@ -261,9 +305,7 @@
         }
       }
 
-      .rd-service__arrow img {
-        transform: scale(1.5); // 36 → 54 px
-      }
+      @include arrow-fly;
     }
   }
 }

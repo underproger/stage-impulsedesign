@@ -20,6 +20,7 @@ $line-dark: rgba(255, 255, 255, 0.04);
 $ease: cubic-bezier(0.25, 0.1, 0.25, 1);
 $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 $dur: 0.5s;
+$ease-fly: cubic-bezier(0.65, 0, 0.35, 1); // стрелки и заливки: мягкий разгон и торможение
 
 // Плавное значение между двумя макетами: $min при $vmin, $max при $vmax, дальше — упор.
 @function fl($min, $max, $vmin: 1600px, $vmax: 1920px) {
@@ -33,9 +34,20 @@ $dur: 0.5s;
   @return clamp(#{$lo}, #{$base} + #{$slope * 100vw}, #{$hi});
 }
 
-// Десктоп: 1600 → 1920
+// Десктоп: 1600 → 1920, а шире 1920 — пропорционально ширине экрана (широкоформатные мониторы:
+// на 2560 всё в 1.33 раза крупнее, как в макете 1920, растянутом на экран)
 @function fd($v1600, $v1920) {
-  @return fl($v1600, $v1920, 1600px, 1920px);
+  $base: fl($v1600, $v1920, 1600px, 1920px);
+  @if $v1920 == 0 or $v1920 == 0px {
+    @return $base;
+  }
+  $grow: math.div($v1920, 1920px);
+  @return calc(#{$base} + max(0px, 100vw - 1920px) * #{$grow});
+}
+
+// Десктопное значение, одинаковое в 1600 и 1920 (но растёт на широких экранах)
+@function fw($v) {
+  @return fd($v, $v);
 }
 
 // Мобайл: 360 → 768
@@ -88,6 +100,19 @@ $dur: 0.5s;
   background-image:
     linear-gradient(to right, $line-dark 1px, transparent 1px),
     linear-gradient(to bottom, $line-dark 1px, transparent 1px);
-  background-size: 100px 100px;
+  background-size: var(--rd-cell, 100px) var(--rd-cell, 100px);
   background-position: 0 0;
+}
+
+// Стрелка «пролетает»: текущая уходит в правый верхний угол, новая выезжает из левого нижнего.
+// Вызывать внутри состояния наведения родителя.
+@mixin arrow-fly {
+  .rd-arrow__a {
+    transform: translate(115%, -115%);
+  }
+
+  .rd-arrow__b {
+    transform: translate(0, 0);
+    transition-delay: 0.08s;
+  }
 }

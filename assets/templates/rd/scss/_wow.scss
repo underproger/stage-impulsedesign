@@ -1,5 +1,5 @@
-// Редизайн: «вау»-слой (эксперимент). Всё под html.rd-wow-js — без него стили не действуют.
-// Сборка: npx sass assets/templates/rd/scss/wow.scss assets/templates/rd/css/rd-wow.css --style=compressed --no-source-map
+// Анимации и интерактив (слой «вау»). Всё под html.rd-wow-js: класс ставит инлайн-скрипт в head
+// (если не включено «уменьшение движения»), без него вёрстка статична и полностью рабочая.
 @use "base" as *;
 
 $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -156,13 +156,13 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   .rd-wow-spot__grid {
     position: absolute;
     top: 0;
-    left: -100px;
+    left: calc(-1 * var(--rd-cell));
     right: 0;
-    bottom: -100px;
+    bottom: calc(-1 * var(--rd-cell));
     background-image:
       linear-gradient(to right, rgba($gold, 0.55) 1px, transparent 1px),
       linear-gradient(to bottom, rgba($gold, 0.55) 1px, transparent 1px);
-    background-size: 100px 100px;
+    background-size: var(--rd-cell) var(--rd-cell);
     animation: rd-grid-move 3s linear infinite; // синхронно с основной сеткой
   }
 
@@ -207,8 +207,8 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
       transition: transform 0.7s $ease-expo;
     }
 
-    img {
-      transition: transform 0.5s $ease-expo, filter 0.5s $ease;
+    .rd-arrow img {
+      transition: transform 0.6s $ease-fly, filter 0.5s $ease;
     }
 
     @include hover {
@@ -219,9 +219,8 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
         transform: translateX(0);
       }
 
-      img {
+      .rd-arrow img {
         filter: brightness(0.1);
-        transform: translate(3px, -3px) rotate(45deg);
       }
     }
   }
@@ -513,8 +512,8 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   .rd-service {
     opacity: 0;
     translate: 0 50px;
-    transition: opacity 1s $ease-expo, translate 1.2s $ease-expo, background-color 0.6s $ease;
-    transition-delay: calc(var(--i) * 120ms), calc(var(--i) * 120ms), 0s;
+    transition: opacity 1s $ease-expo, translate 1.2s $ease-expo;
+    transition-delay: calc(var(--i) * 120ms);
 
     &::before,
     &:last-child::after {
@@ -532,11 +531,6 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
       &:last-child::after {
         transform: scaleX(1);
       }
-    }
-
-    &__row {
-      position: relative;
-      z-index: 1;
     }
 
     // свечение за курсором внутри тёмной плашки
@@ -557,10 +551,6 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
 
     &__arrow {
       will-change: transform;
-
-      img {
-        transition: transform 0.7s $ease-expo;
-      }
     }
 
     @media (hover: hover) and (pointer: fine) {
@@ -571,10 +561,6 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
 
         .rd-service__title {
           translate: 14px 0;
-        }
-
-        .rd-service__arrow img {
-          transform: scale(1.5) rotate(45deg);
         }
       }
     }
@@ -596,11 +582,5 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   from {
     opacity: 0;
     transform: scale(0.6);
-  }
-}
-
-@keyframes rd-grid-move {
-  to {
-    transform: translate3d(100px, -100px, 0);
   }
 }

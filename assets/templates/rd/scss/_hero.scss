@@ -2,6 +2,7 @@
 
 // ===== Первый экран =====
 .rd-hero {
+  --rd-cell: #{fw(100px)}; // ячейка сетки фона
   position: relative;
   overflow: hidden;
   background-color: $black;
@@ -13,9 +14,9 @@
     position: absolute;
     z-index: 0;
     top: 0;
-    left: -100px;
+    left: calc(-1 * var(--rd-cell));
     right: 0;
-    bottom: -100px;
+    bottom: calc(-1 * var(--rd-cell));
     @include grid-bg;
     background-color: transparent;
     pointer-events: none;
@@ -57,10 +58,10 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 48px;
+    gap: fw(48px);
 
     @include desktop {
-      width: 720px;
+      width: fw(720px);
     }
   }
 
@@ -92,7 +93,7 @@
 
     @include desktop {
       --rd-title-max: #{fd(72px, 80px)};
-      --rd-title-box: 720px;
+      --rd-title-box: #{fw(720px)};
       padding-top: fd(7px, 0px);
     }
   }
@@ -151,7 +152,7 @@
   }
 
   &__text {
-    max-width: 550px;
+    max-width: fw(550px);
     font-size: fd(18px, 20px);
     font-weight: 300;
     line-height: 1.6;
@@ -178,7 +179,7 @@
       align-items: center;
       justify-content: space-between;
       margin-top: auto;
-      padding-top: 40px;
+      padding-top: fw(40px);
     }
   }
 
@@ -254,7 +255,7 @@
 
 @keyframes rd-grid-move {
   to {
-    transform: translate3d(100px, -100px, 0);
+    transform: translate3d(var(--rd-cell, 100px), calc(-1 * var(--rd-cell, 100px)), 0);
   }
 }
 
@@ -339,13 +340,12 @@
   }
 
   &__arrow {
-    position: absolute;
+    position: absolute !important;
     top: 50%;
     left: 50%;
-    width: 36px;
-    height: 36px;
-    margin: -18px 0 0 -18px;
-    transition: transform $dur $ease;
+    width: fw(36px);
+    height: fw(36px);
+    margin: calc(-1 * #{fw(18px)}) 0 0 calc(-1 * #{fw(18px)});
   }
 
   @include hover {
@@ -354,9 +354,7 @@
       opacity: 1;
     }
 
-    .rd-works__arrow {
-      transform: scale(1.47); // 36 → 53 px, как во втором состоянии макета
-    }
+    @include arrow-fly;
   }
 
   &:focus-visible .rd-works__fill {

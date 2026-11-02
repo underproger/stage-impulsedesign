@@ -1,6 +1,6 @@
 /*
- * Редизайн: «вау»-слой (эксперимент, ветка wow).
- * Всё, что здесь есть, — поверх основной вёрстки: без этого файла и rd-wow.css сайт работает как раньше.
+ * Редизайн: анимации и интерактив (слой «вау»).
+ * Работает поверх основной вёрстки: без этого файла сайт полностью рабочий, просто статичный.
  * Включается классом html.rd-wow-js (ставит инлайн-скрипт в head, если не включено «уменьшение движения»).
  */
 (function () {
@@ -347,7 +347,7 @@
       var g = document.createElement('span');
       g.className = 'rd-service__glow';
       g.setAttribute('aria-hidden', 'true');
-      row.insertBefore(g, row.firstChild);
+      row.insertBefore(g, row.querySelector('.rd-service__row'));
       if (fine) {
         row.addEventListener('pointermove', function (e) {
           var r = row.getBoundingClientRect();

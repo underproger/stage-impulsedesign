@@ -37,7 +37,7 @@
     }
 
     @include desktop {
-      width: 167px;
+      width: fw(167px);
     }
 
     .rd-header.is-menu-open & {
@@ -70,13 +70,13 @@
   @include desktop {
     display: flex;
     align-items: center;
-    gap: 40px;
+    gap: fw(40px);
   }
 
   &__list {
     display: flex;
     align-items: center;
-    gap: 40px;
+    gap: fw(40px);
   }
 
   &__link {
@@ -125,7 +125,7 @@
 .rd-lang {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: fw(8px);
   font-size: fd(15px, 16px);
   line-height: normal;
 
@@ -145,7 +145,7 @@
 
   &__sep {
     width: 1px;
-    height: 15px;
+    height: fw(15px);
     background: $gold-grad;
   }
 }
@@ -202,12 +202,12 @@
   &__head {
     display: flex;
     align-items: flex-start;
-    gap: 16px;
+    gap: fw(16px);
     font-weight: 700;
   }
 
   &__num {
-    font-size: 14px;
+    font-size: fw(14px);
     line-height: 1.7;
     @include gold-text;
   }
@@ -227,7 +227,7 @@
     display: flex;
     flex-direction: column;
     gap: fd(8px, 16px);
-    padding-left: 34px;
+    padding-left: fw(34px);
   }
 
   &__link {

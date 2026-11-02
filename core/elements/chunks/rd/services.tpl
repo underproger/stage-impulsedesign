@@ -25,6 +25,7 @@
           {set $link = $item.link}
           {if $link && ($link | preg_match : '/^\d+$/')}{set $link = $link | url}{/if}
           <article class="rd-service">
+            <span class="rd-service__fill" aria-hidden="true"><span></span></span>
             <div class="rd-service__row">
               <div class="rd-service__text">
                 <div class="rd-service__head">
@@ -39,7 +40,7 @@
               </div>
               {if $link}
                 <span class="rd-service__arrow" aria-hidden="true">
-                  <img src="{$img}arrow-narrow-up-right-srv.svg" width="36" height="36" alt="">
+                  <span class="rd-arrow"><img class="rd-arrow__a" src="{$img}arrow-narrow-up-right-srv.svg" width="36" height="36" alt=""><img class="rd-arrow__b" src="{$img}arrow-narrow-up-right-srv.svg" width="36" height="36" alt=""></span>
                 </span>
               {/if}
             </div>

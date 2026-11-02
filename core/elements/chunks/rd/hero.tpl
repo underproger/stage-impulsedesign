@@ -63,7 +63,7 @@
       {if $btnUrl}
         <a class="rd-btn rd-hero__btn" href="{$btnUrl}">
           {$btnText}
-          <img src="{$img}arrow-up-right.svg" width="24" height="24" alt="" loading="eager">
+          <span class="rd-arrow" aria-hidden="true"><img class="rd-arrow__a" src="{$img}arrow-up-right.svg" width="24" height="24" alt="" loading="eager"><img class="rd-arrow__b" src="{$img}arrow-up-right.svg" width="24" height="24" alt="" loading="eager"></span>
         </a>
       {/if}
     </div>
@@ -89,7 +89,7 @@
             <circle cx="145" cy="80" r="2"/>
             <circle cx="15" cy="80" r="2"/>
           </svg>
-          <img class="rd-works__arrow" src="{$img}arrow-narrow-up-right.svg" width="36" height="36" alt="" loading="eager">
+          <span class="rd-works__arrow rd-arrow" aria-hidden="true"><img class="rd-arrow__a" src="{$img}arrow-narrow-up-right.svg" width="36" height="36" alt="" loading="eager"><img class="rd-arrow__b" src="{$img}arrow-narrow-up-right.svg" width="36" height="36" alt="" loading="eager"></span>
         </a>
       {/if}
     </div>
