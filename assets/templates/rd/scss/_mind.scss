@@ -1,0 +1,319 @@
+@use "base" as *;
+
+// ===== «Сайти для бізнесу» (Mind Control 2.0) — section 10 макета =====
+// Десктоп: слева заголовок, справа автор и цитата; ниже — серая плашка с двумя карточками,
+// вторая карточка начинается по линии правой колонки. Мобайл/планшет — всё в одну колонку.
+
+$mind-panel: #f5f3f0;
+
+.rd-mind {
+  --rd-mind-right: 0px; // ширина правой колонки (десктоп)
+  position: relative;
+  padding-block: fm(80px, 110px);
+  background: #fff;
+  color: $black;
+
+  @include desktop {
+    --rd-mind-right: #{fd(580px, 720px)};
+    padding-block: fd(130px, 180px);
+  }
+
+  &__wrap {
+    display: flex;
+    flex-direction: column;
+    gap: fm(80px, 96px);
+
+    @include desktop {
+      gap: fd(80px, 96px);
+    }
+  }
+
+  &__top {
+    display: flex;
+    flex-direction: column;
+    gap: fm(48px, 64px);
+
+    @include desktop {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--rd-mind-right);
+      align-items: start;
+      gap: 0;
+    }
+  }
+
+  &__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    @include desktop {
+      padding-top: fw(17px); // верх заголовка — как в макете, ниже верха фото
+      padding-right: fw(40px);
+    }
+  }
+
+  // h2 глобально стилизован старым CSS — перебиваем явно
+  &__title {
+    font-family: inherit;
+    font-size: fm(36px, 48px);
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: $black;
+
+    @include desktop {
+      font-size: fd(60px, 72px);
+    }
+
+    span {
+      @include gold-text;
+    }
+  }
+
+  &__sub {
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.6;
+
+    @include desktop {
+      font-size: fd(18px, 20px);
+    }
+
+    b,
+    strong,
+    span {
+      font-weight: 700;
+    }
+  }
+
+  // ----- автор и цитата -----
+  &__say {
+    margin: 0;
+  }
+
+  &__person {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+
+    @include tablet-up {
+      flex-direction: row;
+      align-items: center;
+      gap: fw(32px);
+    }
+  }
+
+  &__photo {
+    position: relative;
+    display: block;
+    flex: none;
+    width: 100%;
+    height: 144px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: $black-2;
+    isolation: isolate;
+
+    @include tablet-up {
+      width: 248px;
+    }
+
+    @include desktop {
+      width: fd(248px, 310px);
+      height: fd(144px, 180px);
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      object-fit: cover;
+      object-position: 42% 0%;
+    }
+  }
+
+  &__who {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: fw(16px);
+    font-weight: 700;
+    line-height: 1.5;
+    color: $black;
+  }
+
+  &__post {
+    font-size: fw(14px);
+    font-weight: 300;
+    line-height: 1.5;
+    color: $gray;
+  }
+
+  &__quote {
+    margin: fm(44px, 56px) 0 0;
+    padding: 0;
+    border: 0;
+    font-size: fm(20px, 24px);
+    font-weight: 700;
+    line-height: 1.5;
+    color: $black;
+    text-indent: fm(57px, 70px);
+
+    @include desktop {
+      margin-top: fd(56px, 65px);
+      font-size: fd(24px, 30px);
+      text-indent: fd(70px, 91px);
+    }
+
+    p {
+      margin: 0;
+      font: inherit;
+      color: inherit;
+    }
+
+    span {
+      @include gold-text;
+    }
+  }
+
+  // ----- серая плашка с карточками -----
+  &__cards {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    padding: fm(24px, 48px) fm(24px, 40px);
+    border-radius: fw(24px);
+    background: $mind-panel;
+
+    @include desktop {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) calc(var(--rd-mind-right) - #{fw(40px)});
+      column-gap: fd(40px, 60px);
+      row-gap: fw(48px);
+      padding: fw(48px) fw(40px);
+    }
+  }
+}
+
+.rd-mind-card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+
+  @include desktop {
+    gap: fw(24px);
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: fw(24px);
+  }
+
+  // «таблетка» с иконкой
+  &__icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: fw(120px);
+    height: fw(60px);
+    overflow: hidden;
+    border-radius: 999px;
+    background: $black-2;
+    color: $gold;
+    isolation: isolate;
+    transition: color 0.4s $ease;
+  }
+
+  // золотая заливка при наведении: въезжает слева, на уходе курсора уезжает вправо
+  // (масштабируется внутренний слой — скругление «таблетки» не искажается)
+  &__fill {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: $gold-grad;
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition: transform 0.7s $ease-fly;
+  }
+
+  &__svg {
+    width: fw(40px);
+    height: fw(40px);
+    overflow: visible;
+  }
+
+  &__title {
+    font-family: inherit;
+    font-size: fm(18px, 20px);
+    font-weight: 700;
+    line-height: 1.2;
+    color: $black;
+    margin: 0;
+    transition: color $dur $ease;
+
+    @include desktop {
+      font-size: fd(20px, 24px);
+    }
+  }
+
+  &__text {
+    font-size: fm(14px, 16px);
+    font-weight: 300;
+    line-height: fm(24px, 27px); // ≈1.7, как в макете (целые пиксели)
+    color: $black;
+
+    @include desktop {
+      font-size: fd(16px, 18px);
+      line-height: fd(27px, 31px);
+    }
+
+    p {
+      margin: 0;
+      font: inherit;
+      color: inherit;
+    }
+
+    p + p {
+      margin-top: 0.7em;
+    }
+
+    b,
+    strong {
+      font-weight: 700;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: rgba($gold, 0.6);
+      text-underline-offset: 3px;
+    }
+  }
+
+  // Наведение (мышь): «таблетка» заливается золотом слева, иконка темнеет, заголовок золотится
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      .rd-mind-card__fill {
+        transform: scaleX(1);
+        transform-origin: left center;
+      }
+
+      .rd-mind-card__icon {
+        color: $black;
+        transition-delay: 0.12s;
+      }
+
+      .rd-mind-card__title {
+        color: $gold;
+      }
+    }
+  }
+}

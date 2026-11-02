@@ -569,6 +569,306 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   }
 }
 
+// ================= БЛОК «САЙТИ ДЛЯ БІЗНЕСУ» (Mind Control 2.0) =================
+.rd-wow-js {
+  // слова, склеенные &nbsp; (splitWords), не разрываются; группа сама не золотится
+  .rd-nw {
+    white-space: nowrap;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
+
+  // заголовок: слова из размытия, золотое слово переливается (как в услугах)
+  .rd-mind__title .rd-wd {
+    display: inline-block;
+    opacity: 0;
+    translate: 0 0.6em;
+    filter: blur(10px);
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+    transition-delay: calc(var(--i) * 80ms);
+  }
+
+  .rd-mind__title .rd-wd:not(.rd-wd--el) {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: $black;
+  }
+
+  .rd-mind__title .rd-wd--el {
+    background: linear-gradient(110deg, $gold 0%, $gold 38%, #f7e8b6 50%, $gold 62%, $gold-2 100%);
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rd-wow-shimmer 4.5s $ease infinite;
+  }
+
+  .rd-mind__sub {
+    opacity: 0;
+    translate: 0 30px;
+    transition: opacity 1s $ease-expo 0.4s, translate 1.1s $ease-expo 0.4s;
+  }
+
+  .rd-mind__heading.is-in {
+    .rd-mind__title .rd-wd,
+    .rd-mind__sub {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0);
+    }
+  }
+
+  // фото: капсула раскрывается слева направо, кадр «отъезжает» из крупного плана;
+  // при прокрутке фото чуть смещается внутри капсулы (rd-wow.js пишет translate)
+  .rd-mind__photo {
+    clip-path: inset(0 100% 0 0 round 999px);
+    transition: clip-path 1.3s $ease-io;
+
+    img {
+      scale: 1.4;
+      transition: scale 1.8s $ease-expo;
+      will-change: transform;
+    }
+
+    // блик пробегает по капсуле при наведении
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(105deg, transparent 30%, rgba(#fff, 0.32) 48%, rgba($gold, 0.28) 52%, transparent 70%);
+      transform: translateX(-110%);
+      pointer-events: none;
+    }
+  }
+
+  .rd-mind__who > * {
+    opacity: 0;
+    translate: -24px 0;
+    transition: opacity 0.9s $ease-expo, translate 1s $ease-expo;
+  }
+
+  .rd-mind__person.is-in {
+    .rd-mind__photo {
+      clip-path: inset(0 0 0 0 round 999px);
+
+      img {
+        scale: 1.14;
+      }
+    }
+
+    .rd-mind__who > * {
+      opacity: 1;
+      translate: 0 0;
+      transition-delay: 0.55s;
+
+      + * {
+        transition-delay: 0.68s;
+      }
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rd-mind__person.is-in .rd-mind__photo:hover {
+      img {
+        scale: 1.22;
+        transition-duration: 1.2s;
+      }
+
+      &::after {
+        transform: translateX(110%);
+        transition: transform 1.1s $ease-fly;
+      }
+    }
+  }
+
+  // цитата: слова «проявляются» по мере прокрутки (rd-wow.js пишет --q; у слова --i — номер)
+  .rd-mind__quote {
+    .rd-qw {
+      opacity: calc(0.14 + 0.86 * clamp(0, var(--q, 0) - var(--i, 0), 1));
+    }
+
+    // золото — у каждого слова отдельно (у прозрачных слов фон родителя не гаснет);
+    // базовое правило «span в цитате = золото» снимаем с обёрток слов и исходных span
+    .is-split,
+    .rd-qw:not(.rd-qw--gold) {
+      background: none;
+      -webkit-text-fill-color: currentColor;
+      color: $black;
+    }
+
+    .rd-qw--gold {
+      @include gold-text;
+    }
+  }
+
+  // плашка: раскрывается из середины, карточки — снизу по очереди
+  .rd-mind__cards {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    clip-path: inset(7% 4% round #{fw(24px)});
+    opacity: 0;
+    transition: clip-path 1.2s $ease-expo, opacity 0.8s $ease;
+
+    // мягкий золотой свет за курсором
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: radial-gradient(circle 360px at var(--gx, 50%) var(--gy, 50%), rgba($gold, 0.2), rgba($gold, 0.05) 45%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.6s $ease;
+      pointer-events: none;
+    }
+
+    &.is-in {
+      clip-path: inset(0 0 round #{fw(24px)});
+      opacity: 1;
+    }
+
+    &.is-lit::before {
+      opacity: 1;
+    }
+  }
+
+  .rd-mind-card {
+    opacity: 0;
+    translate: 0 40px;
+    transition: opacity 1s $ease-expo, translate 1.2s $ease-expo;
+    transition-delay: calc(var(--i, 0) * 140ms + 250ms);
+
+    &__title {
+      transition: color $dur $ease, translate 0.7s $ease-expo;
+    }
+  }
+
+  .rd-mind__cards.is-in .rd-mind-card {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  // иконки прорисовываются линией, стрела влетает в мишень
+  .rd-mind-ic {
+    transform-box: fill-box;
+    transform-origin: center;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 1.1s $ease-io;
+    transition-delay: calc(var(--i, 0) * 140ms + 500ms);
+  }
+
+  .rd-mind-ic--b {
+    transition-delay: calc(var(--i, 0) * 140ms + 650ms);
+  }
+
+  .rd-mind-ic--c {
+    transition-delay: calc(var(--i, 0) * 140ms + 800ms);
+  }
+
+  .rd-mind-ic--d {
+    transition-duration: 1.4s;
+    transition-delay: calc(var(--i, 0) * 140ms + 700ms);
+  }
+
+  .rd-mind-ic--arrow {
+    stroke-dasharray: none;
+    opacity: 0;
+    translate: 7px -7px;
+    transition: opacity 0.3s $ease, translate 0.7s cubic-bezier(0.3, 1.6, 0.5, 1);
+    transition-delay: calc(var(--i, 0) * 140ms + 1250ms);
+  }
+
+  .rd-mind__cards.is-in .rd-mind-ic {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  // наведение: квадратики «скачут» по ступеням, стрела отходит и бьёт в центр снова
+  @media (hover: hover) and (pointer: fine) {
+    .rd-mind__cards.is-in .rd-mind-card:hover {
+      .rd-mind-card__title {
+        translate: 10px 0;
+      }
+
+      .rd-mind-card__svg--steps {
+        .rd-mind-ic--a,
+        .rd-mind-ic--b,
+        .rd-mind-ic--c {
+          animation: rd-mind-hop 0.7s $ease-out both;
+        }
+
+        .rd-mind-ic--b {
+          animation-delay: 0.08s;
+        }
+
+        .rd-mind-ic--c {
+          animation-delay: 0.16s;
+        }
+      }
+
+      .rd-mind-ic--arrow {
+        animation: rd-mind-hit 0.9s $ease both;
+      }
+
+      .rd-mind-card__svg--target .rd-mind-ic--b {
+        animation: rd-mind-pulse 0.9s $ease both;
+      }
+    }
+  }
+}
+
+@keyframes rd-mind-hop {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  40% {
+    translate: 0 -3px;
+  }
+
+  70% {
+    translate: 0 0.6px;
+  }
+}
+
+@keyframes rd-mind-hit {
+  0% {
+    translate: 0 0;
+  }
+
+  35% {
+    translate: 4px -4px;
+  }
+
+  60% {
+    translate: -1.2px 1.2px;
+  }
+
+  80% {
+    translate: 0.4px -0.4px;
+  }
+
+  100% {
+    translate: 0 0;
+  }
+}
+
+@keyframes rd-mind-pulse {
+  0%,
+  45%,
+  100% {
+    scale: 1;
+  }
+
+  62% {
+    scale: 1.12;
+  }
+}
+
 @keyframes rd-wow-shimmer {
   0% {
     background-position: 100% 0;

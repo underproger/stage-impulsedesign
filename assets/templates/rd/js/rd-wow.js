@@ -60,13 +60,14 @@
     return chars;
   }
 
-  // Слова целиком (для подзаголовков): вложенные элементы (золотое слово и т.п.) — одним куском
+  // Слова целиком (для подзаголовков): вложенные элементы (золотое слово и т.п.) — одним куском.
+  // Делим только по обычным пробелам: неразрывный (&nbsp;) склеивает слова и здесь.
   function splitWords(el) {
     var items = [];
     Array.prototype.slice.call(el.childNodes).forEach(function (child) {
       if (child.nodeType === 3) {
         var frag = document.createDocumentFragment();
-        child.textContent.split(/(\s+)/).forEach(function (t) {
+        child.textContent.split(/([ \t\r\n]+)/).forEach(function (t) {
           if (!t) return;
           if (/^\s+$/.test(t)) { frag.appendChild(document.createTextNode(' ')); return; }
           var w = document.createElement('span');
@@ -82,7 +83,51 @@
       }
     });
     items.forEach(function (w, i) { w.style.setProperty('--i', i); });
+    // слово с &nbsp; на конце не отрывается от следующего (например «для&nbsp;<span>бізнесу</span>»)
+    items.forEach(function (w, i) {
+      var next = items[i + 1];
+      if (next && w.nextSibling === next && /\u00a0$/.test(w.textContent)) {
+        var group = w.parentNode.classList.contains('rd-nw') ? w.parentNode : null; // цепочка слов через &nbsp;
+        if (!group) {
+          group = document.createElement('span');
+          group.className = 'rd-nw';
+          w.parentNode.insertBefore(group, w);
+          group.appendChild(w);
+        }
+        group.appendChild(next);
+      }
+    });
     return items;
+  }
+
+  // Слова для «проявления» при прокрутке: обычные span.rd-qw (inline — переносы и отступ строки не меняются).
+  // Вложенный <span> (золото) тоже делится на слова, каждое — золотое отдельно (rd-qw--gold).
+  function splitFlow(el) {
+    var words = [];
+    var walk = function (node, gold) {
+      Array.prototype.slice.call(node.childNodes).forEach(function (child) {
+        if (child.nodeType === 3) {
+          var frag = document.createDocumentFragment();
+          child.textContent.split(/([ \t\r\n]+)/).forEach(function (t) {
+            if (!t) return;
+            if (/^[ \t\r\n]+$/.test(t)) { frag.appendChild(document.createTextNode(' ')); return; }
+            var w = document.createElement('span');
+            w.className = gold ? 'rd-qw rd-qw--gold' : 'rd-qw';
+            w.textContent = t;
+            frag.appendChild(w);
+            words.push(w);
+          });
+          child.parentNode.replaceChild(frag, child);
+        } else if (child.nodeType === 1 && child.tagName !== 'BR') {
+          var isGold = gold || child.tagName === 'SPAN';
+          if (child.tagName === 'SPAN') child.classList.add('is-split');
+          walk(child, isGold);
+        }
+      });
+    };
+    walk(el, false);
+    words.forEach(function (w, i) { w.style.setProperty('--i', i); });
+    return words;
   }
 
   /* ================= Первый экран ================= */
@@ -172,7 +217,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
     var labelNow = 'click';
@@ -298,6 +343,7 @@
     }
 
     if (pfTick) pfTick();
+    if (mindTick) mindTick();
 
     raf(frame);
   }
@@ -583,6 +629,74 @@
       pfTargets.forEach(function (t) { pfIo.observe(t); });
     } else {
       pfTargets.forEach(pfReveal);
+    }
+  }
+
+  /* ================= «Сайти для бізнесу» (Mind Control 2.0) ================= */
+  // Заголовок и карточки появляются по IntersectionObserver; цитата «проявляется» словами
+  // по мере прокрутки; фото чуть смещается внутри капсулы; на плашке — золотой свет за курсором.
+
+  var mindTick = null;
+  var mind = document.querySelector('.rd-mind');
+  if (mind) {
+    var mTitle = mind.querySelector('.rd-mind__title');
+    if (mTitle) splitWords(mTitle);
+
+    var mQuote = mind.querySelector('.rd-mind__quote p');
+    var mWords = mQuote ? splitFlow(mQuote) : [];
+    var mPhoto = mind.querySelector('.rd-mind__photo');
+    var mImg = mPhoto && mPhoto.querySelector('img');
+    var mCards = mind.querySelector('.rd-mind__cards');
+    var mq = { q: -1, t: -1, ty: 0, s: '' };
+
+    Array.prototype.forEach.call(mind.querySelectorAll('.rd-mind-card'), function (c, i) { c.style.setProperty('--i', i); });
+
+    if (mCards && fine) {
+      mCards.addEventListener('pointermove', function (e) {
+        var r = mCards.getBoundingClientRect();
+        mCards.style.setProperty('--gx', (e.clientX - r.left).toFixed(0) + 'px');
+        mCards.style.setProperty('--gy', (e.clientY - r.top).toFixed(0) + 'px');
+        mCards.classList.add('is-lit');
+      });
+      mCards.addEventListener('pointerleave', function () { mCards.classList.remove('is-lit'); });
+    }
+
+    mindTick = function () {
+      var vh = window.innerHeight;
+      var mr = mind.getBoundingClientRect();
+      if (mr.bottom < -100 || mr.top > vh + 100) return;
+
+      // цитата: от появления снизу (верх на 88% экрана) до низа цитаты на 55% экрана
+      if (mWords.length) {
+        var qr = mQuote.getBoundingClientRect();
+        var p = clamp((vh * 0.88 - qr.top) / (qr.height + vh * 0.33), 0, 1);
+        mq.t = p * (mWords.length + 1.5) - 0.5;
+        mq.q = mq.q < -0.9 ? mq.t : lerp(mq.q, mq.t, 0.12);
+        if (Math.abs(mq.q - mq.t) < 0.01) mq.q = mq.t;
+        var qs = mq.q.toFixed(2);
+        if (qs !== mq.s) { mQuote.style.setProperty('--q', qs); mq.s = qs; }
+      }
+
+      // фото: лёгкий параллакс внутри капсулы
+      if (mImg) {
+        var pr = mPhoto.getBoundingClientRect();
+        var n = clamp((pr.top + pr.height / 2 - vh / 2) / vh, -1, 1);
+        var ty = n * pr.height * -0.12;
+        if (Math.abs(ty - mq.ty) > 0.05) { mImg.style.translate = '0 ' + ty.toFixed(2) + 'px'; mq.ty = ty; }
+      }
+    };
+
+    var mReveal = function (el) { el.classList.add('is-in'); };
+    var mTargets = Array.prototype.filter.call(mind.querySelectorAll('.rd-mind__heading, .rd-mind__person, .rd-mind__cards'), Boolean);
+    if ('IntersectionObserver' in window) {
+      var mIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { mReveal(en.target); mIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
+      mTargets.forEach(function (t) { mIo.observe(t); });
+    } else {
+      mTargets.forEach(mReveal);
     }
   }
 })();
