@@ -472,7 +472,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
@@ -626,6 +626,7 @@
     if (priceTick) priceTick();
     if (aboutTick) aboutTick();
     if (leadTick) leadTick();
+    if (tickerTick) tickerTick();
 
     raf(frame);
   }
@@ -1586,6 +1587,83 @@
       sTargets.forEach(function (t) { sIo.observe(t); });
     } else {
       sTargets.forEach(sReveal);
+    }
+  }
+
+  /* ================= Футер (весь сайт) ================= */
+  // Колонки поднимаются по очереди, под курсором — золотая сетка. Бегущая строка: своя скорость (как у CSS-анимации),
+  // прокрутка разгоняет её в сторону прокрутки, под курсором — замедляется; вне экрана не считается.
+  var tickerTick = null;
+  var footer = document.querySelector('[data-rd-footer]');
+  if (footer) {
+    var fMain = footer.querySelector('.rd-footer__main');
+    var fGrid = footer.querySelector('.rd-footer__grid');
+    Array.prototype.forEach.call(footer.querySelectorAll('.rd-footer__brand, .rd-footer__col, .rd-footer__brief--solo, .rd-footer__bottom'), function (el, i) {
+      el.style.setProperty('--i', i);
+    });
+
+    if (fine && fMain) {
+      var fSpot = makeSpot(fMain);
+      fMain.insertBefore(fSpot.el, fMain.firstChild);
+      fMain.addEventListener('pointermove', function (e) {
+        var r = fMain.getBoundingClientRect();
+        fSpot.move(e.clientX - r.left, e.clientY - r.top);
+        if (!fMain.classList.contains('is-lit')) fMain.classList.add('is-lit');
+      });
+      fMain.addEventListener('pointerleave', function () { fMain.classList.remove('is-lit'); });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fSpot.size);
+    }
+
+    if (fGrid) {
+      if ('IntersectionObserver' in window) {
+        var fIo = new IntersectionObserver(function (entries) {
+          if (entries[0].isIntersecting) { fGrid.classList.add('is-in'); fIo.disconnect(); }
+        }, { threshold: 0.12, rootMargin: '0px 0px -5% 0px' });
+        fIo.observe(fGrid);
+      } else {
+        fGrid.classList.add('is-in');
+      }
+    }
+
+    var tk = footer.querySelector('[data-rd-ticker]');
+    var tkTrack = tk && tk.querySelector('.rd-ticker__track');
+    if (tkTrack) {
+      var tkx = 0;
+      var tkHalf = 0;
+      var tkK = 1; // замедление под курсором (плавно)
+      var tkKTarget = 1;
+      var tkScroll = 0; // добавка скорости от прокрутки, px/с со знаком
+      var tkLast = performance.now();
+      var tkY = window.scrollY;
+      var tkOn = true;
+      var tkMeasure = function () { tkHalf = tkTrack.scrollWidth / 2; };
+      tkMeasure();
+      window.addEventListener('resize', tkMeasure);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(tkMeasure);
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) { tkOn = entries[0].isIntersecting; }).observe(tk);
+      }
+      tk.addEventListener('pointerenter', function () { tkKTarget = 0.2; });
+      tk.addEventListener('pointerleave', function () { tkKTarget = 1; });
+      window.addEventListener('scroll', function () {
+        var y = window.scrollY;
+        if (tkOn) tkScroll = clamp(tkScroll + (y - tkY) * 9, -1600, 1600);
+        tkY = y;
+      }, { passive: true });
+
+      tickerTick = function () {
+        var now = performance.now();
+        var dt = Math.min(0.05, (now - tkLast) / 1000);
+        tkLast = now;
+        if (!tkOn || !tkHalf) return;
+        tkK = lerp(tkK, tkKTarget, 1 - Math.pow(0.02, dt));
+        tkScroll *= Math.pow(0.08, dt);
+        var v = (tkHalf / 44) * tkK + tkScroll; // базовая скорость = как у CSS-анимации (44 с на половину ленты)
+        tkx -= v * dt;
+        if (tkx <= -tkHalf) tkx += tkHalf;
+        if (tkx > 0) tkx -= tkHalf;
+        tkTrack.style.transform = 'translate3d(' + tkx.toFixed(2) + 'px,0,0)';
+      };
     }
   }
 })();

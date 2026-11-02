@@ -8,6 +8,7 @@
 {set $isRu = $_modx->context.key == 'web'}
 {set $ftitle = $r['form-title-bl10'] ?: ($isRu ? 'Заявка на онлайн или <span>офлайн</span> встречу' : 'Заявка на онлайн або <span>офлайн</span> зустріч')}
 {set $policy = $r['policy-link-bl10'] | trim}
+{if !$policy}{set $policy = ($isRu ? ('policy-link' | option) : ('policy-link-ua' | option)) | trim}{/if}
 {if $policy && ($policy | preg_match : '/^\d+$/')}{set $policy = $policy | url}{/if}
 {set $btn = $isRu ? 'Оставить заявку' : 'Залишити заявку'}
   <input class="rd-lead__hp" type="text" name="first-name" value="" tabindex="-1" autocomplete="off" aria-hidden="true">
