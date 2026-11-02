@@ -130,6 +130,64 @@
     return words;
   }
 
+  /* ================= Плавная прокрутка колесом ================= */
+  // Колесо мыши / тачпад: страница едет к цели с инерцией (тач и клавиатура — как обычно).
+  // Не трогаем: Ctrl+колесо (зум), горизонтальную прокрутку, области со своей прокруткой
+  // (пока им есть куда ехать), заблокированную страницу (открыто меню/модалка), [data-rd-no-smooth].
+  // Если прокрутку сдвинул кто-то ещё (скроллбар, клавиши, якорь, лента портфолио) — подхватываем позицию.
+  (function () {
+    if (!fine) return;
+    var cur = window.scrollY;
+    var target = cur;
+    var lastSet = cur;
+    var last = 0;
+    var running = false;
+    var maxY = function () { return Math.max(0, document.documentElement.scrollHeight - window.innerHeight); };
+    var locked = function () {
+      if (root.classList.contains('rd-lock') || document.body.classList.contains('rd-lock')) return true;
+      return getComputedStyle(document.body).overflowY === 'hidden' || getComputedStyle(root).overflowY === 'hidden';
+    };
+    var ownScroll = function (el, dy) {
+      for (; el && el !== document.body && el !== root; el = el.parentElement) {
+        if (el.hasAttribute('data-rd-no-smooth')) return true;
+        var oy = getComputedStyle(el).overflowY;
+        if ((oy === 'auto' || oy === 'scroll' || oy === 'overlay') && el.scrollHeight > el.clientHeight + 1) {
+          if (dy > 0 ? el.scrollTop + el.clientHeight < el.scrollHeight - 1 : el.scrollTop > 0) return true;
+        }
+      }
+      return false;
+    };
+    var tick = function (now) {
+      var dt = Math.min(64, now - last) / 1000;
+      last = now;
+      if (Math.abs(window.scrollY - lastSet) > 2) { // сдвинули снаружи — отдаём управление
+        cur = target = lastSet = window.scrollY;
+        running = false;
+        return;
+      }
+      cur += (target - cur) * (1 - Math.exp(-dt * 9)); // ≈ 0.14 за кадр при 60 Гц, не зависит от частоты
+      if (Math.abs(target - cur) < 0.5) cur = target;
+      window.scrollTo(0, cur);
+      lastSet = window.scrollY;
+      if (cur !== target) raf(tick); else running = false;
+    };
+    window.addEventListener('wheel', function (e) {
+      if (e.ctrlKey || e.defaultPrevented) return;
+      var dy = e.deltaY;
+      if (!dy || Math.abs(e.deltaX) > Math.abs(dy)) return;
+      if (locked() || ownScroll(e.target, dy)) return;
+      e.preventDefault();
+      if (!running) cur = target = lastSet = window.scrollY;
+      var k = e.deltaMode === 1 ? 40 : (e.deltaMode === 2 ? window.innerHeight : 1);
+      target = clamp(target + dy * k, 0, maxY());
+      if (!running) {
+        running = true;
+        last = performance.now();
+        raf(tick);
+      }
+    }, { passive: false });
+  })();
+
   /* ================= Переходы между страницами ================= */
   // Клик по внутренней ссылке: золотой и тёмный круги расходятся из точки клика на весь экран,
   // затем переход. Новая страница открывается из центра (если пришли переходом — html.rd-pt-in).

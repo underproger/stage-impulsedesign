@@ -207,7 +207,11 @@
     }
   }
 
+  // стрелка — ссылка поверх «кликабельной строки»; круг — отдельный слой: на наведении растёт он,
+  // стрелка остаётся прежнего размера
   &__arrow {
+    position: relative;
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -215,11 +219,19 @@
     width: fm(62px, 62px);
     height: fm(62px, 62px);
     border-radius: 50%;
-    background: $gold-grad;
 
     @include desktop {
       width: fw(68px);
       height: fw(68px);
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: $gold-grad;
+      transition: transform 0.5s $ease-out;
     }
 
     .rd-arrow {
@@ -229,6 +241,12 @@
       @include desktop {
         width: fw(36px);
         height: fw(36px);
+      }
+    }
+
+    @include hover {
+      &::before {
+        transform: scale(1.16);
       }
     }
   }

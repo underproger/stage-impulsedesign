@@ -39,9 +39,10 @@
                 {/if}
               </div>
               {if $link}
-                <span class="rd-service__arrow" aria-hidden="true">
+                {* стрелка — тоже ссылка (дубль ссылки заголовка: вне порядка табуляции и скрыта от читалок) *}
+                <a class="rd-service__arrow" href="{$link}" tabindex="-1" aria-hidden="true">
                   <span class="rd-arrow"><img class="rd-arrow__a" src="{$img}arrow-narrow-up-right-srv.svg" width="36" height="36" alt=""><img class="rd-arrow__b" src="{$img}arrow-narrow-up-right-srv.svg" width="36" height="36" alt=""></span>
-                </span>
+                </a>
               {/if}
             </div>
           </article>
