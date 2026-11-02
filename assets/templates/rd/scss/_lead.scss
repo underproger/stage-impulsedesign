@@ -1,0 +1,895 @@
+@use "base" as *;
+
+// ===== «Готові замовити створення сайту?» — section 8 макета (форма заявки) =====
+// Тёмный фон с сеткой, золотое свечение у нижнего края. Слева заголовок, текст и «Грошей за розмови не беремо»,
+// справа (на мобайле — ниже) полупрозрачная плашка с формой: поля с линией снизу, золотая кнопка, согласие.
+// Подпись поля стоит на месте плейсхолдера и при фокусе/заполнении уезжает вверх (rd.js ставит .is-filled).
+// Все отступы сняты с PDF макетов 1920 / 1600 / 768 / 360.
+
+$lead-panel: rgba(50, 47, 50, 0.33); // в макете — полупрозрачная плашка с размытием фона (свечение просвечивает)
+$lead-line: #2f2e33;
+$lead-ph: #6d6f73;
+$lead-err: #ff7b72;
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-io: cubic-bezier(0.77, 0, 0.18, 1);
+
+.rd-lead {
+  --rd-cell: 100px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: fm(81px, 103px) 0 fm(79px, 108px);
+  @include grid-bg;
+  color: #fff;
+
+  @include desktop {
+    --rd-cell: #{fw(100px)};
+    padding-block: fd(130px, 180px);
+  }
+
+  // золотое свечение — размытое «пятно» из макета (img/lead-glow.webp, вырезано из PDF); виден верх картинки:
+  // на всех ширинах над нижним краем блока 48.5% её ширины
+  &__glow {
+    --gw: #{fm(416.8px, 556.4px)};
+    position: absolute;
+    z-index: -1;
+    left: fm(75.2px, 5.4px);
+    top: calc(100% - var(--gw) * 0.485);
+    width: var(--gw);
+    aspect-ratio: 1432 / 1369;
+    background: url("../img/lead-glow.webp") center / 100% 100% no-repeat;
+    pointer-events: none;
+
+    @include desktop {
+      --gw: #{fd(644.5px, 716.3px)};
+      left: calc((100% - min(#{fd(1200px, 1500px)}, 100% - 80px)) / 2 - #{fd(113.3px, 125.8px)});
+    }
+  }
+
+  &__info {
+    @include desktop {
+      margin-top: fd(1px, 0px); // на 1600 текст в макете на 1px ниже плашки
+    }
+  }
+
+  &__wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: fm(48px, 55px);
+
+    @include desktop {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) fd(580px, 720px);
+      column-gap: fd(40px, 60px);
+      align-items: start;
+    }
+  }
+
+  // h2 глобально стилизован старым CSS — перебиваем явно
+  &__title {
+    font-family: inherit;
+    font-size: fm(36px, 48px);
+    font-weight: 700;
+    line-height: fm(40px, 53px); // ≈1.1, в макете — целые пиксели
+    text-transform: uppercase;
+    color: #fff;
+
+    @include desktop {
+      font-size: fd(60px, 72px);
+      line-height: fd(66px, 79px);
+    }
+
+    span {
+      @include gold-text;
+    }
+  }
+
+  // ширина текста — как в макете (переносы строк совпадают)
+  &__text {
+    max-width: 600px;
+    margin-top: 25px;
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: $gray;
+
+    @include desktop {
+      // переносы как в макете: «…брифу | та розробки…». Шире 1920 ширина строк растёт чуть медленнее шрифта — поправка
+      max-width: calc(25.45em - max(0px, 100vw - 1920px) * 0.0072);
+      margin-top: fw(24px);
+      font-size: fd(18px, 20px);
+    }
+  }
+
+  &__note {
+    margin-top: 32px;
+    font-size: fm(20px, 24px);
+    font-weight: 700;
+    line-height: 1.6;
+    color: #fff;
+
+    @include desktop {
+      margin-top: fd(39px, 40px);
+      font-size: fd(24px, 30px);
+    }
+  }
+
+  // ----- плашка с формой -----
+  &__panel {
+    --rd-r: 24px;
+    position: relative;
+    padding: fm(24px, 41px) fm(24px, 48px) fm(24px, 32px);
+    border-radius: var(--rd-r);
+    background: $lead-panel;
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+
+    @include desktop {
+      --rd-r: #{fw(24px)};
+      padding: fd(40px, 49px) fd(48px, 60px) fd(31px, 38px);
+    }
+  }
+
+  &__form {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+  }
+
+  &__hp {
+    display: none !important;
+  }
+
+  &__ftitle {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #fff;
+
+    @include desktop {
+      font-size: fd(20px, 24px);
+    }
+
+    span {
+      @include gold-text;
+    }
+  }
+
+  &__fields {
+    margin-top: 17px;
+
+    @include desktop {
+      margin-top: fw(17px);
+    }
+  }
+
+  // ----- кнопка: золото; на наведении слева «затекает» тёмная заливка (золото остаётся каймой), текст золотится -----
+  &__send {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 68px;
+    margin: 31px 0 0;
+    padding: 0 24px;
+    border: 0;
+    border-radius: 40px;
+    background: $gold-grad;
+    font: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #fff;
+    cursor: pointer;
+    isolation: isolate;
+    -webkit-tap-highlight-color: transparent;
+
+    @include desktop {
+      gap: fw(8px);
+      height: fw(68px);
+      margin-top: fw(31px);
+      border-radius: fw(40px);
+      font-size: fw(18px);
+    }
+
+    > :not(.rd-lead__send-fill) {
+      position: relative;
+      z-index: 1;
+    }
+
+    .rd-arrow {
+      width: 24px;
+      height: 24px;
+
+      @include desktop {
+        width: fw(24px);
+        height: fw(24px);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid $gold;
+      outline-offset: 3px;
+    }
+
+    &:disabled {
+      cursor: progress;
+    }
+  }
+
+  &__send-text {
+    transition: color 0.45s $ease;
+  }
+
+  &__send-fill {
+    position: absolute;
+    inset: 2px;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+
+    span {
+      position: absolute;
+      inset: 0;
+      background: $black-2;
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 0.7s $ease-fly;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &__send:not(:disabled):hover {
+      .rd-lead__send-fill span {
+        transform: scaleX(1);
+        transform-origin: left center;
+      }
+
+      .rd-lead__send-text {
+        color: $gold;
+        transition-delay: 0.1s;
+      }
+
+      @include arrow-fly;
+    }
+  }
+
+  // ----- согласие: «Політикою конфіденційності» — золотом с подчёркиванием -----
+  &__agree {
+    margin-top: 24px;
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 20px;
+    color: $gray;
+
+    @include desktop {
+      margin-top: fw(25px);
+      font-size: fw(12px);
+      line-height: fw(20px);
+    }
+
+    a,
+    span {
+      @include gold-text;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.2em;
+    }
+
+    a {
+      transition: text-underline-offset 0.3s $ease;
+
+      @include hover {
+        text-underline-offset: 0.35em;
+      }
+    }
+  }
+
+  // общая ошибка отправки (нет связи, сервер не ответил)
+  &__status {
+    font-size: 14px;
+    line-height: 20px;
+    color: $lead-err;
+
+    &:empty {
+      display: none;
+    }
+
+    &:not(:empty) {
+      margin-top: 16px;
+    }
+  }
+}
+
+// ----- поле формы: подпись на месте плейсхолдера, линия снизу, ошибка под линией -----
+.rd-field {
+  position: relative;
+
+  &__input {
+    display: block;
+    width: 100%;
+    height: 79px;
+    margin: 0;
+    padding: 36px 16px 19px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    outline: 0;
+    font: inherit;
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 24px;
+    color: #fff;
+    caret-color: $gold;
+    -webkit-appearance: none;
+    appearance: none;
+
+    @include phone {
+      height: 77px;
+      padding: 34.5px 16px 18.5px;
+      font-size: 16px;
+    }
+
+    @include desktop {
+      height: fw(79px);
+      padding: fw(36px) fw(16px) fw(19px);
+      font-size: fw(18px);
+      line-height: fw(24px);
+    }
+
+    // старый CSS сайта рисует input.error красной рамкой — у нас ошибку показывают линия и подпись
+    &.error {
+      border: 0;
+      box-shadow: none;
+    }
+
+    // плейсхолдер не показываем — его роль играет подпись (пробел в placeholder нужен для :placeholder-shown)
+    &::placeholder {
+      color: transparent;
+      opacity: 0;
+    }
+
+    // автозаполнение браузера: без белой заливки
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+      -webkit-text-fill-color: #fff;
+      -webkit-box-shadow: 0 0 0 100px #1e1d22 inset;
+      transition: background-color 9999s 0s;
+    }
+  }
+
+  &__label {
+    position: absolute;
+    left: 16px;
+    top: 36px;
+    max-width: calc(100% - 32px);
+    overflow: hidden;
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 24px;
+    color: $lead-ph;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    transform-origin: 0 0;
+    transition: transform 0.45s $ease-out, color 0.3s $ease;
+
+    @include phone {
+      top: 34.5px;
+      font-size: 16px;
+    }
+
+    @include desktop {
+      left: fw(16px);
+      top: fw(36px);
+      font-size: fw(18px);
+      line-height: fw(24px);
+    }
+  }
+
+  // линия: серая 1px; при фокусе слева «затекает» золото (2px)
+  &__line {
+    position: relative;
+    display: block;
+    height: 2px;
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+    }
+
+    &::before {
+      top: 0;
+      height: 1px;
+      background: $lead-line;
+      transition: background-color 0.3s $ease;
+    }
+
+    &::after {
+      top: 0;
+      bottom: 0;
+      background: $gold-grad;
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 0.6s $ease-fly;
+    }
+  }
+
+  // текст ошибки: AjaxForm кладёт его в .error_<поле> и ставит класс error; rd.js подменяет на data-msg
+  &__err {
+    display: block;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 18px;
+    color: $lead-err;
+    opacity: 0;
+    transition: max-height 0.35s $ease, padding 0.35s $ease, opacity 0.3s $ease;
+
+    &.error {
+      max-height: 60px;
+      padding-top: 6px;
+      padding-bottom: 4px;
+      opacity: 1;
+    }
+  }
+
+  // подпись уезжает вверх: фокус или заполнено
+  &:focus-within,
+  &.is-filled {
+    .rd-field__label {
+      transform: translateY(-22px) scale(0.667);
+    }
+  }
+
+  &:focus-within {
+    .rd-field__label {
+      color: $gold;
+    }
+
+    .rd-field__line::after {
+      transform: scaleX(1);
+      transform-origin: left center;
+    }
+  }
+
+  &.is-error {
+    .rd-field__label {
+      color: $lead-err;
+    }
+
+    .rd-field__line::before {
+      background-color: $lead-err;
+    }
+
+    .rd-field__line::after {
+      background: $lead-err;
+    }
+  }
+}
+
+// то же без JS (браузеры с :has) — отдельными правилами, чтобы старые браузеры не отбросили остальное
+.rd-field:has(.rd-field__input:not(:placeholder-shown)) .rd-field__label {
+  transform: translateY(-22px) scale(0.667);
+}
+
+.rd-field:has(.rd-field__input.error) {
+  .rd-field__label {
+    color: $lead-err;
+  }
+
+  .rd-field__line::before {
+    background-color: $lead-err;
+  }
+}
+
+// ----- телефон: intl-tel-input (чанк inttelinput на всём сайте вешает его на [name=phone]) -----
+// Флаг и код страны показываем, только когда поле в фокусе или заполнено — в покое поле как в макете.
+// Ширину флага с кодом rd.js пишет в --rd-iti-pl (инлайн-отступ от библиотеки перебиваем).
+.rd-field--tel {
+  z-index: 2; // список стран — поверх следующих полей и кнопки (у них в «вау» свой слой из-за translate)
+
+  .iti {
+    display: block;
+    width: 100%;
+  }
+
+  .iti .rd-field__input {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    transition: padding-left 0.35s $ease-out;
+
+    @include desktop {
+      padding-left: fw(16px) !important;
+    }
+  }
+
+  .iti__flag-container {
+    top: 30px;
+    bottom: auto;
+    height: 36px;
+    padding: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s $ease, visibility 0s linear 0.3s;
+
+    @include phone {
+      top: 28.5px;
+    }
+
+    @include desktop {
+      top: fw(30px);
+      height: fw(36px);
+    }
+  }
+
+  .iti .iti__selected-flag {
+    padding: 0 4px 0 16px;
+    background: none !important;
+    font-size: inherit;
+    color: #fff;
+    outline: 0;
+
+    @include desktop {
+      padding-left: fw(16px);
+    }
+  }
+
+  .iti__selected-dial-code {
+    margin-left: 8px;
+    font-size: 18px;
+    font-weight: 300;
+    color: #fff;
+
+    @include phone {
+      font-size: 16px;
+    }
+
+    @include desktop {
+      font-size: fw(18px);
+    }
+  }
+
+  .iti__arrow {
+    margin-left: 6px;
+    border-top-color: $gray;
+  }
+
+  .iti__arrow--up {
+    border-top-color: transparent;
+    border-bottom-color: $gold;
+  }
+
+  .iti__country-list {
+    z-index: 5;
+    max-height: 240px;
+    margin: 6px 0 0;
+    padding: 6px 0;
+    border: 1px solid rgba(#fff, 0.08);
+    border-radius: 12px;
+    background: $black-2;
+    box-shadow: 0 20px 40px rgba(#000, 0.45);
+    font-size: 14px;
+    color: #fff;
+    white-space: nowrap;
+    scrollbar-width: thin;
+    scrollbar-color: rgba($gold, 0.4) transparent;
+  }
+
+  .iti__country {
+    padding: 8px 14px;
+
+    &.iti__highlight {
+      background: rgba($gold, 0.14);
+    }
+  }
+
+  .iti__dial-code {
+    color: $gray;
+  }
+
+  .iti__divider {
+    border-bottom-color: rgba(#fff, 0.08);
+  }
+
+  &:focus-within,
+  &.is-filled {
+    .iti .rd-field__input {
+      padding-left: var(--rd-iti-pl, 96px) !important;
+    }
+
+    .iti__flag-container {
+      opacity: 1;
+      visibility: visible;
+      transition-delay: 0s;
+    }
+  }
+}
+
+.rd-field--tel:has(.rd-field__input:not(:placeholder-shown)) {
+  .iti .rd-field__input {
+    padding-left: var(--rd-iti-pl, 96px) !important;
+  }
+
+  .iti__flag-container {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+}
+
+// ================= «Вау» (html.rd-wow-js, модуль формы в конце rd-wow.js) =================
+.rd-wow-js {
+  // заголовок: слова из размытия, золотое слово переливается
+  .rd-lead__title .rd-wd {
+    display: inline-block;
+    opacity: 0;
+    translate: 0 0.6em;
+    filter: blur(10px);
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+    transition-delay: calc(var(--i) * 70ms);
+  }
+
+  .rd-lead__title .rd-wd:not(.rd-wd--el) {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: #fff;
+  }
+
+  .rd-lead__title .rd-wd--el {
+    background: linear-gradient(110deg, $gold 0%, $gold 38%, #f7e8b6 50%, $gold 62%, $gold-2 100%);
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rd-wow-shimmer 4.5s $ease infinite;
+  }
+
+  .rd-lead__text,
+  .rd-lead__note {
+    opacity: 0;
+    translate: 0 28px;
+    transition: opacity 1s $ease-expo, translate 1.2s $ease-expo;
+  }
+
+  .rd-lead__text {
+    transition-delay: 0.35s;
+  }
+
+  .rd-lead__note {
+    transition-delay: 0.5s;
+  }
+
+  .rd-lead__info.is-in {
+    .rd-wd {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0);
+    }
+
+    .rd-lead__text,
+    .rd-lead__note {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  // «Грошей за розмови не беремо»: по тексту пробегает золотой блик
+  .rd-lead__note {
+    background: linear-gradient(100deg, #fff 0%, #fff 40%, $gold 50%, #fff 60%, #fff 100%) 0 0 / 250% 100% no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .rd-lead__info.is-in .rd-lead__note {
+    animation: rd-lead-glint 1.6s $ease 1.4s both;
+  }
+
+  // золотая сетка под курсором (общий слой .rd-wow-spot; здесь сетка неподвижна)
+  .rd-lead {
+    > .rd-wow-spot {
+      z-index: -2;
+    }
+
+    .rd-wow-spot__grid {
+      left: 0;
+      bottom: 0;
+      animation: none;
+    }
+
+    &.is-lit > .rd-wow-spot {
+      opacity: 1;
+    }
+  }
+
+  // свечение «дышит» и тянется к курсору (translate пишет rd-wow.js)
+  .rd-lead__glow {
+    animation: rd-lead-breathe 6s $ease infinite alternate;
+    will-change: transform;
+  }
+
+  // плашка поднимается, строки формы — по очереди, линии под полями прорисовываются слева
+  .rd-lead__panel {
+    opacity: 0;
+    translate: 0 60px;
+    transition: opacity 1s $ease-expo 0.15s, translate 1.2s $ease-expo 0.15s;
+
+    &.is-in {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    &.is-lit .rd-light--lead {
+      opacity: 1;
+    }
+  }
+
+  // свет за курсором на плашке: обёртка обрезает по скруглению (сама плашка не обрезает — список стран телефона)
+  .rd-lead__light {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .rd-light--lead {
+    --rd-lr: 360px;
+    background: radial-gradient(closest-side, rgba($gold, 0.14), rgba($gold, 0.04) 45%, transparent 70%);
+  }
+
+  .rd-lead__ftitle,
+  .rd-lead__fields .rd-field,
+  .rd-lead__send,
+  .rd-lead__agree {
+    opacity: 0;
+    translate: 0 26px;
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo;
+    transition-delay: calc(var(--i, 0) * 90ms + 300ms);
+  }
+
+  .rd-field__line::before {
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 1.1s $ease-io, background-color 0.3s $ease;
+    transition-delay: calc(var(--i, 0) * 90ms + 450ms), 0s;
+  }
+
+  .rd-lead__panel.is-in {
+    .rd-lead__ftitle,
+    .rd-lead__fields .rd-field,
+    .rd-lead__send,
+    .rd-lead__agree {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    .rd-field__line::before {
+      transform: scaleX(1);
+    }
+  }
+
+  // после появления по кнопке один раз пробегает блик
+  .rd-lead__send-fill::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -40%;
+    width: 40%;
+    background: linear-gradient(100deg, transparent, rgba(#fff, 0.45), transparent);
+    transform: translateX(-100%);
+  }
+
+  .rd-lead__panel.is-in .rd-lead__send-fill::after {
+    animation: rd-lead-sweep 1.3s $ease-io 1.2s both;
+  }
+
+  // отправка: блики бегут по кругу, пока ждём ответ
+  .rd-lead__form.is-sending .rd-lead__send-fill::after {
+    animation: rd-lead-sweep 1.1s $ease-io infinite;
+  }
+
+  .rd-lead__form.is-sending .rd-lead__send-text {
+    animation: rd-lead-pulse 1.1s $ease infinite alternate;
+  }
+
+  // ошибка: поле «качает головой»
+  .rd-field.is-shake {
+    animation: rd-lead-shake 0.5s $ease both;
+  }
+
+  // текст ошибки выезжает
+  .rd-field__err.error {
+    animation: rd-lead-err 0.45s $ease-expo both;
+  }
+}
+
+@keyframes rd-lead-breathe {
+  from {
+    scale: 1;
+    opacity: 0.88;
+  }
+
+  to {
+    scale: 1.07;
+    opacity: 1;
+  }
+}
+
+// блик слева направо; в начале и в конце окно градиента целиком белое — как без анимации
+@keyframes rd-lead-glint {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: 0 0;
+  }
+}
+
+@keyframes rd-lead-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(400%);
+  }
+}
+
+@keyframes rd-lead-pulse {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0.55;
+  }
+}
+
+@keyframes rd-lead-shake {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  20% {
+    translate: -10px 0;
+  }
+
+  40% {
+    translate: 8px 0;
+  }
+
+  60% {
+    translate: -5px 0;
+  }
+
+  80% {
+    translate: 3px 0;
+  }
+}
+
+@keyframes rd-lead-err {
+  from {
+    translate: 0 -6px;
+  }
+
+  to {
+    translate: 0 0;
+  }
+}

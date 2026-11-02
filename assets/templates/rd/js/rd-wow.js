@@ -329,6 +329,25 @@
 
     if (root.classList.contains('rd-pt-in')) enter();
 
+    // закрыть экран кругом без своего перехода: переход уже запущен другим скриптом
+    // (форма заявки после успешной отправки уводит на «Спасибо»). Метку пишем сразу — страница может смениться раньше.
+    window.rdPtCover = function (x, y) {
+      if (busy) return;
+      try {
+        sessionStorage.setItem('rd-pt', Date.now() + '|' + (x / window.innerWidth).toFixed(4) + '|' + (y / window.innerHeight).toFixed(4));
+      } catch (e) { /* без метки новая страница откроется как обычно */ }
+      busy = true;
+      var R = radius(x, y);
+      setCircle(gold, 0, x, y);
+      setCircle(dark, 0, x, y);
+      pt.classList.add('is-on');
+      run(560, 120, function (a, b) {
+        setCircle(gold, R * a, x, y);
+        setCircle(dark, R * b, x, y);
+        if (b > 0.7) pt.classList.add('is-logo');
+      }, function () { setTimeout(reset, 6000); }); // перехода так и не случилось — открываем страницу обратно
+    };
+
     // страница из кэша «назад/вперёд» — снять занавес
     window.addEventListener('pageshow', function (e) {
       if (e.persisted && pt.classList.contains('is-on')) reset();
@@ -453,8 +472,8 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq';
-    var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead';
+    var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
     var labelNow = 'click';
@@ -514,15 +533,16 @@
     document.addEventListener('pointerup', function () { ring.classList.remove('is-down'); });
   }
 
-  /* ---------- «Магниты»: кнопки .rd-btn, стрелки услуг, телефон в шапке ---------- */
+  /* ---------- «Магниты»: кнопки .rd-btn, стрелки услуг, телефон в шапке, кнопка формы ---------- */
   // круглые .rd-works тянет rd.js ([data-rd-magnet])
   var magnets = [];
   if (fine) {
-    Array.prototype.forEach.call(document.querySelectorAll('.rd-btn, .rd-service__arrow, .rd-header__phone'), function (el) {
+    Array.prototype.forEach.call(document.querySelectorAll('.rd-btn, .rd-service__arrow, .rd-header__phone, .rd-lead__send'), function (el) {
       if (el.closest('.rd-mobile')) return; // кнопки мобильного меню — не для мыши
       var phone = el.classList.contains('rd-header__phone');
+      var wide = el.classList.contains('rd-lead__send'); // кнопка во всю ширину формы — тянется слабо
       // у вытянутых кнопок зона — прямоугольник кнопки (+14px), у круглых — круг
-      magnets.push({ el: el, x: 0, y: 0, tx: 0, ty: 0, k: phone ? 0.2 : 0.35, rect: el.classList.contains('rd-btn'), set: false });
+      magnets.push({ el: el, x: 0, y: 0, tx: 0, ty: 0, k: phone ? 0.2 : (wide ? 0.07 : 0.35), rect: wide || el.classList.contains('rd-btn'), set: false });
     });
   }
 
@@ -605,6 +625,7 @@
     if (garTick) garTick();
     if (priceTick) priceTick();
     if (aboutTick) aboutTick();
+    if (leadTick) leadTick();
 
     raf(frame);
   }
@@ -1439,6 +1460,93 @@
       faqIo.observe(faqSec);
     } else {
       faqSec.classList.add('is-in');
+    }
+  }
+
+  /* ================= Форма заявки (section 8) ================= */
+  // Заголовок, текст и плашка появляются по IntersectionObserver; под курсором — золотая сетка, свечение тянется
+  // к курсору, на плашке — свет. Ошибка — поле «качает головой» (событие rd-lead-invalid из rd.js);
+  // заявка принята (rd-lead-sent) — экран закрывается кругом из кнопки, пока грузится «Спасибо».
+  var leadTick = null;
+  var lead = document.querySelector('.rd-lead');
+  if (lead) {
+    var lTitle = lead.querySelector('.rd-lead__title');
+    if (lTitle) splitWords(lTitle);
+    var lPanel = lead.querySelector('.rd-lead__panel');
+    var lForm = lead.querySelector('[data-rd-lead]');
+    var lGlow = lead.querySelector('.rd-lead__glow');
+    var lg = { x: 0, y: 0, s: '' };
+
+    if (lPanel) {
+      Array.prototype.forEach.call(lPanel.querySelectorAll('.rd-lead__ftitle, .rd-lead__fields .rd-field, .rd-lead__send, .rd-lead__agree'), function (el, i) {
+        el.style.setProperty('--i', i);
+      });
+    }
+
+    if (fine) {
+      var lSpot = makeSpot(lead);
+      lead.insertBefore(lSpot.el, lead.firstChild);
+      lead.addEventListener('pointermove', function (e) {
+        var r = lead.getBoundingClientRect();
+        lSpot.move(e.clientX - r.left, e.clientY - r.top);
+        if (!lead.classList.contains('is-lit')) lead.classList.add('is-lit');
+      });
+      lead.addEventListener('pointerleave', function () { lead.classList.remove('is-lit'); });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(lSpot.size);
+
+      if (lPanel) {
+        addLight(lPanel, 'rd-light--lead', lPanel.firstChild, 'rd-lead__light');
+        lPanel.addEventListener('pointerenter', function () { lPanel.classList.add('is-lit'); });
+        lPanel.addEventListener('pointerleave', function () { lPanel.classList.remove('is-lit'); });
+      }
+
+      // свечение мягко смещается к курсору (только пока блок на экране)
+      leadTick = function () {
+        if (!lGlow) return;
+        var r = lead.getBoundingClientRect();
+        if (r.bottom < -100 || r.top > window.innerHeight + 100) return;
+        var inside = mouse.y >= r.top && mouse.y <= r.bottom;
+        var tx = inside ? clamp((mouse.x - window.innerWidth / 2) / window.innerWidth, -0.5, 0.5) * 160 : 0;
+        var ty = inside ? clamp((mouse.y - r.bottom) / r.height, -1, 0) * 60 : 0;
+        lg.x = lerp(lg.x, tx, 0.05);
+        lg.y = lerp(lg.y, ty, 0.05);
+        var st = lg.x.toFixed(1) + 'px ' + lg.y.toFixed(1) + 'px';
+        if (st !== lg.s) { lGlow.style.translate = st; lg.s = st; }
+      };
+    }
+
+    if (lForm) {
+      lForm.addEventListener('rd-lead-invalid', function (e) {
+        (e.detail || []).forEach(function (input) {
+          var f = input.closest('.rd-field');
+          if (!f) return;
+          f.classList.remove('is-shake');
+          void f.offsetWidth; // перезапуск анимации при повторной ошибке
+          f.classList.add('is-shake');
+        });
+      });
+      lForm.addEventListener('animationend', function (e) {
+        if (e.animationName === 'rd-lead-shake') e.target.classList.remove('is-shake');
+      });
+      lForm.addEventListener('rd-lead-sent', function () {
+        var btn = lForm.querySelector('.rd-lead__send');
+        if (!btn || !window.rdPtCover) return;
+        var b = btn.getBoundingClientRect();
+        window.rdPtCover(b.left + b.width / 2, b.top + b.height / 2);
+      });
+    }
+
+    var lReveal = function (el) { el.classList.add('is-in'); };
+    var lTargets = Array.prototype.filter.call(lead.querySelectorAll('.rd-lead__info, .rd-lead__panel'), Boolean);
+    if ('IntersectionObserver' in window) {
+      var lIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { lReveal(en.target); lIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
+      lTargets.forEach(function (t) { lIo.observe(t); });
+    } else {
+      lTargets.forEach(lReveal);
     }
   }
 })();

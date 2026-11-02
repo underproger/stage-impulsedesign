@@ -326,4 +326,123 @@
     if (wide.addEventListener) wide.addEventListener('change', ensure);
     else if (wide.addListener) wide.addListener(ensure);
   });
+
+  /* ---------- Форма заявки (section 8): подписи полей, проверка до отправки, ошибки AjaxForm ---------- */
+  // Отправляет AjaxForm (jQuery, обработчик на document): наша проверка висит на самой форме и при ошибке
+  // не пускает событие дальше. Тексты ошибок — из data-msg (FormIt отвечает по-русски/английски).
+  // События для слоя «вау»: rd-lead-invalid (detail — поля с ошибкой), rd-lead-sent (заявка принята).
+  Array.prototype.forEach.call(document.querySelectorAll('[data-rd-lead]'), function (form) {
+    var status = form.querySelector('.rd-lead__status');
+    var inputs = Array.prototype.slice.call(form.querySelectorAll('.rd-field__input'));
+    var byName = function (name) { return form.querySelector('.rd-field__input[name="' + name + '"]'); };
+    var fieldOf = function (input) { return input && input.closest('.rd-field'); };
+    var sync = function (input) {
+      var f = fieldOf(input);
+      if (f) f.classList.toggle('is-filled', input.value.trim() !== '');
+    };
+    var setErr = function (input, on) {
+      var f = fieldOf(input);
+      if (!f) return;
+      var err = f.querySelector('.rd-field__err');
+      f.classList.toggle('is-error', on);
+      input.classList.toggle('error', on);
+      if (on) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
+      if (err) {
+        err.classList.toggle('error', on);
+        err.textContent = on ? (err.getAttribute('data-msg') || '') : '';
+      }
+    };
+
+    inputs.forEach(function (input) {
+      sync(input);
+      input.addEventListener('input', function () {
+        sync(input);
+        if (fieldOf(input).classList.contains('is-error')) setErr(input, false);
+      });
+      input.addEventListener('change', function () { sync(input); });
+      input.addEventListener('blur', function () { sync(input); });
+    });
+    // после успешной отправки AjaxForm сбрасывает форму
+    form.addEventListener('reset', function () { setTimeout(function () { inputs.forEach(sync); }, 0); });
+
+    // телефон с intl-tel-input: код страны введён отдельно, цифр в поле меньше
+    var itiOf = function (input) {
+      var g = window.intlTelInputGlobals;
+      return g && g.getInstance ? g.getInstance(input) : null;
+    };
+    var phoneOk = function (input) {
+      var digits = input.value.replace(/\D/g, '').length;
+      return digits >= (itiOf(input) ? 7 : 10);
+    };
+    var emailOk = function (v) { return !v || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); };
+
+    // флаг с кодом страны: отступ текста = его ширина (библиотека пишет свой инлайн — CSS его перебивает)
+    var phone = byName('phone');
+    var setPad = function () {
+      var flag = form.querySelector('.iti__selected-flag');
+      if (flag && flag.offsetWidth) fieldOf(phone).style.setProperty('--rd-iti-pl', (flag.offsetWidth + 10) + 'px');
+    };
+    if (phone) {
+      phone.addEventListener('countrychange', setPad);
+      phone.addEventListener('focus', setPad);
+      window.addEventListener('load', setPad);
+      setTimeout(setPad, 0);
+    }
+
+    form.addEventListener('submit', function (e) {
+      if (status) status.textContent = '';
+      var bad = [];
+      var name = byName('name');
+      var email = byName('email');
+      if (name && !name.value.trim()) bad.push(name);
+      if (phone && !phoneOk(phone)) bad.push(phone);
+      if (email && !emailOk(email.value.trim())) bad.push(email);
+      [name, phone, email].forEach(function (input) { if (input) setErr(input, bad.indexOf(input) > -1); });
+      if (bad.length) {
+        e.preventDefault();
+        e.stopPropagation(); // AjaxForm (обработчик на document) не отправит
+        bad[0].focus();
+        form.dispatchEvent(new CustomEvent('rd-lead-invalid', { detail: bad }));
+        return;
+      }
+      form.classList.add('is-sending');
+    });
+
+    var $ = window.jQuery;
+    if (!$) return;
+    // ответ сервера: af_complete приходит до того, как AjaxForm расставит ошибки — подменяем тексты на свои
+    $(document).on('af_complete', function (ev, res) {
+      if (!res || !res.form || res.form[0] !== form) return;
+      form.classList.remove('is-sending');
+      if (res.success) {
+        form.classList.add('is-sent');
+        form.dispatchEvent(new CustomEvent('rd-lead-sent'));
+        return;
+      }
+      // чанк inttelinput перед отправкой записал в поле полный номер (+380…) — возвращаем его в виджет, иначе код страны задвоится
+      var iti = phone && itiOf(phone);
+      if (iti && /^\+/.test(phone.value)) iti.setNumber(phone.value);
+      var shown = false;
+      if (res.data && typeof res.data === 'object') {
+        Object.keys(res.data).forEach(function (key) {
+          var input = byName(key);
+          if (!input) return;
+          var err = fieldOf(input).querySelector('.rd-field__err');
+          if (err && err.getAttribute('data-msg')) res.data[key] = err.getAttribute('data-msg');
+          fieldOf(input).classList.add('is-error');
+          input.setAttribute('aria-invalid', 'true');
+          shown = true;
+        });
+      }
+      if (!shown && status) status.textContent = status.getAttribute('data-fail') || '';
+    });
+    // сервер не ответил (AjaxForm в этом случае оставляет форму заблокированной) — разблокируем и пишем об ошибке
+    $(document).on('ajaxError', function (ev, xhr, settings) {
+      if (!form.classList.contains('is-sending')) return;
+      if (settings && settings.url && settings.url.indexOf('ajaxform') === -1) return;
+      form.classList.remove('is-sending');
+      Array.prototype.forEach.call(form.querySelectorAll('input, button'), function (el) { el.disabled = false; });
+      if (status) status.textContent = status.getAttribute('data-fail') || '';
+    });
+  });
 })();
