@@ -13,8 +13,10 @@
 {if !$title}{set $title = $r.longtitle ?: $r.pagetitle}{/if}
 {set $titleHead = $title | preg_replace : '/\s*\S+$/u' : ''}
 {set $titleLast = $title | preg_replace : '/^.*\s/u' : ''}
+{* Длина самого длинного куска, который нельзя перенести. Мягкий перенос (&shy;) в длинном слове
+   разрешает разрыв: «Профессио&shy;нальное» → ПРОФЕССИО- / НАЛЬНОЕ, и шрифт не уменьшается. *}
 {set $longest = 0}
-{set $words = $title | preg_split : '/\s+/u'}
+{set $words = $title | preg_split : '/\s+|&shy;|\x{00AD}/u'}
 {foreach $words as $w}
   {set $len = $w | length}
   {if $len > $longest}{set $longest = $len}{/if}
