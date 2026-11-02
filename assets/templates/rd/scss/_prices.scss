@@ -1,0 +1,277 @@
+@use "base" as *;
+
+// ===== «Вартість розробки сайту під ключ» — section 5 макета =====
+// Карточки цен: десктоп — 2 сверху + 3 снизу (сетка на 6 колонок), планшет — по две
+// (последняя нечётная — во всю ширину), телефон — столбик. Последняя карточка — тёмная с золотым свечением.
+// Карточка со ссылкой на наведении заливается слева (как строки услуг) и показывает стрелку.
+
+$price-bg: #f5f3f0;
+$price-glow: #cdb167;
+
+.rd-prices {
+  padding-block: fm(80px, 110px);
+  background: #fff;
+  color: $black;
+
+  @include desktop {
+    padding-block: fd(130px, 180px);
+  }
+
+  &__wrap {
+    display: flex;
+    flex-direction: column;
+    gap: fm(48px, 64px);
+
+    @include desktop {
+      gap: fd(64px, 80px);
+    }
+  }
+
+  &__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    @include desktop {
+      max-width: fd(787px, 980px);
+    }
+  }
+
+  // h2 глобально стилизован старым CSS — перебиваем явно
+  &__title {
+    font-family: inherit;
+    font-size: fm(36px, 48px);
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: $black;
+
+    @include desktop {
+      font-size: fd(60px, 72px);
+    }
+
+    span {
+      @include gold-text;
+    }
+  }
+
+  &__text {
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.6;
+
+    @include desktop {
+      font-size: fd(18px, 20px);
+    }
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+
+    @include tablet-up {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include desktop {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: fw(20px);
+    }
+  }
+}
+
+.rd-price {
+  --rd-r: #{fm(20px, 24px)};
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  isolation: isolate;
+  padding: fm(24px, 32px);
+  border-radius: var(--rd-r);
+  background: $price-bg;
+  color: $black;
+  text-decoration: none;
+
+  @include tablet-up {
+    // последняя карточка при нечётном числе — во всю ширину
+    &:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @include desktop {
+    --rd-r: #{fw(24px)};
+    grid-column: span 2;
+    min-height: fd(242px, 256px);
+    padding: fw(32px) fw(40px);
+
+    &:nth-child(-n + 2) {
+      grid-column: span 3;
+    }
+
+    &:last-child:nth-child(odd) {
+      grid-column: span 2;
+    }
+  }
+
+  > :not(.rd-price__fill) {
+    position: relative;
+    z-index: 1;
+  }
+
+  &__num {
+    font-size: fw(14px);
+    font-weight: 700;
+    line-height: 1.7;
+    @include gold-text;
+  }
+
+  &__title {
+    margin-top: fw(4px);
+    font-size: fm(20px, 24px);
+    font-weight: 700;
+    line-height: 1.2;
+    color: $black;
+    transition: color $dur $ease;
+
+    @include desktop {
+      font-size: fd(24px, 30px);
+    }
+  }
+
+  &__cost {
+    display: flex;
+    flex-direction: column;
+    margin-top: 64px;
+
+    @include desktop {
+      margin-top: auto;
+      padding-top: fw(24px); // минимальный отступ: в тёмной карточке заголовок в две строки
+    }
+  }
+
+  &__from {
+    margin-bottom: fm(5px, 6px);
+    font-size: fw(14px);
+    font-weight: 700;
+    line-height: 1.7;
+    transition: color $dur $ease;
+
+    @include desktop {
+      margin-bottom: fw(4px);
+    }
+  }
+
+  &__value {
+    font-size: fm(20px, 24px);
+    font-weight: 700;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    transition: color $dur $ease;
+
+    @include desktop {
+      font-size: fd(24px, 30px);
+    }
+  }
+
+  // стрелка в углу появляется на наведении
+  &__arrow {
+    position: absolute !important;
+    top: fm(24px, 32px);
+    right: fm(24px, 32px);
+    width: fw(24px);
+    height: fw(24px);
+    opacity: 0;
+    transition: opacity 0.4s $ease;
+
+    @include desktop {
+      top: fw(32px);
+      right: fw(40px);
+    }
+  }
+
+  // заливка: въезжает слева, на уходе курсора уезжает вправо (как в строках услуг)
+  &__fill {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+
+    span {
+      position: absolute;
+      inset: 0;
+      background: $black-2;
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 0.7s $ease-fly;
+    }
+  }
+
+  // ----- тёмная карточка с золотым свечением в правом нижнем углу -----
+  &--accent {
+    background: $black;
+    color: #fff;
+
+    // в макете под заголовок оставлено место на две строки (на мобайле карточка выше остальных)
+    .rd-price__title {
+      min-height: 2.4em;
+      color: #fff;
+    }
+
+    // свечение (в макете — размытая картинка): центр на 29px левее правого края и 296px ниже верха,
+    // одинаково на всех ширинах; rd-wow.js может вести центр за курсором (--gx/--gy)
+    &::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      background: radial-gradient(circle var(--gr, #{fw(300px)}) at var(--gx, calc(100% - #{fw(29px)})) var(--gy, #{fw(296px)}),
+        rgba($price-glow, 0.8) 0%, rgba($price-glow, 0.74) 20%, rgba($price-glow, 0.53) 42%,
+        rgba($price-glow, 0.15) 70%, rgba($price-glow, 0) 100%);
+      pointer-events: none;
+    }
+
+    // без заливки: на наведении свечение идёт за курсором и разрастается (rd-wow.js)
+    .rd-price__fill {
+      display: none;
+    }
+  }
+
+  // Наведение (мышь): заливка слева, текст белеет, цена золотится, стрелка «пролетает»
+  @media (hover: hover) and (pointer: fine) {
+    &[href]:hover {
+      .rd-price__fill span {
+        transform: scaleX(1);
+        transform-origin: left center;
+      }
+
+      .rd-price__title,
+      .rd-price__from {
+        color: #fff;
+        transition-delay: 0.1s;
+      }
+
+      .rd-price__value {
+        color: $gold;
+        transition-delay: 0.18s;
+      }
+
+      .rd-price__arrow {
+        opacity: 1;
+      }
+
+      @include arrow-fly;
+    }
+
+    // в тёмной карточке цена остаётся белой: под ней — золотое свечение
+    &--accent[href]:hover .rd-price__value {
+      color: #fff;
+    }
+
+  }
+}

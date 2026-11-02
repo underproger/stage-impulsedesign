@@ -217,7 +217,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
     var labelNow = 'click';
@@ -345,6 +345,7 @@
     if (pfTick) pfTick();
     if (mindTick) mindTick();
     if (garTick) garTick();
+    if (priceTick) priceTick();
 
     raf(frame);
   }
@@ -767,6 +768,117 @@
       gTargets.forEach(function (t) { gIo.observe(t); });
     } else {
       gTargets.forEach(gReveal);
+    }
+  }
+
+  /* ================= «Вартість розробки сайту» ================= */
+  // Заголовок и карточки появляются по IntersectionObserver, цены «досчитываются» от нуля;
+  // свет за курсором на карточке, свечение тёмной карточки плавно идёт за курсором.
+
+  var priceTick = null;
+  var prices = document.querySelector('.rd-prices');
+  if (prices) {
+    var prTitle = prices.querySelector('.rd-prices__title');
+    if (prTitle) splitWords(prTitle);
+    var prCards = Array.prototype.slice.call(prices.querySelectorAll('.rd-price'));
+
+    // счётчик цены: «1300$» → от 0 до 1300, формат (префикс/суффикс) сохраняется
+    var countUp = function (el, delay) {
+      var m = (el.textContent || '').match(/^(\D*)(\d[\d\s]*)(.*)$/);
+      if (!m) return;
+      var to = parseInt(m[2].replace(/\s/g, ''), 10);
+      if (!to) return;
+      var final = el.textContent;
+      el.setAttribute('aria-label', final);
+      var t0 = null;
+      var dur = 1400;
+      var step = function (t) {
+        if (t0 === null) t0 = t;
+        var p = clamp((t - t0) / dur, 0, 1);
+        var e = 1 - Math.pow(1 - p, 4);
+        el.textContent = m[1] + Math.round(to * e) + m[3];
+        if (p < 1) raf(step); else el.textContent = final;
+      };
+      el.textContent = m[1] + '0' + m[3];
+      setTimeout(function () { raf(step); }, delay);
+    };
+
+    var accent = prices.querySelector('.rd-price--accent');
+    var ag = { x: 0, y: 0, r: 300, tx: 0, ty: 0, on: false, s: '' };
+
+    prCards.forEach(function (c, i) {
+      c.style.setProperty('--i', i);
+      if (!fine || !c.hasAttribute('href')) return;
+      if (c !== accent) {
+        var g = document.createElement('span');
+        g.className = 'rd-price__glow';
+        g.setAttribute('aria-hidden', 'true');
+        var fill = c.querySelector('.rd-price__fill');
+        c.insertBefore(g, fill ? fill.nextSibling : c.firstChild);
+      }
+      c.addEventListener('pointermove', function (e) {
+        var r = c.getBoundingClientRect();
+        var x = e.clientX - r.left;
+        var y = e.clientY - r.top;
+        if (c === accent) { ag.tx = x; ag.ty = y; ag.on = true; return; }
+        c.style.setProperty('--gx', x.toFixed(0) + 'px');
+        c.style.setProperty('--gy', y.toFixed(0) + 'px');
+      });
+      if (c === accent) c.addEventListener('pointerleave', function () { ag.on = false; });
+    });
+
+    // свечение тёмной карточки: по умолчанию — правый нижний угол (как в CSS), на наведении — к курсору
+    if (accent && fine) {
+      var home = function () {
+        var r = accent.getBoundingClientRect();
+        var g = window.innerWidth > 1920 ? window.innerWidth / 1920 : 1; // как fw(): шире 1920 — пропорционально
+        return { x: r.width - 29 * g, y: 296 * g, r: 300 * g };
+      };
+      var h0 = home();
+      ag.x = h0.x; ag.y = h0.y; ag.r = h0.r;
+      priceTick = function () {
+        var r = accent.getBoundingClientRect();
+        if (r.bottom < -50 || r.top > window.innerHeight + 50) return;
+        var h = home();
+        var tx = ag.on ? ag.tx : h.x;
+        var ty = ag.on ? ag.ty + 60 : h.y; // центр пятна чуть ниже курсора — золото «подсвечивает» снизу
+        var tr = ag.on ? h.r * 1.3 : h.r;
+        ag.x = lerp(ag.x, tx, 0.08);
+        ag.y = lerp(ag.y, ty, 0.08);
+        ag.r = lerp(ag.r, tr, 0.08);
+        if (!ag.on && Math.abs(ag.x - h.x) < 0.5 && Math.abs(ag.y - h.y) < 0.5 && Math.abs(ag.r - h.r) < 0.5) {
+          if (ag.s) { ['--gx', '--gy', '--gr'].forEach(function (k) { accent.style.removeProperty(k); }); ag.s = ''; }
+          ag.x = h.x; ag.y = h.y; ag.r = h.r;
+          return;
+        }
+        var st = ag.x.toFixed(1) + '|' + ag.y.toFixed(1) + '|' + ag.r.toFixed(1);
+        if (st !== ag.s) {
+          accent.style.setProperty('--gx', ag.x.toFixed(1) + 'px');
+          accent.style.setProperty('--gy', ag.y.toFixed(1) + 'px');
+          accent.style.setProperty('--gr', ag.r.toFixed(1) + 'px');
+          ag.s = st;
+        }
+      };
+    }
+
+    var prReveal = function (el) {
+      el.classList.add('is-in');
+      if (el.classList.contains('rd-price')) {
+        var v = el.querySelector('.rd-price__value');
+        var i = prCards.indexOf(el);
+        if (v) countUp(v, i * 90 + 150);
+      }
+    };
+    var prTargets = [prices.querySelector('.rd-prices__heading')].concat(prCards).filter(Boolean);
+    if ('IntersectionObserver' in window) {
+      var prIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { prReveal(en.target); prIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
+      prTargets.forEach(function (t) { prIo.observe(t); });
+    } else {
+      prTargets.forEach(prReveal);
     }
   }
 })();
