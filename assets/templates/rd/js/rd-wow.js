@@ -626,7 +626,6 @@
     if (priceTick) priceTick();
     if (aboutTick) aboutTick();
     if (leadTick) leadTick();
-    if (seoTick) seoTick();
 
     raf(frame);
   }
@@ -1553,9 +1552,8 @@
 
   /* ================= SEO-текст (section 9) ================= */
   // Заголовок словами из размытия, абзац «проявляется» по словам, икосаэдр влетает (вращает его WebGL).
-  // Раскрытый текст на десктопе длинный — икосаэдр плывёт рядом с текстом (translate на .rd-seo__float,
-  // в пределах блока), свёрнули — возвращается на место.
-  var seoTick = null;
+  // «Розгорнути»: икосаэдр улетает (CSS + раскрутка в WebGL, потом он останавливается), заголовок и абзац гаснут,
+  // текст становится на всю ширину (is-wide) и проявляется заново; «Згорнути» — в обратном порядке.
   var seo = document.querySelector('[data-rd-seo]');
   if (seo) {
     var sTitle = seo.querySelector('.rd-seo__title');
@@ -1564,29 +1562,18 @@
     if (sIntro) splitFlow(sIntro);
     Array.prototype.forEach.call(seo.querySelectorAll('.rd-seo__text > *'), function (el, i) { el.style.setProperty('--k', i); });
 
-    var sObj = seo.querySelector('.rd-seo__obj');
-    var sFloat = seo.querySelector('.rd-seo__float');
-    var sWide = window.matchMedia('(min-width: 1200px)');
-    var sp = { y: 0, s: '' };
-    if (sObj && sFloat) {
-      seoTick = function () {
-        var open = seo.classList.contains('is-open') && sWide.matches;
-        if (!open && Math.abs(sp.y) < 0.5) {
-          if (sp.s) { sFloat.style.transform = ''; sp.s = ''; sp.y = 0; }
-          return;
-        }
-        var target = 0;
-        if (open) {
-          var o = sObj.getBoundingClientRect(); // сам блок не двигается — двигается .rd-seo__float внутри
-          var w = sObj.parentNode.getBoundingClientRect();
-          var max = Math.max(0, w.bottom - o.bottom);
-          target = clamp(window.innerHeight / 2 - (o.top + o.height / 2), 0, max);
-        }
-        sp.y = lerp(sp.y, target, 0.08);
-        var st = 'translate3d(0,' + sp.y.toFixed(1) + 'px,0)';
-        if (st !== sp.s) { sFloat.style.transform = st; sp.s = st; }
-      };
-    }
+    var sBody = seo.querySelector('.rd-seo__body');
+    var sTimer = 0;
+    seo.addEventListener('rd-seo', function (e) {
+      var open = !!e.detail;
+      clearTimeout(sTimer);
+      sBody.classList.add('is-reflow');
+      // раскрытие — ширина меняется, как только икосаэдр отлетел; сворачивание — когда текст почти свернулся
+      sTimer = setTimeout(function () {
+        seo.classList.toggle('is-wide', open);
+        raf(function () { raf(function () { sBody.classList.remove('is-reflow'); }); });
+      }, open ? 260 : 420);
+    });
 
     var sReveal = function (el) { el.classList.add('is-in'); };
     var sTargets = Array.prototype.filter.call(seo.querySelectorAll('.rd-seo__body, .rd-seo__obj'), Boolean);

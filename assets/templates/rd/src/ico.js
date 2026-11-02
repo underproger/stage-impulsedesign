@@ -12,7 +12,8 @@
  * Без WebGL / при reduced motion остаётся картинка.
  *
  * Движение: медленно вращается вокруг вертикали; при первом появлении — раскрутка; прокрутка подкручивает;
- * курсор рядом — наклон к нему и быстрее вращение; лёгкое покачивание.
+ * курсор рядом — наклон к нему и быстрее вращение; лёгкое покачивание. Текст раскрыли (событие rd-seo) —
+ * раскрутка, пока он улетает (CSS), затем рисование останавливается; свернули — снова раскрутка и рисование.
  */
 import {
   Scene,
@@ -332,6 +333,22 @@ class GoldIco {
       if (this.visible) this.scrollV = clamp(this.scrollV + dy * 0.01, -6, 6);
     }, { passive: true });
 
+    // текст раскрыли — икосаэдр раскручивается и улетает (CSS), потом не рисуем; свернули — снова влетает с раскруткой
+    const sec = this.obj.closest('[data-rd-seo]');
+    if (sec) {
+      sec.addEventListener('rd-seo', (e) => {
+        clearTimeout(this.parkTimer);
+        this.boost = 14;
+        if (e.detail) {
+          this.parkTimer = setTimeout(() => { this.parked = true; }, 1100);
+        } else if (this.parked) {
+          this.parked = false;
+          this.last = performance.now();
+          requestAnimationFrame(this.loop);
+        }
+      });
+    }
+
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
       window.addEventListener('pointermove', (e) => {
         if (e.pointerType !== 'mouse' || !this.visible) return;
@@ -357,7 +374,7 @@ class GoldIco {
   }
 
   loop(now) {
-    if (!this.visible && this.ready) return;
+    if ((!this.visible || this.parked) && this.ready) return;
     const dt = clamp((now - this.last) / 1000, 0, 0.05);
     this.last = now;
 

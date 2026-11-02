@@ -328,7 +328,7 @@
   });
 
   /* ---------- SEO-текст (section 9): «Розгорнути» / «Згорнути» ---------- */
-  // Раскрывается остальной текст; кнопка уезжает в конец текста. При сворачивании, если блок ушёл вверх
+  // Раскрывается остальной текст (на всю ширину, икосаэдр убирается); кнопка уезжает в конец текста. При сворачивании, если блок ушёл вверх
   // за край экрана, — плавно возвращаемся к нему. Событие rd-seo на секции (detail — открыт ли).
   Array.prototype.forEach.call(document.querySelectorAll('[data-rd-seo]'), function (seo) {
     var btn = seo.querySelector('.rd-seo__toggle');
@@ -338,6 +338,8 @@
     btn.addEventListener('click', function () {
       var open = !seo.classList.contains('is-open');
       seo.classList.toggle('is-open', open);
+      // без «вау» текст сразу на всю ширину; со слоем «вау» ширину меняет rd-wow.js после ухода икосаэдра
+      if (!document.documentElement.classList.contains('rd-wow-js')) seo.classList.toggle('is-wide', open);
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
       label.textContent = open ? (btn.getAttribute('data-open') || closedText) : closedText;
       seo.dispatchEvent(new CustomEvent('rd-seo', { detail: open }));

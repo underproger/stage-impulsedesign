@@ -7,6 +7,7 @@
 
 $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
+$ease-in-q: cubic-bezier(0.55, 0, 0.75, 0.2); // разгон — «улетает»
 
 .rd-seo {
   position: relative;
@@ -83,6 +84,18 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
 
   &.is-open &__more {
     display: block;
+  }
+
+  // текст раскрыт: икосаэдр убирается, текст — на всю ширину блока (is-wide ставит rd.js, в «вау» — rd-wow.js
+  // с паузой: сначала улетает икосаэдр, текст перестраивается невидимо и проявляется заново)
+  &.is-wide &__body {
+    @include desktop {
+      max-width: none;
+    }
+  }
+
+  &.is-open &__obj {
+    display: none;
   }
 
   // ----- текст статьи -----
@@ -406,6 +419,25 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     transition-delay: calc(var(--i) * 18ms + 250ms);
   }
 
+  .rd-seo__title {
+    transition: opacity 0.5s $ease 0.05s;
+  }
+
+  // смена ширины текста (раскрыли / свернули): заголовок и абзац гаснут, строки перестраиваются невидимо,
+  // потом абзац снова проявляется по словам
+  .rd-seo__body.is-reflow {
+    .rd-seo__title {
+      opacity: 0;
+      transition: opacity 0.2s $ease;
+    }
+
+    .rd-qw {
+      opacity: 0;
+      transition: opacity 0.2s $ease;
+      transition-delay: 0s;
+    }
+  }
+
   .rd-seo__toggle {
     opacity: 0;
     translate: 0 16px;
@@ -430,11 +462,12 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     }
   }
 
-  // икосаэдр влетает (вращение — WebGL); сдвиг при прокрутке раскрытого текста пишет rd-wow.js (translate)
+  // икосаэдр влетает (вращение — WebGL); после сворачивания текста возвращается так же, когда текст сузился
   .rd-seo__obj {
     opacity: 0;
     scale: 0.6;
-    transition: opacity 1s $ease-expo 0.2s, scale 1.4s $ease-expo 0.2s;
+    transition: opacity 1s $ease-expo 0.45s, scale 1.4s $ease-expo 0.45s, translate 1.4s $ease-expo 0.45s,
+      filter 0.9s $ease 0.45s, height 0.6s $ease-io, margin 0.6s $ease-io;
 
     &.is-in {
       opacity: 1;
@@ -442,8 +475,21 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     }
   }
 
-  .rd-seo__float {
-    will-change: transform;
+  // раскрыли текст: икосаэдр (раскручивается в WebGL) разгоняется и улетает вверх-вправо, тая в размытии;
+  // на мобайле он под текстом — заодно схлопывается его место
+  .rd-seo.is-open .rd-seo__obj {
+    display: block;
+    opacity: 0;
+    scale: 0.25;
+    translate: 45% -35%;
+    filter: blur(10px);
+    transition: opacity 0.55s $ease 0.15s, scale 0.8s $ease-in-q, translate 0.8s $ease-in-q, filter 0.6s $ease 0.1s,
+      height 0.6s $ease-io 0.3s, margin 0.6s $ease-io 0.3s;
+
+    @include mobile {
+      height: 0;
+      margin-top: 0;
+    }
   }
 
   // раскрытие: высота 0fr → 1fr, абзацы выезжают по очереди
@@ -465,17 +511,18 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     transition: opacity 0.6s $ease, translate 0.8s $ease-expo;
   }
 
+  // текст раскрывается, когда абзац уже перестроился на всю ширину
   .rd-seo.is-open {
     .rd-seo__more {
       grid-template-rows: 1fr;
       visibility: visible;
-      transition: grid-template-rows 0.9s $ease-io, visibility 0s;
+      transition: grid-template-rows 0.9s $ease-io 0.3s, visibility 0s;
     }
 
     .rd-seo__text > * {
       opacity: 1;
       translate: 0 0;
-      transition-delay: calc(min(var(--k, 0), 12) * 50ms + 150ms);
+      transition-delay: calc(min(var(--k, 0), 12) * 50ms + 450ms);
     }
   }
 }
