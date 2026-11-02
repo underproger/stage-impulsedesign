@@ -472,8 +472,8 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer';
-    var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float';
+    var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
     var labelNow = 'click';
@@ -1591,8 +1591,8 @@
   }
 
   /* ================= Футер (весь сайт) ================= */
-  // Колонки поднимаются по очереди, под курсором — золотая сетка. Бегущая строка: своя скорость (как у CSS-анимации),
-  // прокрутка разгоняет её в сторону прокрутки, под курсором — замедляется; вне экрана не считается.
+  // Колонки поднимаются по очереди, под курсором — золотая сетка. Бегущая строка: своя ровная скорость
+  // (как у CSS-анимации), на прокрутку не реагирует; под курсором — замедляется; вне экрана не считается.
   var tickerTick = null;
   var footer = document.querySelector('[data-rd-footer]');
   if (footer) {
@@ -1632,9 +1632,7 @@
       var tkHalf = 0;
       var tkK = 1; // замедление под курсором (плавно)
       var tkKTarget = 1;
-      var tkScroll = 0; // добавка скорости от прокрутки, px/с со знаком
       var tkLast = performance.now();
-      var tkY = window.scrollY;
       var tkOn = true;
       var tkMeasure = function () { tkHalf = tkTrack.scrollWidth / 2; };
       tkMeasure();
@@ -1645,11 +1643,6 @@
       }
       tk.addEventListener('pointerenter', function () { tkKTarget = 0.2; });
       tk.addEventListener('pointerleave', function () { tkKTarget = 1; });
-      window.addEventListener('scroll', function () {
-        var y = window.scrollY;
-        if (tkOn) tkScroll = clamp(tkScroll + (y - tkY) * 9, -1600, 1600);
-        tkY = y;
-      }, { passive: true });
 
       tickerTick = function () {
         var now = performance.now();
@@ -1657,13 +1650,14 @@
         tkLast = now;
         if (!tkOn || !tkHalf) return;
         tkK = lerp(tkK, tkKTarget, 1 - Math.pow(0.02, dt));
-        tkScroll *= Math.pow(0.08, dt);
-        var v = (tkHalf / 44) * tkK + tkScroll; // базовая скорость = как у CSS-анимации (44 с на половину ленты)
+        var v = (tkHalf / 44) * tkK; // скорость = как у CSS-анимации (44 с на половину ленты)
         tkx -= v * dt;
         if (tkx <= -tkHalf) tkx += tkHalf;
-        if (tkx > 0) tkx -= tkHalf;
         tkTrack.style.transform = 'translate3d(' + tkx.toFixed(2) + 'px,0,0)';
       };
     }
   }
+
+  // золотые «линзы» вставлены — выравниваем все сетки фона в такт (rd.js)
+  if (window.rdSyncGrids) window.rdSyncGrids();
 })();

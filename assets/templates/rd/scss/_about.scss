@@ -165,8 +165,8 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     gap: 44px;
     padding: 37.5px 32px 38.5px;
     border-radius: var(--rd-r);
-    @include grid-bg;
     color: #fff;
+    @include grid-bg-move;
 
     @include tablet-up {
       display: grid;
@@ -376,7 +376,7 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     margin-top: fm(80px, 99px);
     padding: 26px 24px 133.5px;
     border-radius: var(--rd-r);
-    @include grid-bg;
+    background-color: $black; // сетка — в .rd-about__grid (карточка не обрезает кнопку-кольцо)
     color: #fff;
 
     @include tablet-up {
@@ -390,6 +390,17 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
       margin-top: 4px; // верх карточки = верх фото (без колец)
       padding: fd(40px, 48px) fd(48px, 56px) fd(48px, 46.5px);
     }
+  }
+
+  // движущаяся сетка карточки: свой слой с обрезкой по скруглению (сама карточка не обрезает кнопку-кольцо)
+  &__grid {
+    position: absolute;
+    z-index: -3;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+    @include grid-bg-move(0);
   }
 
   &__row {

@@ -1005,16 +1005,10 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     }
   }
 
-  // золотая сетка под курсором (общий слой .rd-wow-spot; здесь сетка неподвижна)
+  // золотая сетка под курсором (общий слой .rd-wow-spot; едет вместе с сеткой блока)
   .rd-gar {
     > .rd-wow-spot {
       z-index: -2;
-    }
-
-    .rd-wow-spot__grid {
-      left: 0;
-      bottom: 0;
-      animation: none;
     }
 
     &.is-lit > .rd-wow-spot {

@@ -6,7 +6,8 @@
   Данные: ClientConfig — phone-1, adress / adress-ua, e-mail, brief, copyright, соцсети,
   policy-link / policy-link-ua (ID или URL политики; пусто — текст без ссылки).
   Пункты «Послуги» — ниже в $services (ID страниц услуг для RU и UA и подписи из макета).
-  Бегущая строка двигается CSS-анимацией, в слое «вау» — rd-wow.js (быстрее при прокрутке, медленнее под курсором).
+  Бегущая строка двигается CSS-анимацией, в слое «вау» — rd-wow.js (ровная скорость, на прокрутку не реагирует, под курсором медленнее).
+  В конце — плавающие кнопки (весь сайт): звонок (phone-1) и «наверх» с прогрессом прокрутки по контуру; логика — rd.js, стили — _float.scss.
 *}
 {set $ctx = $_modx->context.key}
 {set $isRu = $ctx == 'web'}
@@ -21,7 +22,9 @@
   'contacts' => 'Контакты',
   'brief' => 'Скачать бриф',
   'policy' => 'Политика конфиденциальности',
-  'home' => 'Impulse Design — на главную'
+  'home' => 'Impulse Design — на главную',
+  'call' => 'Позвонить',
+  'up' => 'Наверх'
 ] : [
   'write' => 'Пишіть нам',
   'about' => 'Професійне створення та просування сайтів у&nbsp;Києві та&nbsp;Україні',
@@ -30,7 +33,9 @@
   'contacts' => 'Контакти',
   'brief' => 'Завантажити бриф',
   'policy' => 'Політика конфіденційності',
-  'home' => 'Impulse Design — на головну'
+  'home' => 'Impulse Design — на головну',
+  'call' => 'Подзвонити',
+  'up' => 'Нагору'
 ]}
 {set $services = $isRu ? [
   [187, 'Разработка сайтов'], [189, 'Продвижение сайтов'], [262, 'Поддержка сайтов'], [260, 'Написание текстов'], [263, 'Разработка лого']
@@ -146,3 +151,23 @@
     </div>
   </div>
 </footer>
+
+{* Плавающие кнопки: звонок + «наверх» (по контуру — сколько страницы прокручено). Показ после первого экрана — rd.js *}
+<div class="rd-float" data-rd-float>
+  {if $phone}
+    <a class="rd-float__btn rd-float__call" href="tel:{$phoneHref}" aria-label="{$t.call}: {$phone}" data-rd-magnet>
+      <span class="rd-float__wave" aria-hidden="true"></span>
+      <span class="rd-float__wave rd-float__wave--2" aria-hidden="true"></span>
+      <span class="rd-float__num" aria-hidden="true">{$phone}</span>
+      <svg class="rd-float__phone" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    </a>
+  {/if}
+  <button class="rd-float__btn rd-float__up" type="button" aria-label="{$t.up}" data-rd-up data-rd-magnet>
+    <span class="rd-float__fill" aria-hidden="true"></span>
+    <svg class="rd-float__ring" viewBox="0 0 56 56" aria-hidden="true"><circle class="rd-float__track" cx="28" cy="28" r="27"/><circle class="rd-float__bar" cx="28" cy="28" r="27" pathLength="1"/></svg>
+    <span class="rd-float__arrow" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    </span>
+  </button>
+</div>

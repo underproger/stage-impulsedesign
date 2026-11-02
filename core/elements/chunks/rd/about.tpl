@@ -142,6 +142,7 @@
             <span class="rd-works__arrow rd-arrow" aria-hidden="true"><img class="rd-arrow__a" src="{$img}arrow-narrow-up-right.svg" width="36" height="36" alt=""><img class="rd-arrow__b" src="{$img}arrow-narrow-up-right.svg" width="36" height="36" alt=""></span>
           </a>
         {/if}
+        <span class="rd-about__grid" aria-hidden="true"></span>
       </div>
     </div>
   </div>

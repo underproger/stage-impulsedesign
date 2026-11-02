@@ -110,7 +110,7 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
     isolation: isolate;
     padding: fm(68px, 85px) 0 fm(39px, 40px); // верх строки заголовков колонок; логотип на 2–3px выше
-    @include grid-bg;
+    @include grid-bg-move;
 
     @include desktop {
       --rd-cell: #{fw(100px)};
@@ -374,16 +374,10 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     animation: none;
   }
 
-  // под курсором — золотая сетка (общий слой .rd-wow-spot; здесь сетка неподвижна)
+  // под курсором — золотая сетка (общий слой .rd-wow-spot; едет вместе с сеткой блока)
   .rd-footer__main {
     > .rd-wow-spot {
       z-index: -1;
-    }
-
-    .rd-wow-spot__grid {
-      left: 0;
-      bottom: 0;
-      animation: none;
     }
 
     &.is-lit > .rd-wow-spot {
@@ -412,15 +406,51 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     }
   }
 
-  // ссылки: золотятся и чуть сдвигаются
+  // ссылки — как в подменю шапки: перед ссылкой выезжает золотая черта, текст сдвигается, снизу — подчёркивание
+  // (у e-mail подчёркивание и так есть — только черта)
   .rd-footer__link {
+    position: relative;
     display: inline-block;
-    transition: color $dur $ease, translate 0.45s $ease-expo;
+    transition: color $dur $ease, padding-left 0.55s $ease-expo;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 0;
+      height: 1px;
+      background: $gold;
+      transition: width 0.55s $ease-expo;
+    }
+
+    &:not(.rd-footer__mail)::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 1px;
+      background: $gold-grad;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform $dur $ease, left 0.55s $ease-expo, width 0.55s $ease-expo;
+    }
   }
 
   @media (hover: hover) and (pointer: fine) {
     .rd-footer__link:hover {
-      translate: 6px 0;
+      padding-left: 22px;
+
+      &::before {
+        width: 14px;
+      }
+
+      &::after {
+        left: 22px;
+        width: calc(100% - 22px);
+        transform: scaleX(1);
+      }
     }
 
     // бриф: облако «подпрыгивает», стрелка в нём бьёт вниз

@@ -1,0 +1,341 @@
+@use "base" as *;
+
+// ===== Плавающие кнопки (весь сайт): звонок + «наверх» =====
+// Разметка — в конце chunks/rd/footer.tpl, логика — rd.js (показ после первого экрана, прогресс, прокрутка наверх).
+// Звонок: золотой круг, от него расходятся волны, трубка «звенит» раз в несколько секунд; на наведении слева
+// выезжает номер. «Наверх»: тёмный круг, по контуру золотом — сколько страницы прокручено; на наведении
+// заливается золотом, стрелка «пролетает» вверх. Обе кнопки — магниты и «курсор» (rd.js / rd-wow.js).
+// На десктопе обе появляются после первого экрана (там телефон есть в шапке). На мобайле звонок виден сразу
+// и стоит на месте «наверх», пока та скрыта, а потом поднимается.
+
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+.rd-float {
+  --rd-fb: #{fm(52px, 56px)}; // диаметр кнопки
+  --rd-fgap: #{fm(10px, 12px)};
+  position: fixed;
+  z-index: 800; // под шапкой с меню (900), под переходом между страницами и своим курсором
+  right: fm(16px, 24px);
+  bottom: fm(16px, 24px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--rd-fgap);
+  pointer-events: none; // ловят клики только сами кнопки
+
+  @include desktop {
+    --rd-fb: #{fd(56px, 64px)};
+    --rd-fgap: #{fw(12px)};
+    right: fd(24px, 32px);
+    bottom: fd(24px, 32px);
+  }
+
+  &__btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--rd-fb);
+    height: var(--rd-fb);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    font: inherit;
+    cursor: pointer;
+    pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
+    will-change: transform; // магнит
+    // скрыта: ниже и меньше
+    opacity: 0;
+    visibility: hidden;
+    translate: 0 18px;
+    scale: 0.6;
+    transition: opacity 0.35s $ease, translate 0.7s $ease-expo, scale 0.7s $ease-expo, visibility 0s 0.7s;
+
+    &:focus-visible {
+      outline: 2px solid $gold;
+      outline-offset: 4px;
+    }
+  }
+
+  &.is-on &__btn {
+    opacity: 1;
+    visibility: visible;
+    translate: 0 0;
+    scale: 1;
+    transition: opacity 0.4s $ease, translate 0.8s $ease-expo, scale 0.8s $ease-expo, visibility 0s;
+  }
+
+  // «наверх» появляется первой, звонок — следом (он выше)
+  &.is-on &__call {
+    transition-delay: 0.08s;
+  }
+
+  // ----- звонок -----
+  &__call {
+    color: $black;
+    background: $gold-grad;
+    box-shadow: 0 10px 28px rgba($gold, 0.32);
+
+    // мобайл: виден всегда; пока «наверх» скрыта — стоит на её месте
+    @include mobile {
+      opacity: 1;
+      visibility: visible;
+      scale: 1;
+      translate: 0 calc(var(--rd-fb) + var(--rd-fgap));
+    }
+  }
+
+  @include mobile {
+    &.is-on &__call {
+      translate: 0 0;
+    }
+  }
+
+  &__phone {
+    position: relative;
+    width: 44%;
+    height: 44%;
+  }
+
+  &__wave {
+    position: absolute;
+    inset: 0;
+    border: 1.5px solid rgba($gold, 0.75);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  // номер — «таблетка» слева, на наведении
+  &__num {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 10px);
+    display: flex;
+    align-items: center;
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 999px;
+    background: rgba($black-2, 0.92);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    translate: 14px -50%;
+    clip-path: inset(0 0 0 100% round 999px);
+    transition: opacity 0.3s $ease, translate 0.6s $ease-expo, clip-path 0.6s $ease-expo;
+  }
+
+  @include desktop {
+    &__num {
+      display: flex;
+    }
+  }
+
+  @include mobile {
+    &__num {
+      display: none;
+    }
+  }
+
+  // ----- «наверх» -----
+  &__up {
+    color: $gold;
+    background: rgba($black-2, 0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  }
+
+  &__fill {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: $gold-grad;
+    transform: scale(0);
+    transition: transform 0.55s $ease-expo;
+  }
+
+  &__ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    rotate: -90deg; // начало прогресса — сверху
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  &__track,
+  &__bar {
+    fill: none;
+    stroke-width: 2;
+  }
+
+  &__track {
+    stroke: rgba(255, 255, 255, 0.12);
+  }
+
+  // прогресс: длина пути = 1 (pathLength), смещение = 1 − доля прокрутки (rd.js)
+  &__bar {
+    stroke: $gold;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 0.2s linear, stroke 0.35s $ease;
+  }
+
+  &__arrow {
+    position: relative;
+    display: block;
+    width: 40%;
+    aspect-ratio: 1;
+    overflow: hidden;
+
+    svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transition: translate 0.5s $ease-fly;
+
+      + svg {
+        translate: 0 115%;
+      }
+    }
+  }
+
+  // наведение (только мышь)
+  @media (hover: hover) and (pointer: fine) {
+    &__call:hover &__num {
+      opacity: 1;
+      translate: 0 -50%;
+      clip-path: inset(0 0 0 0 round 999px);
+    }
+
+    &__up:hover {
+      color: $black;
+
+      .rd-float__fill {
+        transform: scale(1);
+      }
+
+      .rd-float__bar {
+        stroke: $black;
+      }
+
+      .rd-float__arrow svg {
+        translate: 0 -115%;
+
+        + svg {
+          translate: 0 0;
+          transition-delay: 0.08s;
+        }
+      }
+    }
+  }
+}
+
+// анимации — только если пользователь не просил меньше движения
+@media (prefers-reduced-motion: no-preference) {
+  .rd-float__wave {
+    animation: rd-float-wave 2.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  .rd-float__wave--2 {
+    animation-delay: 1.3s;
+  }
+
+  // трубка «звенит» раз в 4.5 с, на наведении — сразу
+  .rd-float__phone {
+    animation: rd-float-ring 4.5s $ease 1s infinite;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rd-float__call:hover .rd-float__phone {
+      animation: rd-float-ring-now 0.9s $ease;
+    }
+  }
+}
+
+@keyframes rd-float-wave {
+  0% {
+    opacity: 0.85;
+    scale: 1;
+  }
+
+  100% {
+    opacity: 0;
+    scale: 1.85;
+  }
+}
+
+@keyframes rd-float-ring {
+  0%,
+  16%,
+  100% {
+    rotate: 0deg;
+  }
+
+  2% {
+    rotate: -18deg;
+  }
+
+  4% {
+    rotate: 15deg;
+  }
+
+  6% {
+    rotate: -13deg;
+  }
+
+  8% {
+    rotate: 10deg;
+  }
+
+  10% {
+    rotate: -6deg;
+  }
+
+  12% {
+    rotate: 3deg;
+  }
+}
+
+@keyframes rd-float-ring-now {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+
+  12% {
+    rotate: -18deg;
+  }
+
+  26% {
+    rotate: 15deg;
+  }
+
+  40% {
+    rotate: -12deg;
+  }
+
+  54% {
+    rotate: 9deg;
+  }
+
+  68% {
+    rotate: -5deg;
+  }
+
+  82% {
+    rotate: 2deg;
+  }
+}

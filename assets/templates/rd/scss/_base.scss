@@ -104,6 +104,34 @@ $ease-fly: cubic-bezier(0.65, 0, 0.35, 1); // стрелки и заливки: 
   background-position: 0 0;
 }
 
+// Сетка, которая едет вправо-вверх, как в первом экране: слой ::before на ячейку больше блока двигается
+// transform'ом (без перерисовки). Блоку нужны position: relative, overflow: hidden и isolation: isolate —
+// слой лежит под всем содержимым ($z). Все сетки сайта идут в такт: rd.js ставит начало анимаций rd-grid-move на ноль.
+@mixin grid-bg-move($z: -3) {
+  background-color: $black;
+
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: $z;
+    top: 0;
+    left: calc(-1 * var(--rd-cell, 100px));
+    right: 0;
+    bottom: calc(-1 * var(--rd-cell, 100px));
+    background-image:
+      linear-gradient(to right, $line-dark 1px, transparent 1px),
+      linear-gradient(to bottom, $line-dark 1px, transparent 1px);
+    background-size: var(--rd-cell, 100px) var(--rd-cell, 100px);
+    pointer-events: none;
+    will-change: transform;
+    animation: rd-grid-move 3s linear infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+}
+
 // Стрелка «пролетает»: текущая уходит в правый верхний угол, новая выезжает из левого нижнего.
 // Вызывать внутри состояния наведения родителя.
 @mixin arrow-fly {

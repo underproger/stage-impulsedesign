@@ -15,8 +15,8 @@ $gar-glow: #cdb167;
   overflow: hidden;
   isolation: isolate;
   padding-block: fm(80px, 110px);
-  @include grid-bg;
   color: #fff;
+  @include grid-bg-move;
 
   @include desktop {
     --rd-r: #{fw(24px)};

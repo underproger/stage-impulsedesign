@@ -42,6 +42,13 @@
   &__inner {
     position: relative;
     padding-top: fm(60px, 80px);
+    // баннер — без выделения текста и перетаскивания картинок
+    -webkit-user-select: none;
+    user-select: none;
+
+    img {
+      -webkit-user-drag: none;
+    }
 
     @include desktop {
       flex: 1 1 auto;
@@ -184,7 +191,9 @@
   }
 
   // ----- Визуал: золотой объект + кнопка «Останні роботи» -----
+  // Объект крупнее макета (по просьбе): --rd-gw — его сторона; на телефоне от неё считается и место кнопки-кольца.
   &__visual {
+    --rd-gw: #{fm(360px, 560px)};
     position: relative;
     pointer-events: none;
 
@@ -193,35 +202,45 @@
     }
 
     @include tablet-up {
+      --rd-gw: 560px;
       position: static; // кнопка позиционируется от .rd-hero__inner
     }
 
     @include desktop {
+      --rd-gw: #{fl(560px, 620px, 1200px, 1600px)};
       position: absolute;
       inset: 0;
+    }
+
+    @media (min-width: 1600px) {
+      --rd-gw: #{fd(620px, 780px)};
     }
   }
 
   &__glob {
     position: relative;
-    width: fm(320px, 480px);
+    width: var(--rd-gw);
     aspect-ratio: 1;
-    margin: 28px auto 140px;
+    // по центру, даже если шире колонки; снизу — место под кнопку-кольцо (она на 69.7% высоты объекта)
+    margin: 28px 0 calc(237px - var(--rd-gw) * 0.303) calc(50% - var(--rd-gw) / 2);
     pointer-events: none;
 
     @include tablet-up {
-      width: 480px;
-      margin: 9px auto 0;
+      margin: -16px 0 -24px calc(50% - var(--rd-gw) / 2);
     }
 
     @include desktop {
       position: absolute;
       top: 50%;
-      right: 0;
-      width: fd(480px, 600px);
+      // выходит за правый край контейнера (дальше обрезает сам экран) — так крупный объект не наезжает на заголовок
+      right: calc(-1 * #{fl(40px, 72px, 1200px, 1600px)});
       margin: 0;
       // центр по высоте всего экрана (вместе с шапкой)
       transform: translateY(calc(-50% - #{fd(50px, 60px)}));
+    }
+
+    @media (min-width: 1600px) {
+      right: calc(-1 * #{fd(72px, 90px)});
     }
   }
 
@@ -283,8 +302,8 @@
   backdrop-filter: blur(15px);
   will-change: transform; // «магнит» за курсором — rd.js
 
-  // телефон — по центру поверх объекта (223px от верха объекта + его отступ 28px)
-  top: 251px;
+  // телефон — по центру поверх объекта (на 69.7% его высоты + отступ объекта 28px)
+  top: calc(28px + var(--rd-gw, 320px) * 0.697);
   left: 50%;
   margin-left: -94.5px;
 

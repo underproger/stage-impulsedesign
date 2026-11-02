@@ -19,8 +19,8 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   overflow: hidden;
   isolation: isolate;
   padding: fm(81px, 103px) 0 fm(79px, 108px);
-  @include grid-bg;
   color: #fff;
+  @include grid-bg-move;
 
   @include desktop {
     --rd-cell: #{fw(100px)};
@@ -697,16 +697,10 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     animation: rd-lead-glint 1.6s $ease 1.4s both;
   }
 
-  // золотая сетка под курсором (общий слой .rd-wow-spot; здесь сетка неподвижна)
+  // золотая сетка под курсором (общий слой .rd-wow-spot; едет вместе с сеткой блока)
   .rd-lead {
     > .rd-wow-spot {
       z-index: -2;
-    }
-
-    .rd-wow-spot__grid {
-      left: 0;
-      bottom: 0;
-      animation: none;
     }
 
     &.is-lit > .rd-wow-spot {

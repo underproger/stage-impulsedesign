@@ -23,6 +23,21 @@
     });
   }
 
+  /* ---------- Сетки фона (первый экран, гарантии, плашки section 6, форма, футер) едут в такт ---------- */
+  // У каждой сетки своя CSS-анимация rd-grid-move, и стартуют они в разное время (золотые «линзы» под курсором —
+  // ещё и после загрузки rd-wow.js). Ставим начало всех на ноль таймлайна — фаза везде одна, линии совпадают.
+  var syncGrids = function () {
+    if (!document.getAnimations) return;
+    document.getAnimations().forEach(function (a) {
+      if (a.animationName === 'rd-grid-move' && a.startTime !== 0) {
+        try { a.startTime = 0; } catch (e) { /* старый браузер — пусть идут как идут */ }
+      }
+    });
+  };
+  window.rdSyncGrids = syncGrids;
+  syncGrids();
+  window.addEventListener('load', syncGrids);
+
   /* ---------- 3D-объекты (первый экран, спираль section 6, икосаэдр section 9): один WebGL-модуль, грузится после загрузки страницы ---------- */
   var glob = document.querySelector('[data-rd-glob], [data-rd-3d], [data-rd-ico]');
   if (glob && glob.dataset.src && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -469,4 +484,37 @@
       if (status) status.textContent = status.getAttribute('data-fail') || '';
     });
   });
+
+  /* ---------- Плавающие кнопки (весь сайт): звонок + «наверх» с прогрессом прокрутки по контуру ---------- */
+  // .is-on — после половины первого экрана; прогресс — stroke-dashoffset кольца (длина пути = 1).
+  var flt = document.querySelector('[data-rd-float]');
+  if (flt) {
+    var fltBar = flt.querySelector('.rd-float__bar');
+    var fltUp = flt.querySelector('[data-rd-up]');
+    var fltQueued = false;
+    var fltUpdate = function () {
+      fltQueued = false;
+      var de = document.documentElement;
+      var y = window.pageYOffset || de.scrollTop;
+      var max = de.scrollHeight - window.innerHeight;
+      var p = max > 0 ? Math.min(1, Math.max(0, y / max)) : 0;
+      if (fltBar) fltBar.style.strokeDashoffset = (1 - p).toFixed(4);
+      flt.classList.toggle('is-on', y > window.innerHeight * 0.5);
+    };
+    var fltQueue = function () {
+      if (fltQueued) return;
+      fltQueued = true;
+      requestAnimationFrame(fltUpdate);
+    };
+    window.addEventListener('scroll', fltQueue, { passive: true });
+    window.addEventListener('resize', fltQueue);
+    window.addEventListener('load', fltQueue);
+    fltUpdate();
+    if (fltUp) {
+      fltUp.addEventListener('click', function () {
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+      });
+    }
+  }
 })();
