@@ -1,0 +1,238 @@
+@use "base" as *;
+
+// ===== «4 унікальні гарантії від студії Impulse Design» — section 4 макета =====
+// Тёмный фон с сеткой и золотым свечением внизу слева. Заголовок + круглая кнопка (как в первом экране),
+// ниже — полупрозрачная плашка: три гарантии и золотая карточка, прижатая к правому/нижнему краю плашки.
+// Десктоп — 4 колонки, планшет — 2×2, телефон — столбик (кнопка уезжает под плашку).
+
+$gar-panel: rgba(36, 35, 40, 0.65);
+$gar-glow: #cdb167;
+
+.rd-gar {
+  --rd-cell: #{fw(100px)};
+  --rd-r: #{fm(20px, 24px)};
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding-block: fm(80px, 110px);
+  @include grid-bg;
+  color: #fff;
+
+  @include desktop {
+    --rd-r: #{fw(24px)};
+    padding-block: fd(130px, 180px);
+  }
+
+  // золотое свечение: центр — у нижнего края блока, под плашкой
+  &__glow {
+    --gw: #{fm(418px, 556px)};
+    position: absolute;
+    z-index: -1;
+    left: calc(#{fm(80px, 284px)} - var(--gw) / 2);
+    bottom: calc(var(--gw) * -0.476 + 4px);
+    width: var(--gw);
+    aspect-ratio: 1352 / 1289;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba($gar-glow, 0.82) 32%, rgba($gar-glow, 0.6) 56%, rgba($gar-glow, 0.24) 79%, rgba($gar-glow, 0) 100%);
+    pointer-events: none;
+
+    @include desktop {
+      --gw: #{fd(609px, 676px)};
+      left: calc((100% - min(#{fd(1200px, 1500px)}, 100% - 80px)) / 2 + #{fd(209.5px, 232px)} - var(--gw) / 2);
+    }
+  }
+
+  &__wrap {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "title" "panel" "cta";
+    row-gap: 48px;
+
+    @include tablet-up {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: "title cta" "panel panel";
+      column-gap: 20px;
+      row-gap: 64px;
+    }
+
+    @include desktop {
+      row-gap: fd(64px, 80px);
+    }
+  }
+
+  // h2 глобально стилизован старым CSS — перебиваем явно
+  &__title {
+    grid-area: title;
+    font-family: inherit;
+    font-size: fm(36px, 48px);
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: #fff;
+
+    @include desktop {
+      max-width: fd(880px, 1060px);
+      font-size: fd(60px, 72px);
+    }
+
+    span {
+      @include gold-text;
+    }
+  }
+
+  &__cta.rd-works--inline {
+    grid-area: cta;
+    justify-self: center;
+
+    @include tablet-up {
+      justify-self: end;
+    }
+  }
+
+  // ----- плашка -----
+  &__panel {
+    grid-area: panel;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--rd-r);
+    background: $gar-panel;
+
+    @include tablet-up {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: 8px;
+      padding-left: 32px;
+    }
+
+    @include desktop {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) fd(300px, 337px);
+      row-gap: 0;
+      padding-left: fd(32px, 40px);
+    }
+  }
+}
+
+// Круглая кнопка из первого экрана — в потоке, а не поверх объекта
+.rd-works.rd-works--inline {
+  position: relative;
+  z-index: 1;
+  top: auto;
+  right: auto;
+  left: auto;
+  margin: 0;
+}
+
+.rd-gar-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0 24px 40px;
+
+  @include phone {
+    &:first-child {
+      padding-top: 24px;
+    }
+  }
+
+  @include tablet-up {
+    padding: 40px 28px 40px 0;
+  }
+
+  @include desktop {
+    padding: fd(40px, 48px) fd(32px, 61px) fd(40px, 48px) 0;
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: fw(40px);
+    height: fw(40px);
+    color: $gold;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+  }
+
+  &__title {
+    margin: fm(24px, 32px) 0 0;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #fff;
+    transition: color $dur $ease;
+
+    @include desktop {
+      margin-top: fd(32px, 40px);
+      font-size: fd(18px, 20px);
+    }
+  }
+
+  &__text {
+    margin: fm(16px, 20px) 0 0;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: $gray;
+
+    @include desktop {
+      margin-top: fd(20px, 24px);
+      font-size: fd(14px, 16px);
+    }
+
+    b,
+    strong {
+      font-weight: 700;
+      color: #fff;
+    }
+  }
+
+  // ----- золотая карточка: прижата к правому и нижнему краю плашки -----
+  &--gold {
+    align-items: center;
+    margin-top: 8px;
+    padding: 40px fm(38px, 46px);
+    border-radius: var(--rd-r);
+    background: $gold-grad;
+    color: $black;
+    text-align: center;
+
+    @include tablet-up {
+      grid-column: 2;
+      margin: 0;
+      padding: 40px 46px;
+    }
+
+    @include desktop {
+      grid-column: 4;
+      grid-row: 1;
+      padding: fd(40px, 48px) fd(33px, 40px);
+    }
+
+    .rd-gar-card__icon {
+      border-radius: 50%;
+      background: $black-2;
+      color: #fff;
+    }
+
+    .rd-gar-card__title,
+    .rd-gar-card__text {
+      color: $black;
+    }
+  }
+
+  // наведение (мышь): заголовок гарантии золотится
+  @media (hover: hover) and (pointer: fine) {
+    &:not(.rd-gar-card--gold):hover .rd-gar-card__title {
+      color: $gold;
+    }
+  }
+}

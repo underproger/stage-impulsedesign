@@ -67,7 +67,7 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   .rd-hero__text,
   .rd-hero__btn,
   .rd-hero__bottom,
-  .rd-works {
+  .rd-hero .rd-works {
     opacity: 0;
     translate: 0 40px;
     transition: opacity 1s $ease-expo, translate 1.2s $ease-expo;
@@ -81,7 +81,7 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     transition-delay: 1.05s;
   }
 
-  .rd-works {
+  .rd-hero .rd-works {
     translate: 0 0;
     scale: 0.4;
     rotate: -60deg;
@@ -96,12 +96,12 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     .rd-hero__text,
     .rd-hero__btn,
     .rd-hero__bottom,
-    .rd-works {
+    .rd-hero .rd-works {
       opacity: 1;
       translate: 0 0;
     }
 
-    .rd-works {
+    .rd-hero .rd-works {
       scale: 1;
       rotate: 0deg;
     }
@@ -817,6 +817,337 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
         animation: rd-mind-pulse 0.9s $ease both;
       }
     }
+  }
+}
+
+// ================= БЛОК «4 УНІКАЛЬНІ ГАРАНТІЇ» =================
+.rd-wow-js {
+  // заголовок: слова из размытия, золотое слово переливается
+  .rd-gar__title .rd-wd {
+    display: inline-block;
+    opacity: 0;
+    translate: 0 0.6em;
+    filter: blur(10px);
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+    transition-delay: calc(var(--i) * 70ms);
+  }
+
+  .rd-gar__title .rd-wd:not(.rd-wd--el) {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: #fff;
+  }
+
+  .rd-gar__title .rd-wd--el {
+    background: linear-gradient(110deg, $gold 0%, $gold 38%, #f7e8b6 50%, $gold 62%, $gold-2 100%);
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rd-wow-shimmer 4.5s $ease infinite;
+  }
+
+  .rd-gar__title.is-in .rd-wd {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+  }
+
+  // круглая кнопка «вкатывается», как в первом экране
+  .rd-gar__cta {
+    opacity: 0;
+    scale: 0.4;
+    rotate: -60deg;
+    transition: opacity 0.8s $ease-expo 0.3s, scale 1.2s $ease-expo 0.3s, rotate 1.4s $ease-expo 0.3s;
+
+    &.is-in {
+      opacity: 1;
+      scale: 1;
+      rotate: 0deg;
+    }
+  }
+
+  // золотая сетка под курсором (общий слой .rd-wow-spot; здесь сетка неподвижна)
+  .rd-gar {
+    > .rd-wow-spot {
+      z-index: -2;
+    }
+
+    .rd-wow-spot__grid {
+      left: 0;
+      bottom: 0;
+      animation: none;
+    }
+
+    &.is-lit > .rd-wow-spot {
+      opacity: 1;
+    }
+  }
+
+  // свечение «дышит» и чуть тянется за курсором (translate пишет rd-wow.js)
+  .rd-gar__glow {
+    animation: rd-gar-breathe 7s $ease infinite alternate;
+    will-change: transform;
+  }
+
+  // плашка поднимается, гарантии — по очереди
+  .rd-gar__panel {
+    opacity: 0;
+    translate: 0 60px;
+    transition: opacity 1s $ease-expo, translate 1.2s $ease-expo;
+
+    // золотой свет за курсором
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(circle 340px at var(--gx, 50%) var(--gy, 50%), rgba($gold, 0.16), rgba($gold, 0.04) 45%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.6s $ease;
+      pointer-events: none;
+    }
+
+    &.is-lit::before {
+      opacity: 1;
+    }
+
+    &.is-in {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  .rd-gar-card {
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    translate: 0 36px;
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo;
+    transition-delay: calc(var(--i, 0) * 120ms + 200ms);
+
+    &__title {
+      transition: color $dur $ease, translate 0.7s $ease-expo;
+    }
+  }
+
+  .rd-gar__panel.is-in .rd-gar-card {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  // иконки прорисовываются линией
+  .rd-gar-ic {
+    path[pathLength] {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      transition: stroke-dashoffset 1.3s $ease-io;
+      transition-delay: calc(var(--i, 0) * 120ms + 450ms);
+    }
+
+    circle,
+    .rd-gar-ic__needle {
+      opacity: 0;
+      transition: opacity 0.5s $ease, rotate 1.2s cubic-bezier(0.3, 1.5, 0.5, 1);
+      transition-delay: calc(var(--i, 0) * 120ms + 1200ms);
+    }
+
+    // стрелка спидометра «разгоняется» из нуля
+    .rd-gar-ic__needle {
+      transform-box: view-box;
+      transform-origin: 12px 12px;
+      rotate: -135deg;
+    }
+  }
+
+  .rd-gar__panel.is-in .rd-gar-ic {
+    path[pathLength] {
+      stroke-dashoffset: 0;
+    }
+
+    circle,
+    .rd-gar-ic__needle {
+      opacity: 1;
+      rotate: 0deg;
+    }
+  }
+
+  // золотая карточка: блик пробегает при появлении (::before) и на наведении (::after)
+  .rd-gar-card--gold {
+    overflow: hidden;
+    isolation: isolate;
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(105deg, transparent 30%, rgba(#fff, 0.38) 50%, transparent 70%);
+      transform: translateX(-120%);
+      pointer-events: none;
+    }
+
+    > * {
+      position: relative;
+    }
+  }
+
+  .rd-gar__panel.is-in .rd-gar-card--gold::before {
+    animation: rd-gar-sweep 1.4s $ease-io 1.1s both;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rd-gar__panel.is-in .rd-gar-card:hover {
+      .rd-gar-card__title {
+        translate: 8px 0;
+      }
+
+      .rd-gar-ic--cart {
+        animation: rd-gar-roll 0.9s $ease both;
+      }
+
+      .rd-gar-ic--diamond {
+        animation: rd-gar-gem 0.9s $ease both;
+
+        .rd-gar-ic__facets {
+          animation: rd-gar-redraw 0.9s $ease-io both;
+        }
+      }
+
+      .rd-gar-ic__needle {
+        animation: rd-gar-needle 1.1s $ease both;
+      }
+    }
+
+    .rd-gar__panel.is-in .rd-gar-card--gold:hover {
+      &::after {
+        transform: translateX(120%);
+        transition: transform 1.1s $ease-fly;
+      }
+
+      .rd-gar-card__title {
+        translate: 0 0;
+      }
+
+      .rd-gar-card__icon {
+        animation: rd-gar-pulse 1.2s $ease-out both;
+      }
+
+      .rd-gar-ic--zap {
+        animation: rd-gar-flicker 0.9s linear both;
+      }
+    }
+  }
+}
+
+@keyframes rd-gar-breathe {
+  from {
+    scale: 1;
+    opacity: 0.9;
+  }
+
+  to {
+    scale: 1.08;
+    opacity: 1;
+  }
+}
+
+@keyframes rd-gar-sweep {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes rd-gar-roll {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+
+  30% {
+    translate: 4px 0;
+    rotate: -6deg;
+  }
+
+  60% {
+    translate: -2px 0;
+    rotate: 3deg;
+  }
+}
+
+@keyframes rd-gar-gem {
+  0%,
+  100% {
+    scale: 1;
+    rotate: 0deg;
+  }
+
+  35% {
+    scale: 1.14;
+    rotate: -8deg;
+  }
+
+  65% {
+    scale: 0.96;
+    rotate: 4deg;
+  }
+}
+
+@keyframes rd-gar-redraw {
+  from {
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes rd-gar-needle {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+
+  30% {
+    rotate: -120deg;
+  }
+
+  65% {
+    rotate: 18deg;
+  }
+
+  85% {
+    rotate: -6deg;
+  }
+}
+
+@keyframes rd-gar-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba($black-2, 0.45);
+  }
+
+  100% {
+    box-shadow: 0 0 0 18px rgba($black-2, 0);
+  }
+}
+
+@keyframes rd-gar-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  10%,
+  30% {
+    opacity: 0.25;
+  }
+
+  20%,
+  40% {
+    opacity: 1;
   }
 }
 

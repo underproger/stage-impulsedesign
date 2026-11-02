@@ -217,7 +217,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
     var labelNow = 'click';
@@ -344,6 +344,7 @@
 
     if (pfTick) pfTick();
     if (mindTick) mindTick();
+    if (garTick) garTick();
 
     raf(frame);
   }
@@ -697,6 +698,75 @@
       mTargets.forEach(function (t) { mIo.observe(t); });
     } else {
       mTargets.forEach(mReveal);
+    }
+  }
+
+  /* ================= «4 унікальні гарантії» ================= */
+  // Заголовок, кнопка и плашка появляются по IntersectionObserver; под курсором проступает
+  // золотая сетка (общий слой .rd-wow-spot), свечение внизу тянется за курсором, на плашке — свет.
+
+  var garTick = null;
+  var gar = document.querySelector('.rd-gar');
+  if (gar) {
+    var gTitle = gar.querySelector('.rd-gar__title');
+    if (gTitle) splitWords(gTitle);
+    var gPanel = gar.querySelector('.rd-gar__panel');
+    var gGlow = gar.querySelector('.rd-gar__glow');
+    var gg = { x: 0, y: 0, s: '' };
+
+    Array.prototype.forEach.call(gar.querySelectorAll('.rd-gar-card'), function (c, i) { c.style.setProperty('--i', i); });
+
+    if (fine) {
+      var gSpot = document.createElement('div');
+      gSpot.className = 'rd-wow-spot';
+      gSpot.setAttribute('aria-hidden', 'true');
+      gSpot.innerHTML = '<div class="rd-wow-spot__grid"></div>';
+      gar.insertBefore(gSpot, gar.firstChild);
+
+      gar.addEventListener('pointermove', function (e) {
+        var r = gar.getBoundingClientRect();
+        gar.style.setProperty('--mx', (e.clientX - r.left).toFixed(0) + 'px');
+        gar.style.setProperty('--my', (e.clientY - r.top).toFixed(0) + 'px');
+        gar.classList.add('is-lit');
+      });
+      gar.addEventListener('pointerleave', function () { gar.classList.remove('is-lit'); });
+
+      if (gPanel) {
+        gPanel.addEventListener('pointermove', function (e) {
+          var r = gPanel.getBoundingClientRect();
+          gPanel.style.setProperty('--gx', (e.clientX - r.left).toFixed(0) + 'px');
+          gPanel.style.setProperty('--gy', (e.clientY - r.top).toFixed(0) + 'px');
+          gPanel.classList.add('is-lit');
+        });
+        gPanel.addEventListener('pointerleave', function () { gPanel.classList.remove('is-lit'); });
+      }
+
+      // свечение мягко смещается к курсору (только пока блок на экране)
+      garTick = function () {
+        if (!gGlow) return;
+        var r = gar.getBoundingClientRect();
+        if (r.bottom < -100 || r.top > window.innerHeight + 100) return;
+        var inside = mouse.y >= r.top && mouse.y <= r.bottom;
+        var tx = inside ? clamp((mouse.x - window.innerWidth / 2) / window.innerWidth, -0.5, 0.5) * 140 : 0;
+        var ty = inside ? clamp((mouse.y - r.bottom) / r.height, -1, 0) * 50 : 0;
+        gg.x = lerp(gg.x, tx, 0.05);
+        gg.y = lerp(gg.y, ty, 0.05);
+        var st = gg.x.toFixed(1) + 'px ' + gg.y.toFixed(1) + 'px';
+        if (st !== gg.s) { gGlow.style.translate = st; gg.s = st; }
+      };
+    }
+
+    var gReveal = function (el) { el.classList.add('is-in'); };
+    var gTargets = Array.prototype.filter.call(gar.querySelectorAll('.rd-gar__title, .rd-gar__cta, .rd-gar__panel'), Boolean);
+    if ('IntersectionObserver' in window) {
+      var gIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { gReveal(en.target); gIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
+      gTargets.forEach(function (t) { gIo.observe(t); });
+    } else {
+      gTargets.forEach(gReveal);
     }
   }
 })();
