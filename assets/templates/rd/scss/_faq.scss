@@ -1,0 +1,501 @@
+@use "base" as *;
+
+// ===== FAQ — блок «FAQ 2» макета (после «Digital агентство») =====
+// Десктоп (≥1200): заголовок и вопросы слева (активный — светлая «таблетка» с золотой полоской),
+// ответ активного вопроса — справа. Все ответы стоят в одной ячейке сетки (последний ряд — 1fr),
+// поэтому высота блока не меняется при переключении. Планшет и телефон: аккордеон с «+ / −».
+// Отступы сняты с PDF макетов 1920 / 1600 / 768 / 360.
+
+$faq-pill: #f5f3f0;
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+.rd-faq {
+  position: relative;
+  padding: fm(76.3px, 104.9px) 0 fm(80.7px, 111px);
+  background: #fff;
+  color: $black;
+
+  @include desktop {
+    padding-top: fd(124px, 172px);
+    padding-bottom: fd(130px, 180px);
+  }
+
+  &__wrap {
+    position: relative;
+
+    @include desktop {
+      display: grid;
+      grid-template-columns: fd(540px, 624px) minmax(40px, 1fr) minmax(0, #{fd(580px, 720px)}); // на 1200 ответ сужается
+      // заголовок, по ряду на вопрос, последний ряд забирает лишнюю высоту длинного ответа
+      grid-template-rows: auto repeat(var(--n, 5), auto) 1fr;
+      align-items: start;
+    }
+  }
+
+  &__title {
+    position: relative;
+    top: 0.167em; // буквы в макете ниже своей строки (метрики шрифта) — сдвиг только визуальный
+    margin: 0 0 fm(56px, 70px);
+    font-size: fm(36px, 48px);
+    font-weight: 700;
+    line-height: 1;
+    color: $black;
+
+    span {
+      @include gold-text;
+    }
+
+    @include desktop {
+      grid-column: 1;
+      grid-row: 1;
+      margin-bottom: fd(72px, 75px);
+      font-size: fd(60px, 72px);
+    }
+  }
+
+  // ----- вопрос -----
+  &__item {
+    @include phone {
+      margin-inline: -20px; // на телефоне «таблетка» во всю ширину экрана, как в макете
+    }
+
+    @include desktop {
+      display: contents;
+    }
+  }
+
+  &__q {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    margin: 0;
+    padding: fm(24px, 31px) 24px;
+    border: 0;
+    border-radius: 16px;
+    background: transparent;
+    font: inherit;
+    font-size: fm(18px, 20px);
+    font-weight: 700;
+    line-height: fm(22px, 26px);
+    color: $black;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.4s $ease;
+
+    @include desktop {
+      grid-column: 1;
+      padding-block: 31px;
+      font-size: fd(18px, 20px);
+      line-height: fd(24px, 26px);
+    }
+
+    // золотая полоска слева у активного (десктоп)
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: fd(11px, 12px);
+      bottom: fd(11px, 11px);
+      width: 6px;
+      border-radius: 0 4px 4px 0;
+      background: $gold;
+      opacity: 0;
+      transition: opacity 0.4s $ease;
+
+      @include mobile {
+        display: none;
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid $gold;
+      outline-offset: -2px;
+    }
+
+    @include hover {
+      background-color: rgba($faq-pill, 0.6);
+    }
+  }
+
+  &__item.is-open &__q {
+    background-color: $faq-pill;
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  &__q-text {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  // «+» (открыт — «−»): две золотые линии 16×1.5 в рамке 24
+  &__icon {
+    position: relative;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    margin-top: 1px;
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 11.25px;
+      width: 16px;
+      height: 1.5px;
+      border-radius: 1px;
+      background: $gold;
+      transition: transform 0.5s $ease-expo;
+    }
+
+    &::after {
+      transform: rotate(90deg);
+    }
+
+    @include desktop {
+      display: none;
+    }
+  }
+
+  &__item.is-open &__icon::after {
+    transform: rotate(0deg);
+  }
+
+  // ----- ответ -----
+  &__a {
+    display: none;
+
+    @include desktop {
+      display: block;
+      grid-column: 3;
+      grid-row: 1 / -1;
+      visibility: hidden;
+    }
+  }
+
+  &__item.is-open &__a {
+    display: block;
+    visibility: visible;
+  }
+
+  // отступы ответа на мобайле — у текста: обёртка .rd-faq__a-in в «вау» сворачивается в 0 (аккордеон)
+  &__a-in {
+    @include desktop {
+      padding-top: fd(26px, 39px);
+    }
+  }
+
+  &__a-title {
+    display: none;
+
+    @include desktop {
+      position: relative;
+      top: fd(3px, 4px); // как у заголовка блока: буквы ниже строки
+      display: block;
+      margin: 0 0 38px;
+      font-size: fd(30px, 36px);
+      font-weight: 700;
+      line-height: 1;
+    }
+  }
+
+  &__a-text {
+    --lh: #{fm(25px, 29px)};
+    padding: 24.5px 24px 31.5px;
+    font-size: fm(14px, 16px);
+    font-weight: 300;
+    line-height: var(--lh);
+
+    @include desktop {
+      --lh: #{fd(29px, 32px)};
+      padding: 0;
+      font-size: fd(16px, 18px);
+    }
+
+    p,
+    ul,
+    ol {
+      margin: 0 0 15px;
+    }
+
+    > :last-child {
+      margin-bottom: 0;
+    }
+
+    ul,
+    ol {
+      padding: 0 0 0 fm(21px, 24px);
+
+      @include desktop {
+        padding-left: fd(24px, 27px);
+      }
+    }
+
+    ul > li {
+      position: relative;
+      list-style: none;
+
+      // точка по центру строчных букв первой строки
+      &::before {
+        content: "";
+        position: absolute;
+        left: calc(-1 * #{fm(12.25px, 14px)});
+        top: calc(var(--lh) * 0.47 - 0.12em);
+        width: 0.24em;
+        height: 0.24em;
+        border-radius: 50%;
+        background: currentColor;
+
+        @include desktop {
+          left: calc(-1 * #{fd(14px, 16px)});
+        }
+      }
+    }
+
+    ol > li {
+      list-style: decimal;
+    }
+
+    b,
+    strong {
+      font-weight: 700;
+    }
+
+    a {
+      color: $gold;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+}
+
+// ================= «Вау» (html.rd-wow-js, rd-wow.js) =================
+.rd-wow-js {
+  // заголовок: буквы «FAQ» поднимаются из размытия, золотая «s» выпрыгивает и переливается
+  .rd-faq__title {
+    // буквы — span.rd-w / span.rd-ch: не золотые (базовое правило красит любой span заголовка)
+    .rd-w,
+    .rd-ch {
+      background: none;
+      -webkit-text-fill-color: currentColor;
+      color: $black;
+    }
+
+    // inline-block по верху строки: высота строки не растёт, текст ниже не сдвигается
+    .rd-ch,
+    .rd-faq__gold {
+      vertical-align: top;
+    }
+
+    .rd-ch {
+      display: inline-block;
+      opacity: 0;
+      translate: 0 0.45em;
+      filter: blur(8px);
+      transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+      transition-delay: calc(var(--i, 0) * 70ms);
+    }
+
+    .rd-faq__gold {
+      display: inline-block;
+      opacity: 0;
+      scale: 0.2;
+      rotate: -35deg;
+      transform-origin: 30% 80%;
+      background: linear-gradient(110deg, $gold 0%, $gold 38%, #f7e8b6 50%, $gold 62%, $gold-2 100%);
+      background-size: 260% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: opacity 0.6s $ease-expo 0.3s, scale 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, rotate 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s;
+      animation: rd-wow-shimmer 4.5s $ease infinite;
+    }
+  }
+
+  .rd-faq.is-in .rd-faq__title {
+    .rd-ch {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0);
+    }
+
+    .rd-faq__gold {
+      opacity: 1;
+      scale: 1;
+      rotate: 0deg;
+    }
+  }
+
+  // вопросы выезжают по очереди
+  .rd-faq__q {
+    opacity: 0;
+    translate: -28px 0;
+    transition: background-color 0.4s $ease, opacity 0.8s $ease-expo, translate 1s $ease-expo;
+    transition-delay: 0s, calc(var(--i, 0) * 80ms + 0.25s), calc(var(--i, 0) * 80ms + 0.25s);
+
+    @include phone {
+      translate: 0 24px;
+    }
+  }
+
+  .rd-faq.is-in .rd-faq__q {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  .rd-faq__q-text {
+    transition: translate 0.5s $ease-expo;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rd-faq__item:not(.is-open) .rd-faq__q:hover .rd-faq__q-text {
+      translate: 6px 0;
+    }
+  }
+
+  // ответ на десктопе: при появлении блока — снизу; при переключении — строки по очереди
+  @include desktop {
+    .rd-faq__a-in {
+      opacity: 0;
+      translate: 0 30px;
+      transition: opacity 1s $ease-expo 0.45s, translate 1.2s $ease-expo 0.45s;
+    }
+
+    .rd-faq.is-in .rd-faq__a-in {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    .rd-faq__a {
+      opacity: 0;
+      transition: opacity 0.18s $ease, visibility 0s linear 0.18s;
+    }
+
+    .rd-faq__item.is-open .rd-faq__a {
+      opacity: 1;
+      transition: opacity 0.01s, visibility 0s;
+    }
+
+    .rd-faq__a-title,
+    .rd-faq__a-text > :not(ul, ol),
+    .rd-faq__a-text li {
+      opacity: 0;
+      translate: 0 16px;
+      transition: opacity 0.18s $ease, translate 0.18s $ease;
+    }
+
+    .rd-faq__item.is-open {
+      .rd-faq__a-title,
+      .rd-faq__a-text > :not(ul, ol),
+      .rd-faq__a-text li {
+        opacity: 1;
+        translate: 0 0;
+        transition: opacity 0.7s $ease-expo, translate 0.9s $ease-expo;
+        transition-delay: calc(var(--k, 0) * 45ms + 0.2s); // после того как старый ответ погас
+      }
+    }
+
+    // переезжающая «таблетка» с золотой полоской (вставляет rd-wow.js); у самих вопросов фон и полоска гаснут
+    .rd-faq__wrap.has-marker {
+      .rd-faq__q {
+        z-index: 1;
+      }
+
+      .rd-faq__item.is-open .rd-faq__q {
+        background-color: transparent;
+
+        &::before {
+          opacity: 0;
+        }
+      }
+    }
+
+    .rd-faq__marker {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 0;
+      display: block;
+      border-radius: 16px;
+      background: $faq-pill;
+      pointer-events: none;
+      opacity: 0;
+      transition: transform 0.75s $ease-expo, height 0.75s $ease-expo, width 0.4s $ease, opacity 0.8s $ease-expo 0.25s;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: fd(11px, 12px);
+        bottom: 11px;
+        width: 6px;
+        border-radius: 0 4px 4px 0;
+        background: $gold;
+        transform-origin: 0 50%;
+        transition: transform 0.5s $ease-expo;
+      }
+
+      // на ходу полоска вытягивается и становится тоньше
+      &.is-moving::before {
+        transform: scale(0.6, 1.45);
+      }
+    }
+
+    .rd-faq.is-in .rd-faq__marker {
+      opacity: 1;
+    }
+  }
+
+  .rd-faq__marker {
+    @include mobile {
+      display: none;
+    }
+  }
+
+  // аккордеон на мобайле: высота плавно (0fr → 1fr), текст проявляется, «+» поворачивается в «−»
+  @include mobile {
+    .rd-faq__a {
+      display: grid;
+      grid-template-rows: 0fr;
+      visibility: hidden;
+      transition: grid-template-rows 0.6s $ease-expo, visibility 0s linear 0.6s;
+    }
+
+    .rd-faq__item.is-open .rd-faq__a {
+      grid-template-rows: 1fr;
+      visibility: visible;
+      transition: grid-template-rows 0.6s $ease-expo, visibility 0s;
+    }
+
+    .rd-faq__a-in {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .rd-faq__a-text {
+      opacity: 0;
+      translate: 0 -12px;
+      transition: opacity 0.3s $ease, translate 0.5s $ease-expo;
+    }
+
+    .rd-faq__item.is-open .rd-faq__a-text {
+      opacity: 1;
+      translate: 0 0;
+      transition: opacity 0.6s $ease-expo 0.12s, translate 0.8s $ease-expo 0.12s;
+    }
+
+    .rd-faq__icon {
+      transition: transform 0.6s $ease-expo;
+    }
+
+    .rd-faq__item.is-open .rd-faq__icon {
+      transform: rotate(180deg);
+    }
+  }
+}

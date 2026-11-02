@@ -453,7 +453,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
@@ -1363,6 +1363,82 @@
     } else {
       abTargets.forEach(abReveal);
       abPlateOn = true;
+    }
+  }
+  /* ================= FAQ ================= */
+  // Заголовок — буквами, золотая «s» отдельно; вопросы выезжают; на десктопе светлая «таблетка» с полоской
+  // переезжает к активному вопросу, строки ответа появляются по очереди (--k). Переключение — rd.js (событие rd-faq).
+  var faqSec = document.querySelector('.rd-faq');
+  var faqWrap = faqSec && faqSec.querySelector('[data-rd-faq]');
+  if (faqWrap) {
+    var faqTitle = faqSec.querySelector('.rd-faq__title');
+    if (faqTitle) {
+      Array.prototype.forEach.call(faqTitle.querySelectorAll('span'), function (sp) {
+        sp.setAttribute('data-wow-skip', '');
+        sp.classList.add('rd-faq__gold');
+      });
+      splitChars(faqTitle, { local: true });
+    }
+
+    Array.prototype.forEach.call(faqSec.querySelectorAll('.rd-faq__a-in'), function (a) {
+      var k = 0;
+      var t = a.querySelector('.rd-faq__a-title');
+      if (t) t.style.setProperty('--k', k++);
+      Array.prototype.forEach.call(a.querySelectorAll('.rd-faq__a-text > *'), function (b) {
+        if (b.tagName === 'UL' || b.tagName === 'OL') {
+          Array.prototype.forEach.call(b.children, function (li) { li.style.setProperty('--k', k++); });
+        } else {
+          b.style.setProperty('--k', k++);
+        }
+      });
+    });
+
+    var faqMarker = document.createElement('span');
+    faqMarker.className = 'rd-faq__marker';
+    faqMarker.setAttribute('aria-hidden', 'true');
+    faqWrap.insertBefore(faqMarker, faqWrap.firstChild);
+    faqWrap.classList.add('has-marker');
+    var faqWide = window.matchMedia('(min-width: 1200px)');
+    var faqMoveT = 0;
+    var faqPlace = function (instant) {
+      var q = faqWrap.querySelector('.rd-faq__item.is-open .rd-faq__q');
+      if (!q || !faqWide.matches) return;
+      var y = 'translateY(' + q.offsetTop + 'px)';
+      if (instant) {
+        faqMarker.style.transition = 'none';
+      } else if (faqMarker.style.transform && faqMarker.style.transform !== y) {
+        faqMarker.classList.add('is-moving');
+        clearTimeout(faqMoveT);
+        faqMoveT = setTimeout(function () { faqMarker.classList.remove('is-moving'); }, 380);
+      }
+      faqMarker.style.transform = y;
+      faqMarker.style.height = q.offsetHeight + 'px';
+      faqMarker.style.width = q.offsetWidth + 'px';
+      if (instant) {
+        void faqMarker.offsetWidth;
+        faqMarker.style.transition = '';
+      }
+    };
+    faqPlace(true);
+    faqWrap.addEventListener('rd-faq', function () { faqPlace(false); });
+    var faqResizeT = 0;
+    window.addEventListener('resize', function () {
+      clearTimeout(faqResizeT);
+      faqResizeT = setTimeout(function () { faqPlace(true); }, 100);
+    });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { faqPlace(true); });
+
+    if ('IntersectionObserver' in window) {
+      var faqIo = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) {
+          faqPlace(true); // сначала встать на место без перехода, потом плавно появиться
+          faqSec.classList.add('is-in');
+          faqIo.disconnect();
+        }
+      }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+      faqIo.observe(faqSec);
+    } else {
+      faqSec.classList.add('is-in');
     }
   }
 })();

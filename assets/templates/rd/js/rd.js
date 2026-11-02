@@ -283,4 +283,47 @@
 
     panel.setAttribute('inert', '');
   }
+  /* ---------- FAQ: десктоп — вкладки (активный вопрос не закрывается), мобайл — аккордеон (открыт максимум один) ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-rd-faq]'), function (faq) {
+    var items = Array.prototype.slice.call(faq.querySelectorAll('.rd-faq__item'));
+    var wide = window.matchMedia('(min-width: 1200px)');
+    var set = function (item, open) {
+      item.classList.toggle('is-open', open);
+      var btn = item.querySelector('.rd-faq__q');
+      if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    var open = function (item) {
+      items.forEach(function (it) { if (it !== item) set(it, false); });
+      set(item, true);
+      faq.dispatchEvent(new CustomEvent('rd-faq', { detail: item }));
+    };
+    items.forEach(function (item) {
+      var btn = item.querySelector('.rd-faq__q');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        if (item.classList.contains('is-open')) {
+          if (!wide.matches) {
+            set(item, false);
+            faq.dispatchEvent(new CustomEvent('rd-faq', { detail: null }));
+          }
+        } else {
+          open(item);
+          // мобайл: если над вопросом свернулся длинный ответ и вопрос уехал под шапку — докручиваем к нему
+          if (!wide.matches) {
+            var anim = document.documentElement.classList.contains('rd-wow-js');
+            setTimeout(function () {
+              var top = btn.getBoundingClientRect().top;
+              if (top < 80) window.scrollTo({ top: window.scrollY + top - 80, behavior: anim ? 'smooth' : 'auto' });
+            }, anim ? 650 : 0);
+          }
+        }
+      });
+    });
+    // на десктопе ответ виден всегда: если на мобайле всё закрыли — открываем первый
+    var ensure = function () {
+      if (wide.matches && items.length && !items.some(function (it) { return it.classList.contains('is-open'); })) open(items[0]);
+    };
+    if (wide.addEventListener) wide.addEventListener('change', ensure);
+    else if (wide.addListener) wide.addListener(ensure);
+  });
 })();
