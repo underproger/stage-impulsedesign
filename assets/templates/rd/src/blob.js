@@ -24,7 +24,11 @@ import { vertexPars, vertexMain, fragmentPars, fragmentMain } from './blob-glsl.
 
 const CAMERA_Z = 1000;
 const SCALE = 0.3; // радиус сферы = 30% ширины блока (как в прототипе)
-const CANVAS_PAD = 1.4; // канвас больше блока, чтобы деформация не обрезалась
+const CANVAS_PAD = 1.7; // канвас больше блока: деформация и «всплеск» не обрезаются
+
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+// появление с лёгким «перелётом»
+const easeOutBack = (t) => 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2);
 
 class GoldBlob {
   constructor(box) {
@@ -32,6 +36,15 @@ class GoldBlob {
     this.start = performance.now();
     this.last = this.start;
     this.visible = true;
+    // интерактив: наклон к курсору, «кипение» от скорости мыши, всплеск по клику
+    this.time = 0;
+    this.spin = 0;
+    this.agit = 0;
+    this.agitTarget = 0;
+    this.pulse = 0;
+    this.tilt = { x: 0, y: 0 };
+    this.tiltTarget = { x: 0, y: 0 };
+    this.lastMove = null;
     this.uniforms = {
       uAlpha: { value: 1 },
       uTime: { value: 0 },
@@ -125,6 +138,31 @@ class GoldBlob {
         }
       }).observe(this.box);
     }
+
+    // курсор: наклон к мыши + скорость движения раскачивает поверхность
+    window.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const r = this.box.getBoundingClientRect();
+      const nx = clamp((e.clientX - (r.left + r.width / 2)) / (r.width * 1.2), -1, 1);
+      const ny = clamp((e.clientY - (r.top + r.height / 2)) / (r.height * 1.2), -1, 1);
+      this.tiltTarget.y = nx * 0.9;
+      this.tiltTarget.x = ny * 0.6;
+      const t = performance.now();
+      if (this.lastMove) {
+        const d = Math.hypot(e.clientX - this.lastMove.x, e.clientY - this.lastMove.y);
+        const speed = d / Math.max(t - this.lastMove.t, 8); // px/мс
+        this.agitTarget = Math.min(1, Math.max(this.agitTarget, speed / 2.2));
+      }
+      this.lastMove = { x: e.clientX, y: e.clientY, t };
+    }, { passive: true });
+
+    // клик / тап по объекту — золотой «всплеск»
+    document.addEventListener('pointerdown', (e) => {
+      const r = this.box.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+        this.pulse = Math.min(this.pulse + 0.75, 1.1);
+      }
+    });
   }
 
   loop(now) {
@@ -132,9 +170,23 @@ class GoldBlob {
     const dt = Math.min((now - this.last) / 16.667, 3); // в «кадрах 60fps»
     this.last = now;
 
-    this.uniforms.uTime.value = 0.00025 * (now - this.start);
-    this.mesh.scale.setScalar(this.size * SCALE);
-    this.mesh.rotation.y += 0.01 * dt;
+    // затухания (в «кадрах»)
+    this.agitTarget *= Math.pow(0.93, dt);
+    this.agit += (this.agitTarget - this.agit) * 0.06 * dt;
+    this.pulse *= Math.pow(0.95, dt);
+    this.tilt.x += (this.tiltTarget.x - this.tilt.x) * 0.045 * dt;
+    this.tilt.y += (this.tiltTarget.y - this.tilt.y) * 0.045 * dt;
+
+    // время течёт быстрее, когда объект «волнуется»
+    this.time += 0.00025 * 16.667 * dt * (1 + this.agit * 2.5 + this.pulse * 3);
+    this.uniforms.uTime.value = this.time;
+    this.uniforms.uAlpha.value = 1 + this.agit * 0.3 + this.pulse * 0.7;
+
+    const intro = easeOutBack(Math.min((now - this.start) / 1400, 1));
+    const breathe = 1 + Math.sin(now * 0.0012) * 0.015;
+    this.mesh.scale.setScalar(Math.max(this.size * SCALE * intro * breathe, 0.0001));
+    this.spin += 0.01 * dt * (1 + this.agit);
+    this.mesh.rotation.set(this.tilt.x, this.spin + this.tilt.y, 0);
 
     this.renderer.render(this.scene, this.camera);
 
