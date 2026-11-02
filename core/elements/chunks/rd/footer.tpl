@@ -45,6 +45,8 @@
 {set $phone = ('phone-1' | option)}
 {set $phoneHref = $phone | preg_replace : '/[^0-9+]/' : ''}
 {set $address = ($isRu ? ('adress' | option) : ('adress-ua' | option)) | strip_tags | trim}
+{* «1-5(центр)» → «1-5 (центр)»; номер дома с дефисом не рвём («1-» / «5») *}
+{set $address = $address | preg_replace : '~(\S)\(~u' : '$1 (' | preg_replace : '~(\d+-\d+)~u' : '<span class="rd-nowrap">$1</span>'}
 {set $brief = ('brief' | option)}
 {if $brief && !($brief | preg_match : '#^(https?:)?/#')}{set $brief = '/' ~ $brief}{/if}
 {set $policy = ($isRu ? ('policy-link' | option) : ('policy-link-ua' | option)) | trim}
