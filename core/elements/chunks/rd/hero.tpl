@@ -54,7 +54,7 @@
     <div class="rd-hero__content">
       <div class="rd-hero__heading">
         <h1 class="rd-hero__title" style="--rd-longest: {$longest ?: 10}">
-          {if $titleHead}{$titleHead} {/if}<span class="rd-hero__last"><span class="rd-hero__pill" aria-hidden="true"><img src="{$img}code.svg" width="40" height="40" alt="" loading="eager"></span>{$titleLast}</span>
+          {if $titleHead}{$titleHead} {/if}<span class="rd-hero__last"><span class="rd-hero__pill" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path class="rd-hero__caret" d="M23.334 5 16.667 35"/><path d="M11.873 11.647 3.308 19.919l8.468 8.468"/><path d="m28.321 11.679 8.759 8.37-8.662 8.564"/></svg></span>{$titleLast}</span>
         </h1>
         {if $r['sub-title-banner']}
           <p class="rd-hero__text">{$r['sub-title-banner'] | strip_tags : '<b><strong><br><a>'}</p>
@@ -69,14 +69,17 @@
     </div>
 
     <div class="rd-hero__visual">
-      <picture>
-        <source srcset="{$img}hero-blob.webp" type="image/webp">
-        <img class="rd-hero__blob" src="{$img}hero-blob.png" width="600" height="600" alt="" fetchpriority="high" loading="eager">
-      </picture>
+      <div class="rd-hero__glob" data-rd-glob data-src="/assets/templates/rd/js/rd-blob.js?v={$.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/js/rd-blob.js')}">
+        <picture>
+          <source srcset="{$img}hero-blob.webp" type="image/webp">
+          <img class="rd-hero__blob" src="{$img}hero-blob.png" width="600" height="600" alt="" fetchpriority="high" loading="eager">
+        </picture>
+      </div>
 
       {if $worksUrl}
-        <a class="rd-works" href="{$worksUrl}" aria-label="{$worksText}">
+        <a class="rd-works" href="{$worksUrl}" aria-label="{$worksText}" data-rd-magnet>
           <span class="rd-works__disc"></span>
+          <span class="rd-works__fill"></span>
           <svg class="rd-works__ring" viewBox="0 0 160 160" aria-hidden="true">
             <defs>
               <path id="rd-works-path" d="M19 80a61 61 0 1 1 122 0a61 61 0 1 1 -122 0"/>

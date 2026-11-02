@@ -4,8 +4,28 @@
 .rd-hero {
   position: relative;
   overflow: hidden;
-  @include grid-bg;
+  background-color: $black;
   color: #fff;
+
+  // анимированная сетка: слой на 100px шире/выше и едет вправо-вверх — transform, без перерисовки
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    left: -100px;
+    right: 0;
+    bottom: -100px;
+    @include grid-bg;
+    background-color: transparent;
+    pointer-events: none;
+    will-change: transform;
+    animation: rd-grid-move 3s linear infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
 
   @include desktop {
     display: flex;
@@ -93,9 +113,14 @@
     border-radius: 50px;
     background: $gold-grad;
 
-    img {
+    svg {
       width: 0.7em;
       height: auto;
+      stroke: #fff;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      overflow: visible;
     }
 
     @include tablet-up {
@@ -104,7 +129,7 @@
       margin-top: 0.125em;
       margin-right: 0.12em;
 
-      img {
+      svg {
         width: 0.555em;
       }
     }
@@ -114,10 +139,15 @@
       height: 0.75em;
       margin-top: 0.11em;
 
-      img {
+      svg {
         width: 0.5em;
       }
     }
+  }
+
+  // мигает постоянно, как курсор в поле ввода
+  &__caret {
+    animation: rd-caret 1.06s step-end infinite;
   }
 
   &__text {
@@ -171,13 +201,12 @@
     }
   }
 
-  &__blob {
-    display: block;
+  &__glob {
+    position: relative;
     width: fm(320px, 480px);
-    height: auto;
     aspect-ratio: 1;
     margin: 28px auto 140px;
-    object-fit: contain;
+    pointer-events: auto;
 
     @include tablet-up {
       width: 480px;
@@ -194,6 +223,49 @@
       transform: translateY(calc(-50% - #{fd(50px, 60px)}));
     }
   }
+
+  &__blob {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: opacity 0.6s ease;
+
+    .is-webgl & {
+      opacity: 0;
+    }
+  }
+
+  // канвас больше блока (деформация не обрезается), размер задаёт rd-blob.js
+  &__canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+
+    .is-webgl & {
+      opacity: 1;
+    }
+  }
+}
+
+@keyframes rd-grid-move {
+  to {
+    transform: translate3d(100px, -100px, 0);
+  }
+}
+
+@keyframes rd-caret {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 // Круглая кнопка «Останні роботи» с вращающейся надписью
@@ -206,8 +278,9 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.06);
   pointer-events: auto;
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  will-change: transform; // «магнит» за курсором — rd.js
 
   // телефон — по центру поверх объекта (223px от верха объекта + его отступ 28px)
   top: 251px;
@@ -235,12 +308,22 @@
     background: $gold-grad;
   }
 
+  // на ховер золото заливает кнопку целиком
+  &__fill {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: $gold-grad;
+    transform: scale(0);
+    transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
   &__ring {
     position: absolute;
     inset: 11.9%;
     width: 76.2%;
     height: 76.2%;
-    animation: rd-spin 16s linear infinite;
+    animation: rd-spin 10s linear infinite;
 
     text {
       font-family: "Roboto Flex Wide", Arial, sans-serif; // размер — атрибутом font-size из шаблона
@@ -265,13 +348,17 @@
   }
 
   @include hover {
+    .rd-works__fill {
+      transform: scale(1.01);
+    }
+
     .rd-works__arrow {
       transform: scale(1.47); // 36 → 53 px, как во втором состоянии макета
     }
+  }
 
-    .rd-works__ring {
-      animation-duration: 8s;
-    }
+  &:focus-visible .rd-works__fill {
+    transform: scale(1.01);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -281,8 +368,9 @@
   }
 }
 
+// против часовой, как в прототипе
 @keyframes rd-spin {
   to {
-    transform: rotate(360deg);
+    transform: rotate(-360deg);
   }
 }

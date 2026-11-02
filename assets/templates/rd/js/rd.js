@@ -23,6 +23,72 @@
     });
   }
 
+  /* ---------- Золотой объект: WebGL-модуль грузится после загрузки страницы ---------- */
+  var glob = document.querySelector('[data-rd-glob]');
+  if (glob && glob.dataset.src && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var loadBlob = function () {
+      var s = document.createElement('script');
+      s.src = glob.dataset.src;
+      s.async = true;
+      document.body.appendChild(s);
+    };
+    var whenIdle = function () {
+      if ('requestIdleCallback' in window) window.requestIdleCallback(loadBlob, { timeout: 1500 });
+      else setTimeout(loadBlob, 200);
+    };
+    if (document.readyState === 'complete') whenIdle();
+    else window.addEventListener('load', whenIdle);
+  }
+
+  /* ---------- Кнопка «Останні роботи»: плавает за курсором ---------- */
+  var magnet = document.querySelector('[data-rd-magnet]');
+  if (magnet && window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var pos = { x: 0, y: 0 };
+    var target = { x: 0, y: 0 };
+    var running = false;
+    var STRENGTH = 0.4; // доля расстояния до курсора
+    var tick = function () {
+      pos.x += (target.x - pos.x) * 0.12;
+      pos.y += (target.y - pos.y) * 0.12;
+      if (Math.abs(target.x - pos.x) < 0.1 && Math.abs(target.y - pos.y) < 0.1) {
+        pos.x = target.x;
+        pos.y = target.y;
+        running = false;
+      }
+      magnet.style.transform = 'translate3d(' + pos.x.toFixed(2) + 'px,' + pos.y.toFixed(2) + 'px,0)';
+      if (running) requestAnimationFrame(tick);
+    };
+    var kick = function () {
+      if (!running) {
+        running = true;
+        requestAnimationFrame(tick);
+      }
+    };
+    window.addEventListener('pointermove', function (e) {
+      var r = magnet.getBoundingClientRect();
+      // центр без текущего смещения
+      var cx = r.left + r.width / 2 - pos.x;
+      var cy = r.top + r.height / 2 - pos.y;
+      var dx = e.clientX - cx;
+      var dy = e.clientY - cy;
+      var zone = r.width * 0.9; // радиус «притяжения»
+      if (dx * dx + dy * dy < zone * zone) {
+        target.x = dx * STRENGTH;
+        target.y = dy * STRENGTH;
+      } else {
+        target.x = 0;
+        target.y = 0;
+      }
+      kick();
+    }, { passive: true });
+    document.addEventListener('mouseleave', function () {
+      target.x = 0;
+      target.y = 0;
+      kick();
+    });
+  }
+
   var header = document.querySelector('[data-rd-header]');
   if (!header) return;
 
