@@ -132,7 +132,8 @@ $gar-glow: #cdb167;
   padding: 0 24px 40px;
 
   @include phone {
-    &:first-child {
+    // first-of-type, не first-child: в «вау» перед карточками вставляется слой света (.rd-light)
+    &:first-of-type {
       padding-top: 24px;
     }
   }
