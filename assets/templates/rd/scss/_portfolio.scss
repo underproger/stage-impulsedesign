@@ -1,0 +1,627 @@
+@use "base" as *;
+
+// ===== «Портфоліо» =====
+// Мобайл/планшет — кейсы списком; десктоп — горизонтальная лента (свайп/перетаскивание мышью).
+// Слой «вау» (rd-wow.js) на десктопе закрепляет блок на экране: прокрутка страницы двигает ленту.
+
+$pf-bg: #f5f4f2;
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-io: cubic-bezier(0.77, 0, 0.18, 1);
+
+.rd-portfolio {
+  --rd-gutter: #{fm(20px, 30px)};
+  position: relative;
+  padding-block: fm(80px, 110px);
+  background: $pf-bg;
+  color: $black;
+
+  @include desktop {
+    // отступ ленты слева/справа = поля контейнера (.rd-container)
+    --rd-gutter: max(40px, calc((100% - #{fd(1200px, 1500px)}) / 2));
+    padding-block: fd(130px, 180px);
+  }
+
+  &__pin {
+    display: flex;
+    flex-direction: column;
+    gap: fm(48px, 64px);
+
+    @include desktop {
+      gap: fd(64px, 80px);
+    }
+  }
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 30px;
+  }
+
+  &__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+
+    @include desktop {
+      max-width: fd(787px, 980px);
+    }
+  }
+
+  // h2 глобально стилизован старым CSS — перебиваем явно
+  &__title {
+    font-family: inherit;
+    font-size: fm(36px, 48px);
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: $black;
+
+    @include desktop {
+      font-size: fd(60px, 72px);
+    }
+
+    span {
+      @include gold-text;
+    }
+  }
+
+  &__text {
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.6;
+
+    @include desktop {
+      font-size: fd(18px, 20px);
+    }
+  }
+
+  // «Всі проекти»: на десктопе — в шапке блока, на мобайле — внизу, рядом с Behance
+  &__all {
+    flex: none;
+
+    @include mobile {
+      display: none;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+
+    @include desktop {
+      display: none;
+    }
+
+    @include phone {
+      .rd-portfolio__all-m {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+    }
+  }
+
+  // Лента
+  &__viewport {
+    position: relative;
+
+    @include desktop {
+      overflow-x: auto;
+      overflow-y: hidden;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--rd-gutter);
+      scrollbar-width: none;
+      cursor: grab;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      &.is-dragging {
+        cursor: grabbing;
+        scroll-snap-type: none;
+      }
+    }
+  }
+
+  &__track {
+    display: flex;
+    flex-direction: column;
+    gap: fm(64px, 96px);
+    padding-inline: var(--rd-gutter);
+
+    @include desktop {
+      flex-direction: row;
+      gap: fd(40px, 60px);
+      width: max-content;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  }
+
+  // Закреплённый режим (ставит rd-wow.js, когда блок целиком помещается по высоте экрана)
+  &.is-pinned {
+    padding-block: 0;
+
+    .rd-portfolio__pin {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      justify-content: center;
+      overflow: hidden;
+      overflow: clip; // не прокручивается программно (фокус на кейсе за краем не сдвигает блок)
+    }
+
+    .rd-portfolio__viewport {
+      overflow: visible;
+      scroll-snap-type: none;
+    }
+
+    .rd-portfolio__track {
+      will-change: transform;
+    }
+  }
+}
+
+// ===== Карточка кейса =====
+.rd-case {
+  --rd-glow-y: 81%; // высота «свечения» в фоне-градиенте (поле bg может ссылаться на var(--rd-glow-y))
+  display: flex;
+  flex-direction: column;
+  gap: fw(32px);
+  min-width: 0;
+
+  @include phone {
+    --rd-glow-y: 46%;
+  }
+
+  @include desktop {
+    flex: none;
+    width: fd(993px, 1240px);
+    scroll-snap-align: start;
+  }
+
+  &__media {
+    --rd-r: #{fm(12px, 16px)};
+    position: relative;
+    display: block;
+    overflow: hidden;
+    isolation: isolate;
+    container-type: inline-size;
+    aspect-ratio: 320 / 220;
+    border-radius: var(--rd-r);
+    -webkit-user-drag: none;
+
+    // фон карточки — псевдоэлементом: в градиентах поля bg работают единицы cqw (от ширины карточки)
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--rd-case-bg, #16202e);
+    }
+
+    @include tablet-up {
+      aspect-ratio: 1240 / 487;
+    }
+
+    @include desktop {
+      --rd-r: #{fw(24px)};
+    }
+  }
+
+  // фото проекта на фоне — проявляется при наведении
+  &__photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.8);
+    opacity: 0;
+    transition: opacity 0.8s $ease;
+  }
+
+  // крупная надпись на фоне: ширина ≈ 90% карточки (точный размер подгоняет rd.js)
+  &__word {
+    position: absolute;
+    left: -50%;
+    right: -50%;
+    top: 50%;
+    margin-top: -0.6em;
+    font-size: calc(var(--rd-wfs, 9.16) * 1cqw);
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    color: #fff;
+    // мягкий свет: одинаково заметно и на тёмном, и на золотом фоне (как 5% / 10% в макете)
+    mix-blend-mode: soft-light;
+    opacity: 0.26;
+    pointer-events: none;
+  }
+
+  &__layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    picture {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  // описание: мобайл — столбиком; от 600 — название слева, текст справа
+  &__desc {
+    display: grid;
+    gap: 24px;
+
+    @include tablet-up {
+      grid-template-columns: 216px minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
+      grid-template-areas: "head text" "more text";
+      column-gap: 30px;
+    }
+
+    @include desktop {
+      grid-template-columns: fd(373px, 460px) minmax(0, 1fr);
+      column-gap: fd(40px, 60px);
+      row-gap: fw(32px);
+    }
+  }
+
+  &__heading {
+    display: flex;
+    flex-direction: column;
+    gap: fw(10px);
+
+    @include tablet-up {
+      grid-area: head;
+    }
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: fw(16px);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.2;
+
+    span {
+      @include gold-text;
+    }
+
+    @include desktop {
+      font-size: fw(18px);
+    }
+  }
+
+  &__title {
+    font-family: inherit;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: $black;
+    margin: 0;
+
+    @include desktop {
+      font-size: fd(24px, 30px);
+    }
+
+    a {
+      transition: color $dur $ease;
+
+      @include hover {
+        color: $gold;
+      }
+    }
+  }
+
+  &__text {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.8;
+
+    @include tablet-up {
+      grid-area: text;
+    }
+
+    @include desktop {
+      font-size: fd(16px, 18px);
+    }
+
+    p {
+      margin: 0;
+    }
+
+    p + p {
+      margin-top: 0.8em;
+    }
+  }
+
+  // «Переглянути проект»: золото + подчёркивание, стрелка «пролетает»
+  &__more {
+    justify-self: start;
+    align-self: start;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: fw(8px);
+    font-size: fw(16px);
+    font-weight: 700;
+    line-height: normal;
+    color: $black;
+
+    @include tablet-up {
+      grid-area: more;
+    }
+
+    .rd-arrow {
+      width: fw(24px);
+      height: fw(24px);
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+      width: 100%;
+      height: 2px;
+      background: $gold-grad;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.6s $ease-fly;
+    }
+  }
+
+  &__more-text {
+    transition: color $dur $ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &__more:hover,
+    &:has(.rd-case__media:hover) .rd-case__more {
+      .rd-case__more-text {
+        color: $gold;
+      }
+
+      &::after {
+        transform: scaleX(1);
+      }
+
+      @include arrow-fly;
+    }
+
+    &:has(.rd-case__media:hover) .rd-case__photo {
+      opacity: 1;
+    }
+  }
+}
+
+// Кнопка с тёмным текстом (на светлом фоне)
+.rd-btn--dark {
+  color: $black;
+}
+
+// Behance: круг; при наведении раскрывается в синюю «таблетку» с надписью
+.rd-behance {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 68px;
+  height: 68px;
+  border: 2px solid rgba(98, 98, 128, 0.15);
+  border-radius: 40px;
+  overflow: hidden;
+  transition: width 0.6s $ease-fly, background-color 0.5s $ease, border-color 0.5s $ease;
+
+  &__icon {
+    width: 37px;
+    height: 37px;
+    background-color: rgba(98, 98, 128, 0.35);
+    -webkit-mask: var(--rd-icon) center / contain no-repeat;
+    mask: var(--rd-icon) center / contain no-repeat;
+    transition: opacity 0.4s $ease, transform 0.6s $ease-fly;
+  }
+
+  &__text {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: #fff;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate(-20%, -50%);
+    transition: opacity 0.4s $ease, transform 0.6s $ease-fly;
+  }
+
+  @include hover {
+    width: 170px;
+    background-color: #0057ff;
+    border-color: #0057ff;
+
+    .rd-behance__icon {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+
+    .rd-behance__text {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+      transition-delay: 0.12s;
+    }
+  }
+}
+
+// ===================== Слой «вау» =====================
+.rd-wow-js {
+  // заголовок — слова всплывают из размытия, подзаголовок и кнопка — следом
+  .rd-portfolio__title .rd-wd {
+    display: inline-block;
+    opacity: 0;
+    translate: 0 0.6em;
+    filter: blur(10px);
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+    transition-delay: calc(var(--i) * 80ms);
+  }
+
+  .rd-portfolio__title .rd-wd:not(.rd-wd--el) {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: $black;
+  }
+
+  .rd-portfolio__text,
+  .rd-portfolio__all {
+    opacity: 0;
+    translate: 0 30px;
+    transition: opacity 1s $ease-expo 0.4s, translate 1.1s $ease-expo 0.4s;
+  }
+
+  .rd-portfolio__all {
+    transition-delay: 0.55s;
+  }
+
+  .rd-portfolio__head.is-in {
+    .rd-portfolio__title .rd-wd,
+    .rd-portfolio__text,
+    .rd-portfolio__all {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0);
+    }
+  }
+
+  .rd-portfolio__actions {
+    opacity: 0;
+    translate: 0 30px;
+    transition: opacity 1s $ease-expo, translate 1.1s $ease-expo;
+
+    &.is-in {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  // карточка: шторка открывает картинку (на десктопе — справа, на мобайле — снизу),
+  // устройства «отъезжают» из крупного плана, надпись выплывает навстречу
+  .rd-case__media {
+    clip-path: inset(100% 0 0 0 round var(--rd-r));
+    transition: clip-path 1.3s $ease-io;
+    will-change: transform;
+
+    @include desktop {
+      clip-path: inset(0 0 0 100% round var(--rd-r));
+    }
+  }
+
+  .rd-case__img {
+    transform: scale(1.22);
+    transform-origin: 50% 45%;
+    transition: transform 1.8s $ease-expo 0.15s;
+  }
+
+  .rd-case__word {
+    opacity: 0;
+    transform: translateX(14cqw);
+    transition: opacity 1.4s $ease 0.35s, transform 1.8s $ease-expo 0.35s;
+  }
+
+  .rd-case__heading,
+  .rd-case__text,
+  .rd-case__more {
+    opacity: 0;
+    translate: 0 26px;
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo;
+  }
+
+  .rd-case__heading {
+    transition-delay: 0.35s;
+  }
+
+  .rd-case__text {
+    transition-delay: 0.45s;
+  }
+
+  .rd-case__more {
+    transition-delay: 0.55s;
+  }
+
+  .rd-case.is-in {
+    .rd-case__media {
+      clip-path: inset(0 0 0 0 round var(--rd-r));
+    }
+
+    .rd-case__img {
+      transform: scale(1);
+    }
+
+    .rd-case__word {
+      opacity: 0.26;
+      transform: none;
+    }
+
+    .rd-case__heading,
+    .rd-case__text,
+    .rd-case__more {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  // наведение: устройства приближаются, свет мягко усиливается
+  @media (hover: hover) and (pointer: fine) {
+    .rd-case.is-in .rd-case__media:hover {
+      .rd-case__img {
+        transform: scale(1.07) translateY(-1.5%);
+        transition: transform 1s $ease-expo;
+      }
+
+      .rd-case__word {
+        opacity: 0.4;
+        transition: opacity 0.6s $ease, transform 1s $ease-expo;
+      }
+    }
+  }
+
+  // курсор над картинкой кейса — золотой круг «дивитись» (точка прячется, чтобы не резать надпись)
+  &.rd-cursor-view .rd-cursor {
+    opacity: 0;
+  }
+
+  // курсор над картинкой кейса — золотой круг «дивитись»
+  .rd-cursor-ring.is-view {
+    &::before {
+      transform: scale(2.6);
+      background-color: rgba($gold, 0.94);
+      border-color: transparent;
+      mix-blend-mode: normal;
+    }
+
+    span {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}

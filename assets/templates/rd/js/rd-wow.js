@@ -172,7 +172,10 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio';
+    var pfSection = document.querySelector('[data-rd-portfolio]');
+    var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
+    var labelNow = 'click';
 
     window.addEventListener('pointermove', function (e) {
       if (e.pointerType !== 'mouse') return;
@@ -182,10 +185,19 @@
       cur.y = e.clientY;
 
       var t = e.target;
-      var inScope = t.closest && t.closest(scopes);
+      if (!t.closest) return;
+      var inScope = t.closest(scopes);
+      var overCase = !!t.closest('.rd-case__media');
       root.classList.toggle('rd-cursor-on', !!inScope);
-      ring.classList.toggle('is-link', !!(t.closest && t.closest('a, button')) && !t.closest('.rd-works'));
-      ring.classList.toggle('is-hidden', !!(t.closest && t.closest('.rd-works')));
+      ring.classList.toggle('is-view', overCase);
+      root.classList.toggle('rd-cursor-view', overCase);
+      ring.classList.toggle('is-link', !!t.closest('a, button') && !t.closest('.rd-works') && !overCase);
+      ring.classList.toggle('is-hidden', !!t.closest('.rd-works'));
+      var want = overCase ? 'view' : 'click';
+      if (want !== labelNow) {
+        labelNow = want;
+        ringLabel.textContent = labels[want];
+      }
 
       var overBlob = false;
       if (glob && !t.closest('a, button')) {
@@ -285,6 +297,8 @@
       mg.el.style.transform = 'translate3d(' + mg.x.toFixed(2) + 'px,' + mg.y.toFixed(2) + 'px,0)';
     }
 
+    if (pfTick) pfTick();
+
     raf(frame);
   }
   raf(frame);
@@ -368,6 +382,187 @@
       Array.prototype.forEach.call(targets, function (t) { io.observe(t); });
     } else {
       Array.prototype.forEach.call(targets, reveal);
+    }
+  }
+
+  /* ================= Портфолио ================= */
+  // Десктоп: блок закрепляется на экране, прокрутка страницы ведёт ленту кейсов вбок
+  // (если блок по высоте не помещается в окно — остаётся обычная лента, её тянут мышью).
+  // Внутри карточек — глубина: устройства и фоновая надпись смещаются с разной скоростью,
+  // при наведении карточка чуть наклоняется за курсором.
+
+  var pfTick = null;
+  var pf = document.querySelector('[data-rd-portfolio]');
+  if (pf) {
+    var pfPin = pf.querySelector('.rd-portfolio__pin');
+    var pfHead = pf.querySelector('.rd-portfolio__head');
+    var pfVp = pf.querySelector('[data-rd-pf-viewport]');
+    var pfTrack = pf.querySelector('[data-rd-pf-track]');
+    var pfActions = pf.querySelector('.rd-portfolio__actions');
+    var pfDesktop = window.matchMedia('(min-width: 1200px)');
+    var PF_K = 0.85; // пикселей прокрутки страницы на 1px сдвига ленты
+    var pin = { on: false, dist: 0, x: 0 };
+
+    var pfTitle = pf.querySelector('.rd-portfolio__title');
+    if (pfTitle) splitWords(pfTitle);
+
+    var pfCases = Array.prototype.map.call(pf.querySelectorAll('.rd-case'), function (el) {
+      return {
+        el: el,
+        media: el.querySelector('.rd-case__media'),
+        layer: el.querySelector('.rd-case__layer'),
+        word: el.querySelector('.rd-case__word'),
+        tx: 0, ty: 0, mx: 0, my: 0, sl: '', sw: '', sm: ''
+      };
+    });
+
+    var pfMeasure = function () {
+      pf.classList.remove('is-pinned');
+      pf.style.height = '';
+      pfTrack.style.transform = '';
+      pin.on = false;
+      if (!pfDesktop.matches || !pfPin || !pfVp || !pfTrack) return;
+      var need = pfPin.offsetHeight;
+      if (need + 96 > window.innerHeight) return; // не помещается — обычная лента
+      var dist = pfTrack.scrollWidth - pfVp.clientWidth;
+      if (dist < 40) return;
+      pin.dist = dist;
+      pin.on = true;
+      pfVp.scrollLeft = 0;
+      pf.classList.add('is-pinned');
+      pf.style.height = Math.round(window.innerHeight + dist * PF_K) + 'px';
+      pin.x = Math.min(pin.x, dist);
+    };
+    pfMeasure();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(pfMeasure);
+    var pfTimer;
+    window.addEventListener('resize', function () {
+      clearTimeout(pfTimer);
+      pfTimer = setTimeout(pfMeasure, 150);
+    });
+
+    var pfStart = function () { return pf.getBoundingClientRect().top + window.scrollY; };
+
+    // клавиатура: фокус на кейсе за краем экрана — докручиваем страницу до него
+    pf.addEventListener('focusin', function (e) {
+      if (pfPin) pfPin.scrollLeft = 0;
+      if (!pin.on) return;
+      var card = e.target.closest && e.target.closest('.rd-case');
+      if (!card) return;
+      var first = pfTrack.firstElementChild;
+      var x = clamp(card.offsetLeft - (first ? first.offsetLeft : 0), 0, pin.dist);
+      window.scrollTo(0, pfStart() + x * PF_K);
+    });
+
+    // горизонтальный свайп тачпадом и перетаскивание мышью двигают ленту через прокрутку страницы
+    pfVp.addEventListener('wheel', function (e) {
+      if (!pin.on || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      window.scrollBy(0, e.deltaX * PF_K);
+    }, { passive: false });
+
+    var pd = null;
+    var pdMoved = false;
+    pfVp.addEventListener('pointerdown', function (e) {
+      if (!pin.on || e.pointerType !== 'mouse' || e.button !== 0) return;
+      pd = { x: e.clientX, y: window.scrollY };
+      pdMoved = false;
+    });
+    window.addEventListener('pointermove', function (e) {
+      if (!pd) return;
+      var dx = e.clientX - pd.x;
+      if (!pdMoved && Math.abs(dx) > 6) {
+        pdMoved = true;
+        pfVp.classList.add('is-dragging');
+      }
+      if (pdMoved) window.scrollTo(0, pd.y - dx * PF_K);
+    });
+    window.addEventListener('pointerup', function () {
+      if (!pd) return;
+      pd = null;
+      pfVp.classList.remove('is-dragging');
+    });
+    pfVp.addEventListener('click', function (e) {
+      if (pdMoved) {
+        e.preventDefault();
+        e.stopPropagation();
+        pdMoved = false;
+      }
+    }, true);
+
+    // наклон карточки за курсором
+    if (fine) {
+      pfCases.forEach(function (c) {
+        if (!c.media) return;
+        c.media.addEventListener('pointermove', function (e) {
+          var r = c.media.getBoundingClientRect();
+          c.tx = clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1);
+          c.ty = clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1);
+        });
+        c.media.addEventListener('pointerleave', function () { c.tx = 0; c.ty = 0; });
+      });
+    }
+
+    var pfRects = [];
+    pfTick = function () {
+      var vw = window.innerWidth;
+      var vh = window.innerHeight;
+      var desk = pfDesktop.matches;
+
+      // сначала только чтение геометрии, потом запись стилей (без лишних пересчётов раскладки)
+      var pr = pf.getBoundingClientRect();
+      if (pr.bottom < -200 || pr.top > vh + 200) return; // блок далеко — ничего не считаем
+      for (var k = 0; k < pfCases.length; k++) pfRects[k] = pfCases[k].media ? pfCases[k].media.getBoundingClientRect() : null;
+
+      var shift = 0;
+      if (pin.on) {
+        var target = clamp(-pr.top / (pin.dist * PF_K), 0, 1) * pin.dist;
+        var nx = lerp(pin.x, target, 0.14);
+        if (Math.abs(nx - target) < 0.05) nx = target;
+        shift = pin.x - nx; // на столько сдвинутся карточки в этом кадре
+        pin.x = nx;
+        var tr = 'translate3d(' + (-pin.x).toFixed(2) + 'px,0,0)';
+        if (pfTrack.style.transform !== tr) pfTrack.style.transform = tr;
+      }
+
+      for (var i = 0; i < pfCases.length; i++) {
+        var c = pfCases[i];
+        var r = pfRects[i];
+        if (!r) continue;
+        var left = r.left + shift;
+        if (left + r.width < -100 || left > vw + 100 || r.bottom < -100 || r.top > vh + 100) continue;
+        // положение карточки относительно центра экрана: по горизонтали на десктопе, по вертикали на мобайле
+        var n = desk ? (left + r.width / 2 - vw / 2) / vw : (r.top + r.height / 2 - vh / 2) / vh;
+        c.mx = lerp(c.mx, c.tx, 0.08);
+        c.my = lerp(c.my, c.ty, 0.08);
+        if (Math.abs(c.mx) < 0.0005 && c.tx === 0) c.mx = 0;
+        if (Math.abs(c.my) < 0.0005 && c.ty === 0) c.my = 0;
+
+        if (c.layer) {
+          var sl = desk ? (n * -60 + c.mx * 14).toFixed(1) + 'px ' + (c.my * 8).toFixed(1) + 'px' : '0px 0px';
+          if (sl !== c.sl) { c.layer.style.translate = sl; c.sl = sl; }
+        }
+        if (c.word) {
+          var sw = (n * (desk ? 160 : 70) - c.mx * 22).toFixed(1) + 'px 0px';
+          if (sw !== c.sw) { c.word.style.translate = sw; c.sw = sw; }
+        }
+        var sm = (c.mx || c.my) ? 'perspective(1400px) rotateX(' + (-c.my * 2.5).toFixed(3) + 'deg) rotateY(' + (c.mx * 3.5).toFixed(3) + 'deg)' : '';
+        if (sm !== c.sm) { c.media.style.transform = sm; c.sm = sm; }
+      }
+    };
+
+    // появление: заголовок, карточки (по мере въезда в кадр), кнопки внизу
+    var pfReveal = function (el) { el.classList.add('is-in'); };
+    var pfTargets = [pfHead, pfActions].concat(pfCases.map(function (c) { return c.el; })).filter(Boolean);
+    if ('IntersectionObserver' in window) {
+      var pfIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { pfReveal(en.target); pfIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+      pfTargets.forEach(function (t) { pfIo.observe(t); });
+    } else {
+      pfTargets.forEach(pfReveal);
     }
   }
 })();

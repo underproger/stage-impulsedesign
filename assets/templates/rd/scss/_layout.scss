@@ -15,14 +15,15 @@
 // :where() обнуляет специфичность, чтобы классы блоков (.rd-hero__title и т.п.) всегда побеждали.
 .rd-header,
 .rd-hero,
-.rd-services {
+.rd-services,
+.rd-portfolio {
   font-family: "Roboto Flex Wide", "Gotham Pro", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-:where(.rd-header, .rd-hero, .rd-services) {
+:where(.rd-header, .rd-hero, .rd-services, .rd-portfolio) {
   *,
   *::before,
   *::after {

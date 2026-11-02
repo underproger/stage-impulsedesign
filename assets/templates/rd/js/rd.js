@@ -89,6 +89,63 @@
     });
   }
 
+  /* ---------- Портфолио ---------- */
+  var pf = document.querySelector('[data-rd-portfolio]');
+  if (pf) {
+    // Крупная надпись на фоне карточки: ширина ≈ 89.7% карточки (как в макете).
+    // Размер задан в cqw — после одной подгонки он сам масштабируется вместе с карточкой.
+    var fitWords = function () {
+      pf.querySelectorAll('.rd-case__word').forEach(function (word) {
+        var media = word.parentNode;
+        var mw = media.clientWidth;
+        if (!mw) return;
+        var rg = document.createRange();
+        rg.selectNodeContents(word);
+        var tw = rg.getBoundingClientRect().width;
+        if (!tw) return;
+        var fs = parseFloat(getComputedStyle(word).getPropertyValue('--rd-wfs')) || 9.16;
+        word.style.setProperty('--rd-wfs', (fs * 0.897 * mw / tw).toFixed(3));
+      });
+    };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitWords);
+    else fitWords();
+
+    // Десктоп: ленту можно тянуть мышью (если слой «вау» не закрепил блок — тогда двигает прокрутка)
+    var vp = pf.querySelector('[data-rd-pf-viewport]');
+    if (vp) {
+      var drag = null;
+      var moved = false;
+      vp.addEventListener('pointerdown', function (e) {
+        if (e.pointerType !== 'mouse' || e.button !== 0 || pf.classList.contains('is-pinned')) return;
+        if (vp.scrollWidth <= vp.clientWidth) return;
+        drag = { x: e.clientX, left: vp.scrollLeft };
+        moved = false;
+      });
+      window.addEventListener('pointermove', function (e) {
+        if (!drag) return;
+        var dx = e.clientX - drag.x;
+        if (!moved && Math.abs(dx) > 6) {
+          moved = true;
+          vp.classList.add('is-dragging');
+        }
+        if (moved) vp.scrollLeft = drag.left - dx;
+      });
+      window.addEventListener('pointerup', function () {
+        if (!drag) return;
+        drag = null;
+        vp.classList.remove('is-dragging');
+      });
+      // после перетаскивания клик по карточке не открывает проект
+      vp.addEventListener('click', function (e) {
+        if (moved) {
+          e.preventDefault();
+          e.stopPropagation();
+          moved = false;
+        }
+      }, true);
+    }
+  }
+
   var header = document.querySelector('[data-rd-header]');
   if (!header) return;
 
