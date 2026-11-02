@@ -188,17 +188,28 @@
         setCircle(dark, R * b, x, y);
         if (b > 0.7) pt.classList.add('is-logo');
       }, function () {
-        try { sessionStorage.setItem('rd-pt', String(Date.now())); } catch (e) { /* без метки страница откроется как обычно */ }
+        // метка для новой страницы: время и точка клика в долях окна — оттуда она и откроется
+        var pos = (x / window.innerWidth).toFixed(4) + '|' + (y / window.innerHeight).toFixed(4);
+        try { sessionStorage.setItem('rd-pt', Date.now() + '|' + pos); } catch (e) { /* без метки страница откроется как обычно */ }
         window.location.href = url;
         setTimeout(reset, 5000); // переход не случился (например, отдали файл) — открываем страницу обратно
       });
     };
 
-    // открытие: тёмный слой «прорезается» из центра, за ним — золотой (видна золотая кайма)
+    // открытие: тёмный слой «прорезается» из точки клика на прошлой странице (иначе из центра),
+    // за ним — золотой (видна золотая кайма)
     var enter = function () {
       busy = true;
-      var x = window.innerWidth / 2;
-      var y = window.innerHeight / 2;
+      var fx = 0.5;
+      var fy = 0.5;
+      var from = (root.getAttribute('data-rd-pt') || '').split(' ');
+      if (from.length === 2 && !isNaN(+from[0]) && !isNaN(+from[1])) {
+        fx = clamp(+from[0], 0, 1);
+        fy = clamp(+from[1], 0, 1);
+      }
+      root.removeAttribute('data-rd-pt');
+      var x = window.innerWidth * fx;
+      var y = window.innerHeight * fy;
       var R = radius(x, y);
       pt.classList.add('is-on', 'is-logo');
       root.classList.remove('rd-pt-in');
