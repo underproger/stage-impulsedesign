@@ -19,14 +19,15 @@
 .rd-portfolio,
 .rd-mind,
 .rd-gar,
-.rd-prices {
+.rd-prices,
+.rd-about {
   font-family: "Roboto Flex Wide", "Gotham Pro", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-:where(.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices) {
+:where(.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about) {
   *,
   *::before,
   *::after {

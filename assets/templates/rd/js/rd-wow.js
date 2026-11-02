@@ -453,7 +453,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
     var labelNow = 'click';
@@ -582,6 +582,7 @@
     if (mindTick) mindTick();
     if (garTick) garTick();
     if (priceTick) priceTick();
+    if (aboutTick) aboutTick();
 
     raf(frame);
   }
@@ -1094,6 +1095,164 @@
       prTargets.forEach(function (t) { prIo.observe(t); });
     } else {
       prTargets.forEach(prReveal);
+    }
+  }
+  /* ================= «Digital агентство Impulse Design» ================= */
+  // Объект парит и тянется за курсором/прокруткой, цифры «прокручиваются» как счётчик,
+  // цитата проявляется словами при прокрутке, на графике рисуется линия и бежит огонёк.
+
+  var aboutTick = null;
+  var about = document.querySelector('.rd-about');
+  if (about) {
+    var abTitle = about.querySelector('.rd-about__title');
+    if (abTitle) splitWords(abTitle);
+
+    // счётчик-«одометр»: каждая цифра — лента 0…9, к нужной цифре докручивается (правые — больше оборотов)
+    var odometer = function (el) {
+      var text = (el.textContent || '').trim();
+      if (!/\d/.test(text)) return;
+      el.setAttribute('aria-label', text);
+      el.textContent = '';
+      var digits = text.replace(/\D/g, '').length;
+      var di = 0;
+      Array.prototype.forEach.call(text, function (ch) {
+        if (!/\d/.test(ch)) { el.appendChild(document.createTextNode(ch)); return; }
+        var d = +ch;
+        var box = document.createElement('span');
+        box.className = 'rd-odo';
+        box.setAttribute('aria-hidden', 'true');
+        var ph = document.createElement('span');
+        ph.className = 'rd-odo__ph';
+        ph.textContent = ch;
+        var strip = document.createElement('span');
+        strip.className = 'rd-odo__strip';
+        var loops = 1 + di; // старшие разряды — один оборот, младшие — больше
+        var seq = [];
+        for (var l = 0; l < loops; l++) for (var k = 0; k < 10; k++) seq.push(k);
+        for (var k2 = 0; k2 <= d; k2++) seq.push(k2);
+        seq.forEach(function (n) {
+          var s = document.createElement('span');
+          s.textContent = n;
+          strip.appendChild(s);
+        });
+        strip.style.setProperty('--to', -(seq.length - 1) + 'em');
+        strip.style.setProperty('--d', di);
+        box.appendChild(ph);
+        box.appendChild(strip);
+        el.appendChild(box);
+        di++;
+      });
+      el.classList.add('is-odo');
+      el.style.setProperty('--n', digits);
+    };
+    Array.prototype.forEach.call(about.querySelectorAll('.rd-stat__val'), odometer);
+
+    // «20%» досчитывается от нуля
+    var abPct = about.querySelector('.rd-about__pct');
+    var countPct = function () {
+      if (!abPct) return;
+      var m = (abPct.textContent || '').match(/^(\D*)(\d+)(.*)$/);
+      if (!m) return;
+      var to = +m[2];
+      var fin = abPct.textContent;
+      var t0 = null;
+      var step = function (t) {
+        if (t0 === null) t0 = t;
+        var p = clamp((t - t0) / 1500, 0, 1);
+        abPct.textContent = m[1] + Math.round(to * (1 - Math.pow(1 - p, 4))) + m[3];
+        if (p < 1) raf(step); else abPct.textContent = fin;
+      };
+      abPct.textContent = m[1] + '0' + m[3];
+      setTimeout(function () { raf(step); }, 700);
+    };
+
+    // огонёк бежит по кривой графика (SVG animateMotion — масштабируется вместе с графиком)
+    var abChart = about.querySelector('.rd-about__chart');
+    var abLine = abChart && abChart.querySelector('.rd-about__line');
+    var abMotion = null;
+    if (abChart && abLine) {
+      var NS = 'http://www.w3.org/2000/svg';
+      var g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'rd-about__spark');
+      g.innerHTML = '<circle r="9" class="rd-about__spark-halo"/><circle r="3.2" class="rd-about__spark-dot"/>';
+      abMotion = document.createElementNS(NS, 'animateMotion');
+      abMotion.setAttribute('dur', '4.2s');
+      abMotion.setAttribute('repeatCount', 'indefinite');
+      abMotion.setAttribute('begin', 'indefinite');
+      abMotion.setAttribute('calcMode', 'spline');
+      abMotion.setAttribute('keyTimes', '0;1');
+      abMotion.setAttribute('keySplines', '0.45 0 0.55 1');
+      abMotion.setAttribute('path', abLine.getAttribute('d'));
+      g.appendChild(abMotion);
+      abChart.appendChild(g);
+    }
+
+    var abQuote = about.querySelector('.rd-about__quote p');
+    var abWords = abQuote ? splitFlow(abQuote) : [];
+    var abObj = about.querySelector('.rd-about__spiral');
+    var abPlate = about.querySelector('.rd-about__plate');
+    var abCard = about.querySelector('.rd-about__card');
+    var ab = { q: -1, s: '', mx: 0, my: 0, tx: 0, ty: 0, os: '' };
+
+    if (fine) {
+      [abPlate, abCard].forEach(function (box) {
+        if (!box) return;
+        addLight(box, 'rd-light--about rd-about__light', box.firstChild);
+        box.addEventListener('pointerenter', function () { box.classList.add('is-lit'); });
+        box.addEventListener('pointerleave', function () { box.classList.remove('is-lit'); });
+      });
+      // объект тянется к курсору, пока курсор в блоке
+      about.addEventListener('pointermove', function (e) {
+        var r = about.getBoundingClientRect();
+        ab.tx = (e.clientX / window.innerWidth) * 2 - 1;
+        ab.ty = ((e.clientY - r.top) / r.height) * 2 - 1;
+      });
+      about.addEventListener('pointerleave', function () { ab.tx = 0; ab.ty = 0; });
+    }
+
+    aboutTick = function () {
+      var vh = window.innerHeight;
+      var r = about.getBoundingClientRect();
+      if (r.bottom < -100 || r.top > vh + 100) return;
+
+      if (abWords.length) {
+        var qr = abQuote.getBoundingClientRect();
+        var p = clamp((vh * 0.88 - qr.top) / (qr.height + vh * 0.33), 0, 1);
+        var t = p * (abWords.length + 1.5) - 0.5;
+        ab.q = ab.q < -0.9 ? t : lerp(ab.q, t, 0.12);
+        if (Math.abs(ab.q - t) < 0.01) ab.q = t;
+        var qs = ab.q.toFixed(2);
+        if (qs !== ab.s) { abQuote.style.setProperty('--q', qs); ab.s = qs; }
+      }
+
+      if (abObj) {
+        // прокрутка: объект медленнее страницы (глубина); курсор: тянется за ним
+        var n = clamp((r.top + 300 - vh / 2) / vh, -1.5, 1.5);
+        ab.mx = lerp(ab.mx, ab.tx, 0.05);
+        ab.my = lerp(ab.my, ab.ty, 0.05);
+        var os = (ab.mx * 22).toFixed(1) + 'px ' + (n * 60 + ab.my * 16).toFixed(1) + 'px';
+        if (os !== ab.os) { abObj.style.translate = os; ab.os = os; }
+      }
+    };
+
+    var abReveal = function (el) {
+      el.classList.add('is-in');
+      if (el === abCard) {
+        countPct();
+        if (abMotion && abMotion.beginElement) setTimeout(function () { try { abMotion.beginElement(); } catch (e) { } }, 1900);
+      }
+    };
+    var abTargets = [about.querySelector('.rd-about__head'), abPlate,
+      about.querySelector('.rd-about__people'), about.querySelector('.rd-about__more'), abCard].filter(Boolean);
+    if ('IntersectionObserver' in window) {
+      var abIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { abReveal(en.target); abIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
+      abTargets.forEach(function (el) { abIo.observe(el); });
+    } else {
+      abTargets.forEach(abReveal);
     }
   }
 })();
