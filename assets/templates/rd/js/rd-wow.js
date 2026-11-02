@@ -389,7 +389,7 @@
   // Десктоп: блок закрепляется на экране, прокрутка страницы ведёт ленту кейсов вбок
   // (если блок по высоте не помещается в окно — остаётся обычная лента, её тянут мышью).
   // Внутри карточек — глубина: устройства и фоновая надпись смещаются с разной скоростью,
-  // при наведении карточка чуть наклоняется за курсором.
+  // при наведении устройства в карточке приближаются и расходятся (CSS, настройки — в слоях кейса).
 
   var pfTick = null;
   var pf = document.querySelector('[data-rd-portfolio]');
@@ -412,25 +412,47 @@
         media: el.querySelector('.rd-case__media'),
         layer: el.querySelector('.rd-case__layer'),
         word: el.querySelector('.rd-case__word'),
-        tx: 0, ty: 0, mx: 0, my: 0, sl: '', sw: '', sm: ''
+        tx: 0, ty: 0, mx: 0, my: 0, sl: '', sw: ''
       };
     });
 
+    // Закрепление: блок должен целиком помещаться по высоте окна. Если не помещается —
+    // карточки пропорционально уменьшаются (до 62%), и только потом — обычная лента.
+    var PF_MIN_K = 0.62;
     var pfMeasure = function () {
       pf.classList.remove('is-pinned');
       pf.style.height = '';
+      pf.style.removeProperty('--rd-pf-k');
       pfTrack.style.transform = '';
       pin.on = false;
-      if (!pfDesktop.matches || !pfPin || !pfVp || !pfTrack) return;
-      var need = pfPin.offsetHeight;
-      if (need + 96 > window.innerHeight) return; // не помещается — обычная лента
+      if (!pfDesktop.matches || !pfPin || !pfVp || !pfTrack || !pfHead) return;
+      var media = pfTrack.querySelector('.rd-case__media');
+      if (!media) return;
+
+      pf.classList.add('is-pinned'); // меряем уже в закреплённой раскладке
+      var vh = window.innerHeight;
+      var avail = vh - 2 * Math.max(40, vh * 0.06);
+      var k = 1;
+      var fits = false;
+      for (var i = 0; i < 5; i++) {
+        var need = pfVp.getBoundingClientRect().bottom - pfHead.getBoundingClientRect().top;
+        if (need <= avail) { fits = true; break; }
+        var mh = media.offsetHeight;
+        var nk = k * (avail - (need - mh)) / mh;
+        if (nk < PF_MIN_K) break;
+        k = Math.min(k, nk) - 0.002;
+        pf.style.setProperty('--rd-pf-k', k.toFixed(4));
+      }
       var dist = pfTrack.scrollWidth - pfVp.clientWidth;
-      if (dist < 40) return;
+      if (!fits || dist < 40) {
+        pf.classList.remove('is-pinned');
+        pf.style.removeProperty('--rd-pf-k');
+        return;
+      }
       pin.dist = dist;
       pin.on = true;
       pfVp.scrollLeft = 0;
-      pf.classList.add('is-pinned');
-      pf.style.height = Math.round(window.innerHeight + dist * PF_K) + 'px';
+      pf.style.height = Math.round(vh + dist * PF_K) + 'px';
       pin.x = Math.min(pin.x, dist);
     };
     pfMeasure();
@@ -490,7 +512,7 @@
       }
     }, true);
 
-    // наклон карточки за курсором
+    // устройства чуть следуют за курсором
     if (fine) {
       pfCases.forEach(function (c) {
         if (!c.media) return;
@@ -539,15 +561,13 @@
         if (Math.abs(c.my) < 0.0005 && c.ty === 0) c.my = 0;
 
         if (c.layer) {
-          var sl = desk ? (n * -60 + c.mx * 14).toFixed(1) + 'px ' + (c.my * 8).toFixed(1) + 'px' : '0px 0px';
+          var sl = desk ? (n * -60 + c.mx * 10).toFixed(1) + 'px ' + (c.my * 6).toFixed(1) + 'px' : '0px 0px';
           if (sl !== c.sl) { c.layer.style.translate = sl; c.sl = sl; }
         }
         if (c.word) {
           var sw = (n * (desk ? 160 : 70) - c.mx * 22).toFixed(1) + 'px 0px';
           if (sw !== c.sw) { c.word.style.translate = sw; c.sw = sw; }
         }
-        var sm = (c.mx || c.my) ? 'perspective(1400px) rotateX(' + (-c.my * 2.5).toFixed(3) + 'deg) rotateY(' + (c.mx * 3.5).toFixed(3) + 'deg)' : '';
-        if (sm !== c.sm) { c.media.style.transform = sm; c.sm = sm; }
       }
     };
 

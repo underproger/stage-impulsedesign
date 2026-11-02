@@ -190,8 +190,8 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     }
   }
 
-  // главная кнопка: золото «затекает» слева, текст темнеет
-  .rd-hero__btn {
+  // кнопки с золотой обводкой: золото «затекает» слева, текст и иконки темнеют
+  .rd-btn {
     position: relative;
     overflow: hidden;
     isolation: isolate;
@@ -207,7 +207,8 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
       transition: transform 0.7s $ease-expo;
     }
 
-    .rd-arrow img {
+    .rd-arrow img,
+    > img {
       transition: transform 0.6s $ease-fly, filter 0.5s $ease;
     }
 
@@ -219,7 +220,8 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
         transform: translateX(0);
       }
 
-      .rd-arrow img {
+      .rd-arrow img,
+      > img {
         filter: brightness(0.1);
       }
     }

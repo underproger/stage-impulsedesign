@@ -91,7 +91,7 @@
   line-height: normal;
   color: #fff;
   white-space: nowrap;
-  transition: background-color $dur $ease, border-color $dur $ease;
+  transition: background-color $dur $ease, border-color $dur $ease, color 0.45s $ease;
 
   .rd-arrow {
     width: fw(24px);
