@@ -472,7 +472,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
@@ -626,6 +626,7 @@
     if (priceTick) priceTick();
     if (aboutTick) aboutTick();
     if (leadTick) leadTick();
+    if (seoTick) seoTick();
 
     raf(frame);
   }
@@ -1547,6 +1548,57 @@
       lTargets.forEach(function (t) { lIo.observe(t); });
     } else {
       lTargets.forEach(lReveal);
+    }
+  }
+
+  /* ================= SEO-текст (section 9) ================= */
+  // Заголовок словами из размытия, абзац «проявляется» по словам, икосаэдр влетает (вращает его WebGL).
+  // Раскрытый текст на десктопе длинный — икосаэдр плывёт рядом с текстом (translate на .rd-seo__float,
+  // в пределах блока), свёрнули — возвращается на место.
+  var seoTick = null;
+  var seo = document.querySelector('[data-rd-seo]');
+  if (seo) {
+    var sTitle = seo.querySelector('.rd-seo__title');
+    if (sTitle) splitWords(sTitle);
+    var sIntro = seo.querySelector('.rd-seo__intro');
+    if (sIntro) splitFlow(sIntro);
+    Array.prototype.forEach.call(seo.querySelectorAll('.rd-seo__text > *'), function (el, i) { el.style.setProperty('--k', i); });
+
+    var sObj = seo.querySelector('.rd-seo__obj');
+    var sFloat = seo.querySelector('.rd-seo__float');
+    var sWide = window.matchMedia('(min-width: 1200px)');
+    var sp = { y: 0, s: '' };
+    if (sObj && sFloat) {
+      seoTick = function () {
+        var open = seo.classList.contains('is-open') && sWide.matches;
+        if (!open && Math.abs(sp.y) < 0.5) {
+          if (sp.s) { sFloat.style.transform = ''; sp.s = ''; sp.y = 0; }
+          return;
+        }
+        var target = 0;
+        if (open) {
+          var o = sObj.getBoundingClientRect(); // сам блок не двигается — двигается .rd-seo__float внутри
+          var w = sObj.parentNode.getBoundingClientRect();
+          var max = Math.max(0, w.bottom - o.bottom);
+          target = clamp(window.innerHeight / 2 - (o.top + o.height / 2), 0, max);
+        }
+        sp.y = lerp(sp.y, target, 0.08);
+        var st = 'translate3d(0,' + sp.y.toFixed(1) + 'px,0)';
+        if (st !== sp.s) { sFloat.style.transform = st; sp.s = st; }
+      };
+    }
+
+    var sReveal = function (el) { el.classList.add('is-in'); };
+    var sTargets = Array.prototype.filter.call(seo.querySelectorAll('.rd-seo__body, .rd-seo__obj'), Boolean);
+    if ('IntersectionObserver' in window) {
+      var sIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { sReveal(en.target); sIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
+      sTargets.forEach(function (t) { sIo.observe(t); });
+    } else {
+      sTargets.forEach(sReveal);
     }
   }
 })();

@@ -23,8 +23,8 @@
     });
   }
 
-  /* ---------- 3D-объекты (первый экран, спираль section 6): один WebGL-модуль, грузится после загрузки страницы ---------- */
-  var glob = document.querySelector('[data-rd-glob], [data-rd-3d]');
+  /* ---------- 3D-объекты (первый экран, спираль section 6, икосаэдр section 9): один WebGL-модуль, грузится после загрузки страницы ---------- */
+  var glob = document.querySelector('[data-rd-glob], [data-rd-3d], [data-rd-ico]');
   if (glob && glob.dataset.src && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     var loadBlob = function () {
       var s = document.createElement('script');
@@ -325,6 +325,28 @@
     };
     if (wide.addEventListener) wide.addEventListener('change', ensure);
     else if (wide.addListener) wide.addListener(ensure);
+  });
+
+  /* ---------- SEO-текст (section 9): «Розгорнути» / «Згорнути» ---------- */
+  // Раскрывается остальной текст; кнопка уезжает в конец текста. При сворачивании, если блок ушёл вверх
+  // за край экрана, — плавно возвращаемся к нему. Событие rd-seo на секции (detail — открыт ли).
+  Array.prototype.forEach.call(document.querySelectorAll('[data-rd-seo]'), function (seo) {
+    var btn = seo.querySelector('.rd-seo__toggle');
+    if (!btn) return;
+    var label = btn.querySelector('.rd-seo__toggle-text');
+    var closedText = label.textContent;
+    btn.addEventListener('click', function () {
+      var open = !seo.classList.contains('is-open');
+      seo.classList.toggle('is-open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      label.textContent = open ? (btn.getAttribute('data-open') || closedText) : closedText;
+      seo.dispatchEvent(new CustomEvent('rd-seo', { detail: open }));
+      if (!open) {
+        var anim = document.documentElement.classList.contains('rd-wow-js');
+        var top = seo.getBoundingClientRect().top;
+        if (top < 0) window.scrollTo({ top: window.scrollY + top - 80, behavior: anim ? 'smooth' : 'auto' });
+      }
+    });
   });
 
   /* ---------- Форма заявки (section 8): подписи полей, проверка до отправки, ошибки AjaxForm ---------- */

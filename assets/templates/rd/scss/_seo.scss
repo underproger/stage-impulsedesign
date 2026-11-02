@@ -1,0 +1,481 @@
+@use "base" as *;
+
+// ===== SEO-текст главной «Створення сайтів у Києві та Україні» — section 9 макета =====
+// Белый фон. Слева заголовок, первый абзац «Содержимого» и кнопка «Розгорнути» (раскрывает остальной текст),
+// справа — золотой икосаэдр (WebGL, картинка — заглушка). На мобайле икосаэдр под текстом, по центру.
+// Отступы сняты с PDF макетов 1920 / 1600 / 768 / 360.
+
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-io: cubic-bezier(0.77, 0, 0.18, 1);
+
+.rd-seo {
+  position: relative;
+  overflow-x: clip; // икосаэдр на телефоне — во всю ширину экрана, канвас WebGL больше блока
+  padding: fm(81px, 111px) 0 fm(49px, 10.1px);
+  background: #fff;
+  color: $black;
+
+  @include desktop {
+    padding-block: fd(130px, 180px);
+  }
+
+  &__wrap {
+    position: relative;
+  }
+
+  &__body {
+    position: relative;
+    z-index: 1;
+
+    @include desktop {
+      max-width: fd(580px, 652px); // переносы абзаца и заголовка — как в макете
+    }
+  }
+
+  // h2 глобально стилизован старым CSS — перебиваем явно
+  &__title {
+    font-family: inherit;
+    font-size: fm(24px, 30px);
+    font-weight: 700;
+    line-height: fm(26px, 33px);
+    color: $black;
+
+    @include desktop {
+      font-size: fd(30px, 36px);
+      line-height: fd(33px, 40px);
+    }
+
+    span {
+      @include gold-text;
+    }
+  }
+
+  &__intro,
+  &__text {
+    font-size: fm(14px, 16px);
+    font-weight: 300;
+    line-height: fm(25px, 29px);
+    color: $black;
+
+    @include desktop {
+      font-size: fd(16px, 18px);
+      line-height: fd(29px, 32px);
+    }
+  }
+
+  &__intro {
+    margin-top: 40px;
+
+    @include desktop {
+      margin-top: fw(40px);
+    }
+
+    strong,
+    b {
+      font-weight: inherit; // в макете вводный абзац без выделений (в тексте <strong> оставлен для SEO)
+    }
+  }
+
+  // раскрывающаяся часть (без «вау» — просто показывается; анимация высоты — в слое «вау»)
+  &__more {
+    display: none;
+  }
+
+  &.is-open &__more {
+    display: block;
+  }
+
+  // ----- текст статьи -----
+  &__text {
+    padding-top: 8px;
+
+    > :first-child {
+      margin-top: 16px;
+    }
+
+    p,
+    ul,
+    ol,
+    table {
+      margin: 16px 0 0;
+    }
+
+    h2,
+    h3,
+    h4 {
+      margin: 40px 0 0;
+      font-family: inherit;
+      font-weight: 700;
+      color: $black;
+    }
+
+    h2 {
+      font-size: fm(20px, 24px);
+      line-height: 1.25;
+
+      @include desktop {
+        font-size: fd(24px, 28px);
+      }
+    }
+
+    h3,
+    h4 {
+      margin-top: 32px;
+      font-size: fm(18px, 20px);
+      line-height: 1.3;
+
+      @include desktop {
+        font-size: fd(20px, 22px);
+      }
+    }
+
+    h2 + p,
+    h3 + p,
+    h2 + ul,
+    h3 + ul,
+    h2 + ol,
+    h3 + ol {
+      margin-top: 12px;
+    }
+
+    strong,
+    b {
+      font-weight: 700;
+    }
+
+    a {
+      color: $gold;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.2em;
+      transition: color $dur $ease, text-underline-offset 0.3s $ease;
+
+      @include hover {
+        color: $black;
+        text-underline-offset: 0.35em;
+      }
+    }
+
+    ul,
+    ol {
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      position: relative;
+      padding-left: 1.4em;
+
+      & + li {
+        margin-top: 6px;
+      }
+    }
+
+    ul > li::before {
+      content: "";
+      position: absolute;
+      left: 0.35em;
+      top: 0.74em; // середина строки (line-height ≈1.8) минус полкружка
+      width: 0.3em;
+      height: 0.3em;
+      border-radius: 50%;
+      background: $gold-grad;
+    }
+
+    ol {
+      counter-reset: rd-seo;
+    }
+
+    ol > li {
+      counter-increment: rd-seo;
+
+      &::before {
+        content: counter(rd-seo) ".";
+        position: absolute;
+        left: 0;
+        font-weight: 700;
+        color: $gold;
+      }
+    }
+
+    // таблица ссылок на услуги — сеткой «таблеток»
+    table {
+      display: block;
+      width: 100%;
+      border: 0;
+      border-collapse: collapse;
+    }
+
+    tbody {
+      display: grid;
+      gap: 8px;
+    }
+
+    tr {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+      gap: 8px;
+    }
+
+    td {
+      display: block;
+      padding: 0;
+      border: 0;
+
+      a {
+        display: block;
+        height: 100%;
+        padding: 12px 18px;
+        border-radius: 14px;
+        background: #f5f3f0;
+        color: $black;
+        text-decoration: none;
+        transition: background-color $dur $ease, color $dur $ease;
+
+        @include hover {
+          background: $black-2;
+          color: $gold;
+        }
+      }
+    }
+
+    img {
+      display: block;
+      float: none !important;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      margin: 24px 0 0 !important;
+      border-radius: 16px;
+    }
+  }
+
+  // ----- кнопка «Розгорнути» / «Згорнути» -----
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 24px;
+    margin-top: 40px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    color: $black;
+    transition: color $dur $ease;
+
+    @include mobile {
+      margin-top: 41px;
+    }
+
+    @include desktop {
+      gap: fw(8px);
+      height: fw(24px);
+      margin-top: fw(40px);
+      font-size: fw(16px);
+      line-height: fw(24px);
+    }
+  }
+
+  &__arrow {
+    width: 24px;
+    height: 24px;
+
+    @include desktop {
+      width: fw(24px);
+      height: fw(24px);
+    }
+
+    // стрелка ↘ «пролетает» вниз-вправо: уходит в правый нижний угол, новая — из левого верхнего
+    &--down .rd-arrow__b {
+      transform: translate(-115%, -115%);
+    }
+
+    // ↖ — наоборот
+    &--up {
+      display: none;
+
+      .rd-arrow__b {
+        transform: translate(115%, 115%);
+      }
+    }
+  }
+
+  &.is-open &__arrow--down {
+    display: none;
+  }
+
+  &.is-open &__arrow--up {
+    display: inline-block;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &__toggle:hover {
+      color: $gold;
+
+      .rd-seo__arrow--down .rd-arrow__a {
+        transform: translate(115%, 115%);
+      }
+
+      .rd-seo__arrow--up .rd-arrow__a {
+        transform: translate(-115%, -115%);
+      }
+
+      .rd-arrow__b {
+        transform: translate(0, 0);
+        transition-delay: 0.08s;
+      }
+    }
+  }
+
+  // ----- икосаэдр -----
+  &__obj {
+    --s: #{fm(360px, 500px)};
+    position: relative;
+    width: var(--s);
+    height: var(--s);
+    margin: fm(16.7px, -38px) 0 0 calc(50% - var(--s) / 2); // по центру экрана, даже если шире контейнера
+    pointer-events: none;
+
+    @include desktop {
+      --s: #{fd(500px, 600px)};
+      position: absolute;
+      top: calc(#{fd(37px, 52px)} - #{fd(130px, 180px)}); // от верха блока
+      right: fd(40px, 50px);
+      margin: 0;
+    }
+  }
+
+  &__float {
+    position: absolute;
+    inset: 0;
+  }
+
+  &__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transition: opacity 0.6s ease, visibility 0s linear 0.6s;
+  }
+
+  // WebGL нарисовал первый кадр — картинку прячем; канвас больше блока (наклон и покачивание не обрезаются)
+  &__obj.is-webgl &__img {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  &__canvas {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    max-width: none; // старый CSS сайта ограничивает canvas шириной родителя
+    transform: translate(-50%, -50%);
+  }
+}
+
+// ================= «Вау» (html.rd-wow-js, модуль SEO-текста в конце rd-wow.js) =================
+.rd-wow-js {
+  // заголовок: слова из размытия, золотое слово переливается
+  .rd-seo__title .rd-wd {
+    display: inline-block;
+    opacity: 0;
+    translate: 0 0.6em;
+    filter: blur(10px);
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+    transition-delay: calc(var(--i) * 70ms);
+  }
+
+  .rd-seo__title .rd-wd:not(.rd-wd--el) {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: $black;
+  }
+
+  .rd-seo__title .rd-wd--el {
+    background: linear-gradient(110deg, $gold 0%, $gold 38%, #f7e8b6 50%, $gold 62%, $gold-2 100%);
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rd-wow-shimmer 4.5s $ease infinite;
+  }
+
+  // абзац «проявляется» словами по очереди, кнопка — следом
+  .rd-seo__intro .rd-qw {
+    opacity: 0.12;
+    transition: opacity 0.6s $ease;
+    transition-delay: calc(var(--i) * 18ms + 250ms);
+  }
+
+  .rd-seo__toggle {
+    opacity: 0;
+    translate: 0 16px;
+    transition: opacity 0.8s $ease-expo, translate 1s $ease-expo, color $dur $ease;
+    transition-delay: 0.9s, 0.9s, 0s;
+  }
+
+  .rd-seo__body.is-in {
+    .rd-wd {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0);
+    }
+
+    .rd-qw {
+      opacity: 1;
+    }
+
+    .rd-seo__toggle {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  // икосаэдр влетает (вращение — WebGL); сдвиг при прокрутке раскрытого текста пишет rd-wow.js (translate)
+  .rd-seo__obj {
+    opacity: 0;
+    scale: 0.6;
+    transition: opacity 1s $ease-expo 0.2s, scale 1.4s $ease-expo 0.2s;
+
+    &.is-in {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  .rd-seo__float {
+    will-change: transform;
+  }
+
+  // раскрытие: высота 0fr → 1fr, абзацы выезжают по очереди
+  .rd-seo__more {
+    display: grid;
+    grid-template-rows: 0fr;
+    visibility: hidden;
+    transition: grid-template-rows 0.8s $ease-io, visibility 0s linear 0.8s;
+  }
+
+  .rd-seo__more-in {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .rd-seo__text > * {
+    opacity: 0;
+    translate: 0 18px;
+    transition: opacity 0.6s $ease, translate 0.8s $ease-expo;
+  }
+
+  .rd-seo.is-open {
+    .rd-seo__more {
+      grid-template-rows: 1fr;
+      visibility: visible;
+      transition: grid-template-rows 0.9s $ease-io, visibility 0s;
+    }
+
+    .rd-seo__text > * {
+      opacity: 1;
+      translate: 0 0;
+      transition-delay: calc(min(var(--k, 0), 12) * 50ms + 150ms);
+    }
+  }
+}
