@@ -16,6 +16,11 @@ $gold-grad: linear-gradient(77deg, $gold 0%, $gold-2 100%);
 $line-light: rgba(20, 20, 26, 0.08);
 $line-dark: rgba(255, 255, 255, 0.04);
 
+// Анимации: одна плавная кривая для всех ховеров
+$ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+$ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+$dur: 0.5s;
+
 // Плавное значение между двумя макетами: $min при $vmin, $max при $vmax, дальше — упор.
 @function fl($min, $max, $vmin: 1600px, $vmax: 1920px) {
   @if $min == $max {

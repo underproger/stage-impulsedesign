@@ -98,7 +98,7 @@
       <ul class="rd-social">
         {foreach $socials as $s}
           {if $s.url && $s.url != '#'}
-            <li><a href="{$s.url}" target="_blank" rel="nofollow noopener" aria-label="{$s.label}"><img src="{$img}{$s.icon}" width="20" height="20" alt="" loading="eager"></a></li>
+            <li><a href="{$s.url}" target="_blank" rel="nofollow noopener" aria-label="{$s.label}" style="--rd-icon: url({$img}{$s.icon})"></a></li>
           {/if}
         {/foreach}
       </ul>

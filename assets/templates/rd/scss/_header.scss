@@ -51,14 +51,14 @@
     font-weight: 700;
     line-height: normal;
     white-space: nowrap;
-    transition: opacity 0.2s ease;
+    transition: color $dur $ease;
 
     @include desktop {
       display: block;
     }
 
     @include hover {
-      @include gold-text;
+      color: $gold;
     }
   }
 }
@@ -87,6 +87,7 @@
     font-weight: 400;
     line-height: normal;
     white-space: nowrap;
+    transition: color $dur $ease;
 
     &::after {
       content: "";
@@ -98,14 +99,20 @@
       background: $gold-grad;
       transform: scaleX(0);
       transform-origin: left;
-      transition: transform 0.3s ease;
+      transition: transform $dur $ease;
     }
 
     @include hover {
+      color: $gold;
+
       &::after {
         transform: scaleX(1);
       }
     }
+  }
+
+  &__item--mega.is-open > &__link {
+    color: $gold;
   }
 
   &__item.is-active > &__link::after,
@@ -124,7 +131,7 @@
 
   &__item {
     opacity: 0.3;
-    transition: opacity 0.2s ease;
+    transition: opacity $dur $ease;
 
     &.is-active {
       opacity: 1;
@@ -156,7 +163,7 @@
   opacity: 0;
   visibility: hidden;
   transform: translateY(-12px);
-  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0.3s;
+  transition: opacity $dur $ease, transform $dur $ease, visibility 0s linear $dur;
 
   // линия под шапкой
   &::before {
@@ -177,7 +184,7 @@
     opacity: 1;
     visibility: visible;
     transform: none;
-    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s;
+    transition: opacity $dur $ease, transform $dur $ease, visibility 0s;
   }
 
   &__row {
@@ -209,10 +216,10 @@
     font-size: fd(20px, 24px);
     line-height: 1.2;
     color: #fff;
-    transition: opacity 0.2s ease;
+    transition: color $dur $ease;
 
     @include hover {
-      @include gold-text;
+      color: $gold;
     }
   }
 
@@ -224,16 +231,34 @@
   }
 
   &__link {
+    position: relative;
     display: inline-block;
     padding: 3px 0;
     font-size: fd(16px, 18px);
     font-weight: 300;
     line-height: 1.7;
     color: $gray;
-    transition: color 0.2s ease;
+    transition: color $dur $ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 2px;
+      width: 100%;
+      height: 1px;
+      background: $gold-grad;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform $dur $ease;
+    }
 
     @include hover {
-      color: #fff;
+      color: $gold;
+
+      &::after {
+        transform: scaleX(1);
+      }
     }
 
     &.is-active {
@@ -264,7 +289,7 @@
     height: 2px;
     border-radius: 2px;
     background: #fff;
-    transition: transform 0.3s ease, top 0.3s ease;
+    transition: transform $dur $ease, top $dur $ease;
 
     &:nth-child(1) {
       top: 14px;
@@ -301,7 +326,7 @@
   opacity: 0;
   visibility: hidden;
   transform: translateY(-16px);
-  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0.3s;
+  transition: opacity $dur $ease, transform $dur $ease, visibility 0s linear $dur;
 
   @include desktop {
     display: none;
@@ -311,7 +336,7 @@
     opacity: 1;
     visibility: visible;
     transform: none;
-    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s;
+    transition: opacity $dur $ease, transform $dur $ease, visibility 0s;
   }
 
   &__top {
@@ -405,7 +430,7 @@
       height: 1.5px;
       border-radius: 1px;
       background: $gold;
-      transition: transform 0.25s ease;
+      transition: transform $dur $ease;
     }
 
     &::after {
@@ -420,7 +445,7 @@
   &__sub {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.3s ease;
+    transition: grid-template-rows $dur $ease;
 
     > ul {
       overflow: hidden;
@@ -488,6 +513,18 @@
     .rd-social {
       gap: fm(40px, 64px);
     }
+  }
+}
+
+// Мобильное меню на ховер (узкое окно с мышью) — тоже золото
+.rd-mobile__link,
+.rd-mobile__group-link,
+.rd-mobile__sub-link,
+.rd-mobile__heading {
+  transition: color $dur $ease;
+
+  @include hover {
+    color: $gold;
   }
 }
 

@@ -206,7 +206,7 @@
     width: fm(320px, 480px);
     aspect-ratio: 1;
     margin: 28px auto 140px;
-    pointer-events: auto;
+    pointer-events: none;
 
     @include tablet-up {
       width: 480px;
@@ -314,8 +314,9 @@
     inset: 0;
     border-radius: 50%;
     background: $gold-grad;
-    transform: scale(0);
-    transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+    transform: scale(0.762);
+    opacity: 0;
+    transition: transform $dur $ease-out, opacity 0.15s linear;
   }
 
   &__ring {
@@ -344,12 +345,13 @@
     width: 36px;
     height: 36px;
     margin: -18px 0 0 -18px;
-    transition: transform 0.35s ease;
+    transition: transform $dur $ease;
   }
 
   @include hover {
     .rd-works__fill {
       transform: scale(1.01);
+      opacity: 1;
     }
 
     .rd-works__arrow {
@@ -359,6 +361,7 @@
 
   &:focus-visible .rd-works__fill {
     transform: scale(1.01);
+    opacity: 1;
   }
 
   @media (prefers-reduced-motion: reduce) {

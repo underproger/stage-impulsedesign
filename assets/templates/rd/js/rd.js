@@ -72,7 +72,7 @@
       var cy = r.top + r.height / 2 - pos.y;
       var dx = e.clientX - cx;
       var dy = e.clientY - cy;
-      var zone = r.width * 0.9; // радиус «притяжения»
+      var zone = r.width / 2 + 24; // притягивает только у самой кнопки (24px за краем)
       if (dx * dx + dy * dy < zone * zone) {
         target.x = dx * STRENGTH;
         target.y = dy * STRENGTH;

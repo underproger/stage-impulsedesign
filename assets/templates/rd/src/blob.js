@@ -1,7 +1,6 @@
 /*
  * Золотой объект первого экрана (WebGL, three.js r158).
- * Порт анимации из прототипа: сфера, деформированная шумом Перлина, золотой Phong-материал,
- * при наведении превращается в икосаэдр.
+ * Порт анимации из прототипа: сфера, деформированная шумом Перлина, золотой Phong-материал.
  *
  * Сборка (из каталога с node_modules three@0.158.0 и esbuild):
  *   npx esbuild assets/templates/rd/src/blob.js --bundle --minify --format=iife \
@@ -27,17 +26,11 @@ const CAMERA_Z = 1000;
 const SCALE = 0.3; // радиус сферы = 30% ширины блока (как в прототипе)
 const CANVAS_PAD = 1.4; // канвас больше блока, чтобы деформация не обрезалась
 
-const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
-
 class GoldBlob {
   constructor(box) {
     this.box = box;
     this.start = performance.now();
     this.last = this.start;
-    this.alpha = 1; // 1 — капля, 0 — икосаэдр
-    this.alphaFrom = 1;
-    this.alphaTo = 1;
-    this.alphaStart = 0;
     this.visible = true;
     this.uniforms = {
       uAlpha: { value: 1 },
@@ -70,12 +63,7 @@ class GoldBlob {
     const detail = isDesktop ? 50 : 26;
 
     this.mesh = new Mesh(new IcosahedronGeometry(1, detail), this.material());
-    const hoverMaterial = this.material();
-    hoverMaterial.transparent = true;
-    this.meshHover = new Mesh(new IcosahedronGeometry(1, 0), hoverMaterial);
-    this.meshHover.position.set(0, 0, 200);
-    this.meshHover.scale.setScalar(0);
-    this.parent.add(this.mesh, this.meshHover);
+    this.parent.add(this.mesh);
 
     this.resize();
     this.bind();
@@ -137,19 +125,6 @@ class GoldBlob {
         }
       }).observe(this.box);
     }
-
-    // Наведение (на тач-устройствах — тап) превращает каплю в икосаэдр
-    const morph = (toPolyhedron) => {
-      this.alphaFrom = this.alpha;
-      this.alphaTo = toPolyhedron ? 0 : 1;
-      this.alphaStart = performance.now();
-    };
-    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-      this.box.addEventListener('mouseenter', () => morph(true));
-      this.box.addEventListener('mouseleave', () => morph(false));
-    } else {
-      this.box.addEventListener('click', () => morph(this.alphaTo === 1));
-    }
   }
 
   loop(now) {
@@ -157,21 +132,9 @@ class GoldBlob {
     const dt = Math.min((now - this.last) / 16.667, 3); // в «кадрах 60fps»
     this.last = now;
 
-    // плавный переход капля ↔ икосаэдр (400 мс)
-    if (this.alpha !== this.alphaTo) {
-      const t = Math.min((now - this.alphaStart) / 400, 1);
-      this.alpha = this.alphaFrom + (this.alphaTo - this.alphaFrom) * easeInOut(t);
-      if (t === 1) this.alpha = this.alphaTo;
-    }
-    const a = this.alpha;
-    this.uniforms.uAlpha.value = a;
     this.uniforms.uTime.value = 0.00025 * (now - this.start);
-
-    const s = this.size * SCALE;
-    this.mesh.scale.setScalar(Math.max(s * a, 0.0001));
-    this.meshHover.scale.setScalar(Math.max(s * (1 - a) * 0.7, 0.0001));
+    this.mesh.scale.setScalar(this.size * SCALE);
     this.mesh.rotation.y += 0.01 * dt;
-    this.meshHover.rotation.y -= (0.01 + 0.01 * a) * dt;
 
     this.renderer.render(this.scene, this.camera);
 
