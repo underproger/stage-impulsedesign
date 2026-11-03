@@ -3,6 +3,7 @@
 // ===== «Сайти для бізнесу» (Mind Control 2.0) — section 10 макета =====
 // Десктоп: слева заголовок, справа автор и цитата; ниже — серая плашка с двумя карточками,
 // вторая карточка начинается по линии правой колонки. Мобайл/планшет — всё в одну колонку.
+// .rd-mind--notice — «Ми завжди йдемо Вам на зустріч» на странице услуги (mind.tpl src='notice', в конце файла).
 
 $mind-panel: #f5f3f0;
 
@@ -83,6 +84,23 @@ $mind-panel: #f5f3f0;
     strong,
     span {
       font-weight: 700;
+    }
+
+    p {
+      margin: 0;
+      font: inherit;
+      color: inherit;
+    }
+
+    p + p {
+      margin-top: 0.7em;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: rgba($gold, 0.6);
+      text-underline-offset: 3px;
     }
   }
 
@@ -314,6 +332,159 @@ $mind-panel: #f5f3f0;
       .rd-mind-card__title {
         color: $gold;
       }
+    }
+  }
+}
+
+// ===== «Ми завжди йдемо Вам на зустріч» (страница услуги, section 6b макета) =====
+// Та же вёрстка без карточек: слева заголовок (не капсом, мельче), текст и «таблетка» со стрелкой рядом
+// с мелким текстом; справа фото с подписью и цитата — как в «Сайтах для бізнесу».
+// Идёт сразу после цен на том же белом фоне: на 1920 верх фото — на 120px ниже карточек цен
+// (нижний отступ цен перекрываем отрицательным margin). В макете блок только на 1920, остальные ширины — по аналогии.
+.rd-mind--notice {
+  .rd-mind__title {
+    font-size: fm(32px, 40px);
+    text-transform: none;
+
+    @include desktop {
+      max-width: fd(484px, 580px); // «Ми завжди йдемо / Вам на зустріч»
+      font-size: fd(40px, 48px);
+    }
+
+    span {
+      white-space: nowrap; // «на зустріч» не рвём
+    }
+  }
+
+  .rd-mind__sub {
+    @include desktop {
+      max-width: fd(484px, 580px);
+    }
+  }
+}
+
+.rd-prices + .rd-mind--notice {
+  margin-top: calc(-1 * #{fm(80px, 110px)});
+  padding-top: fm(56px, 72px);
+
+  @include desktop {
+    margin-top: calc(-1 * #{fd(130px, 180px)});
+    padding-top: fd(100px, 120px);
+  }
+}
+
+// «таблетка» со стрелкой и мелкий текст
+.rd-mind__note {
+  display: flex;
+  align-items: flex-start;
+  gap: fm(20px, 32px);
+  margin-top: fm(10px, 15px);
+
+  @include desktop {
+    gap: fw(32px);
+    margin-top: fw(15px);
+  }
+}
+
+.rd-mind__pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: fm(48px, 60px);
+  height: fm(96px, 120px);
+  overflow: hidden;
+  border-radius: 999px;
+  background: $black-2;
+  color: $gold;
+  isolation: isolate;
+  transition: color 0.4s $ease;
+
+  @include desktop {
+    width: fw(60px);
+    height: fw(120px);
+  }
+}
+
+// золотая заливка при наведении: въезжает слева, на уходе курсора уезжает вправо (как «таблетки» карточек)
+.rd-mind__pill-fill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: $gold-grad;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.7s $ease-fly;
+}
+
+.rd-mind__pill-svg {
+  width: fm(32px, 40px);
+  height: fm(32px, 40px);
+
+  @include desktop {
+    width: fw(40px);
+    height: fw(40px);
+  }
+}
+
+// стрелка: вторая ждёт под кольцом; на наведении первая улетает вверх, вторая приходит снизу
+.rd-mind__pill-arrow {
+  transition: translate 0.6s $ease-fly;
+
+  &--b {
+    translate: 0 24px;
+  }
+}
+
+.rd-mind__note-text {
+  max-width: fd(430px, 516px);
+  padding-top: fm(6px, 8px);
+  font-size: fm(14px, 16px);
+  font-weight: 300;
+  line-height: fm(22px, 26px);
+
+  @include desktop {
+    padding-top: fw(8px);
+    font-size: fd(14px, 16px);
+    line-height: fd(22px, 26px);
+  }
+
+  p {
+    margin: 0;
+    font: inherit;
+    color: inherit;
+  }
+
+  p + p {
+    margin-top: 0.7em;
+  }
+
+  b,
+  strong {
+    font-weight: 700;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rd-mind__note:hover {
+    .rd-mind__pill-fill {
+      transform: scaleX(1);
+      transform-origin: left center;
+    }
+
+    .rd-mind__pill {
+      color: $black;
+      transition-delay: 0.12s;
+    }
+
+    .rd-mind__pill-arrow {
+      translate: 0 -24px;
+    }
+
+    .rd-mind__pill-arrow--b {
+      translate: 0 0;
+      transition-delay: 0.08s;
     }
   }
 }

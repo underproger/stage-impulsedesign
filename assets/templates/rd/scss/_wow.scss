@@ -754,13 +754,40 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     transition: opacity 1s $ease-expo 0.4s, translate 1.1s $ease-expo 0.4s;
   }
 
+  .rd-mind__note {
+    opacity: 0;
+    translate: 0 30px;
+    transition: opacity 1s $ease-expo 0.6s, translate 1.1s $ease-expo 0.6s;
+  }
+
+  // «таблетка» (блок «Ми завжди йдемо Вам на зустріч»): кольцо прорисовывается, стрелка приходит снизу
+  .rd-mind__pill-ring {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 1.2s $ease-io 0.9s;
+  }
+
   .rd-mind__heading.is-in {
     .rd-mind__title .rd-wd,
-    .rd-mind__sub {
+    .rd-mind__sub,
+    .rd-mind__note {
       opacity: 1;
       translate: 0 0;
       filter: blur(0);
     }
+
+    .rd-mind__pill-ring {
+      stroke-dashoffset: 0;
+    }
+
+    // fill backwards: после анимации translate снова за правилами наведения
+    .rd-mind__pill-arrow:not(.rd-mind__pill-arrow--b) {
+      animation: rd-notice-arrow 0.9s $ease-fly 1.3s backwards;
+    }
+  }
+
+  .rd-mind__heading:not(.is-in) .rd-mind__pill-arrow:not(.rd-mind__pill-arrow--b) {
+    translate: 0 24px;
   }
 
   // фото: капсула раскрывается слева направо, кадр «отъезжает» из крупного плана;
@@ -1533,5 +1560,15 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   from {
     opacity: 0;
     transform: scale(0.6);
+  }
+}
+
+@keyframes rd-notice-arrow {
+  from {
+    translate: 0 24px;
+  }
+
+  to {
+    translate: 0 0;
   }
 }
