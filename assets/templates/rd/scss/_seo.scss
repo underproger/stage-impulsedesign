@@ -408,6 +408,18 @@ $ease-in-q: cubic-bezier(0.55, 0, 0.75, 0.2); // разгон — «улетае
   &.is-wide .rd-seo__wrap {
     @include desktop {
       grid-template-columns: minmax(0, 1fr);
+      align-items: start; // текст растёт вниз от заголовка, а не «съезжает» от середины
+    }
+  }
+
+  // текст на всю ширину: фото (уже погасшее) — вне потока, иначе сетка уводит его во вторую строку
+  // на всю ширину блока и под текстом остаётся пустота высотой с фото
+  &.is-wide .rd-seo__obj--photo {
+    @include desktop {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: fd(380px, 460px);
     }
   }
 
@@ -494,23 +506,16 @@ $ease-in-q: cubic-bezier(0.55, 0, 0.75, 0.2); // разгон — «улетае
     transition-delay: calc(var(--i) * 18ms + 250ms);
   }
 
-  .rd-seo__title {
-    transition: opacity 0.5s $ease 0.05s;
+  // смена ширины текста (раскрыли / свернули, только десктоп): текст коротко гаснет целиком, строки перестраиваются
+  // невидимо и текст проявляется уже в новой ширине, чуть всплывая (без повторного «проявления по словам»)
+  .rd-seo__body {
+    transition: opacity 0.5s $ease, translate 0.7s $ease-expo;
   }
 
-  // смена ширины текста (раскрыли / свернули): заголовок и абзац гаснут, строки перестраиваются невидимо,
-  // потом абзац снова проявляется по словам
   .rd-seo__body.is-reflow {
-    .rd-seo__title {
-      opacity: 0;
-      transition: opacity 0.2s $ease;
-    }
-
-    .rd-qw {
-      opacity: 0;
-      transition: opacity 0.2s $ease;
-      transition-delay: 0s;
-    }
+    opacity: 0;
+    translate: 0 12px;
+    transition: opacity 0.18s $ease, translate 0s linear 0.18s;
   }
 
   .rd-seo__toggle {
@@ -567,6 +572,26 @@ $ease-in-q: cubic-bezier(0.55, 0, 0.75, 0.2); // разгон — «улетае
     }
   }
 
+  // сворачивание: пока текст ещё на всю ширину (is-wide без is-open), икосаэдр / фото не возвращаются —
+  // влетают, когда текст снова сузился
+  .rd-seo.is-wide:not(.is-open) .rd-seo__obj {
+    opacity: 0;
+    scale: 0.6;
+    transition: none;
+  }
+
+  // фото (страница портфолио) не «улетает» в размытии, а быстро гаснет, чуть уменьшаясь: к перестройке текста его уже не видно
+  .rd-seo--photo.is-open .rd-seo__obj--photo {
+    scale: 0.92;
+    translate: 0 0;
+    filter: none;
+    transition: opacity 0.22s $ease, scale 0.4s $ease, height 0.6s $ease-io 0.3s, margin 0.6s $ease-io 0.3s;
+
+    @include mobile {
+      overflow: hidden;
+    }
+  }
+
   // раскрытие: высота 0fr → 1fr, абзацы выезжают по очереди
   .rd-seo__more {
     display: grid;
@@ -589,6 +614,7 @@ $ease-in-q: cubic-bezier(0.55, 0, 0.75, 0.2); // разгон — «улетае
   // текст раскрывается, когда абзац уже перестроился на всю ширину
   .rd-seo.is-open {
     .rd-seo__more {
+      display: grid; // иначе базовое «.is-open → display: block» убивает анимацию высоты: текст выпадал сразу целиком
       grid-template-rows: 1fr;
       visibility: visible;
       transition: grid-template-rows 0.9s $ease-io 0.3s, visibility 0s;

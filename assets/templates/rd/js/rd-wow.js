@@ -1601,16 +1601,36 @@
     Array.prototype.forEach.call(seo.querySelectorAll('.rd-seo__text > *'), function (el, i) { el.style.setProperty('--k', i); });
 
     var sBody = seo.querySelector('.rd-seo__body');
-    var sTimer = 0;
+    var sWrap = seo.querySelector('.rd-seo__wrap');
+    var sTimers = [];
+    var sLater = function (fn, ms) { sTimers.push(setTimeout(fn, ms)); };
+    var sDesk = window.matchMedia('(min-width: 1200px)');
     seo.addEventListener('rd-seo', function (e) {
       var open = !!e.detail;
-      clearTimeout(sTimer);
-      sBody.classList.add('is-reflow');
-      // раскрытие — ширина меняется, как только икосаэдр отлетел; сворачивание — когда текст почти свернулся
-      sTimer = setTimeout(function () {
+      sTimers.forEach(clearTimeout); sTimers = [];
+      // на мобайле ширина текста не меняется — перестраивать нечего
+      if (!sDesk.matches) {
+        seo.classList.toggle('is-wide', open);
+        sBody.classList.remove('is-reflow');
+        sWrap.style.minHeight = '';
+        return;
+      }
+      var reflow = function () {
         seo.classList.toggle('is-wide', open);
         raf(function () { raf(function () { sBody.classList.remove('is-reflow'); }); });
-      }, open ? 260 : 420);
+      };
+      if (open) {
+        // блок не проседает, пока текст перестраивается (широкий текст ниже, а раскрывающаяся часть ещё не выросла)
+        sWrap.style.minHeight = sWrap.offsetHeight + 'px';
+        sBody.classList.add('is-reflow');
+        sLater(reflow, 240);
+        sLater(function () { sWrap.style.minHeight = ''; }, 1500);
+      } else {
+        // текст сворачивается на прежней ширине, к концу гаснет, сужается и проявляется; икосаэдр / фото — следом
+        sWrap.style.minHeight = '';
+        sLater(function () { sBody.classList.add('is-reflow'); }, 380);
+        sLater(reflow, 580);
+      }
     });
 
     var sReveal = function (el) { el.classList.add('is-in'); };
