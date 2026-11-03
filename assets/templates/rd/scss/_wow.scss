@@ -1084,6 +1084,27 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     translate: 0 0;
   }
 
+  // номера (вариант num — «4 гарантії» услуги): выезжают снизу из-под маски, на наведении «прокручиваются»
+  .rd-gar-card__num-in {
+    translate: 0 105%;
+    transition: translate 1s $ease-expo;
+    transition-delay: calc(var(--i, 0) * 120ms + 350ms);
+  }
+
+  .rd-gar__panel.is-in .rd-gar-card__num-in {
+    translate: 0 0;
+  }
+
+  .rd-gar--num > .rd-wow-spot {
+    display: none; // светлый фон без сетки — золотой «линзы» под курсором нет, свет — только на плашке
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rd-gar__panel.is-in .rd-gar-card:hover .rd-gar-card__num-in {
+      animation: rd-cause-roll 0.75s $ease-io both;
+    }
+  }
+
   // иконки прорисовываются линией
   .rd-gar-ic {
     path[pathLength] {

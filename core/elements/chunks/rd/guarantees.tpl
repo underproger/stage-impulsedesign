@@ -9,6 +9,9 @@
   2) страница услуги, «Переваги наших …»:  {include 'file:chunks/rd/guarantees.tpl' src='bl12'}
      title-bl12 — заголовок, list-bl12 — MIGX «advantages»: title, text, icon (иконки — в $icons ниже);
      круглая кнопка — как кнопка «Обговорити проект» первого экрана услуги (link-left-banner, пусто — как у главной).
+  3) страница услуги, «4 гарантії, що ваш …» (section 7):  {include 'file:chunks/rd/guarantees.tpl' num=1}
+     поля — как у главной (блок 7), но светлый фон, вместо иконок крупные номера 01–04, без золотой карточки,
+     свечение — в правом верхнем углу плашки. Круглая кнопка — guaranty_link_bl7, пусто — кнопка первого экрана услуги.
 *}
 {set $r = $_modx->resource}
 {set $isRu = $_modx->context.key == 'web'}
@@ -27,10 +30,12 @@
   {set $sid = 'garanty'}
   {set $title = $r['guaranty_title_bl7']}
   {set $items = $r['guaranty_list_bl7'] | json_decode : true}
-  {set $ctaUrl = $r['guaranty_link_bl7'] ?: $r['link-left-banner']}
+  {set $ctaUrl = ($r['guaranty_link_bl7'] | trim) ?: ($r['link-left-banner'] | trim)}
+  {if !$ctaUrl || $ctaUrl == '#'}{set $ctaUrl = $_modx->config.site_start | resource : 'link-left-banner'}{/if}
   {set $ctaText = $r['guaranty_link_text_bl7']}
   {set $icons = ['cart', 'diamond', 'speed', 'zap']}
 {/if}
+{set $mod = $src == 'bl12' ? $sid : ($num ? 'num' : '')}
 {if $ctaUrl && ($ctaUrl | preg_match : '/^\d+$/')}{set $ctaUrl = $ctaUrl | url}{/if}
 {if !$ctaText}{set $ctaText = $isRu ? 'Обсудить проект' : 'Обговорити проект'}{/if}
 {* размер надписи на круге — как у кнопки первого экрана *}
@@ -38,11 +43,12 @@
 {set $ringFs = $ringLen > 14 ? (196 / $ringLen) : 14}
 
 {if $items}
-<section class="rd-gar{if $sid != 'garanty'} rd-gar--{$sid}{/if}" id="{$sid}">
-  <div class="rd-gar__glow" aria-hidden="true"></div>
+<section class="rd-gar{if $mod} rd-gar--{$mod}{/if}" id="{$sid}">
+  {if !$num}<div class="rd-gar__glow" aria-hidden="true"></div>{/if}
   <div class="rd-container rd-gar__wrap">
     {if $title}
-      {set $title = $title | strip_tags : '<span><br>' | trim}
+      {* классы у <span> снимаем; двоеточие в конце («…ваш сайт на MODX:») не выводим *}
+      {set $title = $title | strip_tags : '<span><br>' | preg_replace : '~<span[^>]*>~iu' : '<span>' | preg_replace : '~\s*:\s*(</span>)?\s*$~u' : '$1' | trim}
       {* в заголовке нет <span> — золотым становится первое слово («Переваги наших …») *}
       {if !($title | preg_match : '~<span~')}{set $title = $title | preg_replace : '~^(\S+)~u' : '<span>$1</span>'}{/if}
       {* data-rd-fit: длинное слово («ПРЕИМУЩЕСТВА») не влезает — rd.js уменьшает кегль *}
@@ -67,10 +73,14 @@
     {/if}
 
     <div class="rd-gar__panel">
+      {if $num}<span class="rd-gar__pglow" aria-hidden="true"></span>{/if}
       {set $last = ($items | length) - 1}
       {foreach $items as $i => $item}
         {set $icon = $item.icon ?: $icons[$i % 4]}
-        <article class="rd-gar-card{if $i == $last} rd-gar-card--gold{/if}">
+        <article class="rd-gar-card{if $i == $last && !$num} rd-gar-card--gold{/if}">
+          {if $num}
+          <span class="rd-gar-card__num" aria-hidden="true"><span class="rd-gar-card__num-in">{$i < 9 ? ('0' ~ ($i + 1)) : ($i + 1)}</span></span>
+          {else}
           <span class="rd-gar-card__icon" aria-hidden="true">
             <svg class="rd-gar-ic rd-gar-ic--{$icon}" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
               {switch $icon}
@@ -106,6 +116,7 @@
               {/switch}
             </svg>
           </span>
+          {/if}
           {* слова через дефис в заголовке не переносим («SEO-оптимізація») *}
           <h3 class="rd-gar-card__title">{$item.title | strip_tags : '<br><span>' | preg_replace : '~([^\s<>"]*-[^\s<>"]+)~u' : '<span class="rd-nowrap">$1</span>'}</h3>
           {if $item.text}<p class="rd-gar-card__text">{$item.text | strip_tags : '<br><b><strong><span>'}</p>{/if}

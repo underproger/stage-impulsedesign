@@ -254,3 +254,128 @@ $gar-glow: #cdb167;
     }
   }
 }
+
+// ----- вариант для страницы услуги: «4 гарантії, що ваш …» (guarantees.tpl num=1, section 7 макета услуги) -----
+// Светлый фон без сетки, плашка — тёмная с сеткой, свечение в её правом верхнем углу; вместо иконок —
+// крупные золотые номера 01–04, золотой карточки нет: 4 равные колонки (планшет — 2×2, телефон — столбик).
+$gar-num-bg: #f5f3f0;
+
+.rd-gar--num {
+  background: $gar-num-bg;
+  color: $black;
+
+  &::before {
+    display: none;
+  }
+
+  .rd-gar__title {
+    color: $black;
+  }
+
+  .rd-gar__panel {
+    --rd-cell: 100px;
+    isolation: isolate;
+    @include grid-bg-move;
+
+    @include tablet-up {
+      row-gap: 7px;
+      padding: 0 0 40px 40px;
+    }
+
+    @include desktop {
+      --rd-cell: #{fw(100px)};
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      row-gap: 0;
+      padding: 0 0 0 fd(48px, 60px);
+    }
+  }
+
+  // свечение: центр — над правым верхним углом плашки (видна нижняя половина)
+  .rd-gar__pglow {
+    --gw: #{fm(360px, 463px)};
+    --gh: #{fm(480px, 572px)};
+    position: absolute;
+    z-index: -1;
+    top: calc(#{fm(-8px, -54px)} - var(--gh) / 2);
+    right: calc(#{fm(160px, 202px)} - var(--gw) / 2);
+    width: var(--gw);
+    height: var(--gh);
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba($gar-glow, 0.82) 32%, rgba($gar-glow, 0.6) 56%, rgba($gar-glow, 0.24) 79%, rgba($gar-glow, 0) 100%);
+    pointer-events: none;
+
+    @include desktop {
+      --gw: #{fd(633px, 643px)};
+      --gh: #{fd(592px, 677px)};
+      top: calc(#{fd(-64px, -107px)} - var(--gh) / 2);
+      right: calc(#{fd(117px, 112px)} - var(--gw) / 2);
+    }
+  }
+
+  // кольцо приподнято над верхом заголовка (как в «Переваги»), плашка — на обычный отступ ниже кольца
+  .rd-gar__cta.rd-works--inline {
+    @include tablet-up {
+      margin-top: -22px;
+    }
+
+    @include desktop {
+      margin-top: calc(-1 * #{fd(22.5px, 25px)});
+    }
+  }
+
+  .rd-gar-card {
+    @include phone {
+      padding-bottom: 44px;
+
+      &:first-of-type {
+        padding-top: 28px;
+      }
+
+      &:last-of-type {
+        padding-bottom: 21px;
+      }
+    }
+
+    @include tablet-up {
+      padding: 44px 28px 0 0;
+    }
+
+    @include desktop {
+      padding: fw(53px) fd(32px, 61px) fw(48px) 0;
+    }
+  }
+
+  .rd-gar-card__title {
+    margin-top: 11px;
+    font-size: 16px;
+
+    @include tablet-up {
+      max-width: 280px; // «Продасть будь-який товар / чи послугу», как в макете 768
+      font-size: 18px;
+    }
+
+    @include desktop {
+      max-width: none;
+      margin-top: fw(12px);
+      font-size: fd(18px, 20px);
+    }
+  }
+}
+
+// крупный номер (маска — для «вау» и наведения)
+.rd-gar-card__num {
+  display: block;
+  overflow: hidden;
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1;
+
+  @include desktop {
+    font-size: fw(90px);
+  }
+}
+
+.rd-gar-card__num-in {
+  display: block;
+  @include gold-text;
+}

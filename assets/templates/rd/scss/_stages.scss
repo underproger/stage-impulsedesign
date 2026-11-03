@@ -1,0 +1,417 @@
+@use "base" as *;
+
+// ===== «Етапи розробки» — section 8 страницы услуги =====
+// Белый фон. Десктоп: золотые полупрозрачные «таблетки» в ряд внахлёст (последняя — тёмная со свечением),
+// под каждой — скобка и описание. Планшет: «таблетка» слева, описание справа по центру. Телефон: столбик.
+// Отступы сняты с service_*.pdf.
+
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$stage-line: #cecfd2;
+$stage-glow: #cdb167;
+
+.rd-stages {
+  position: relative;
+  padding: fm(80px, 110px) 0;
+  background: #fff;
+  color: $black;
+
+  @include desktop {
+    padding: fd(147px, 196px) 0 fd(131px, 181px);
+  }
+
+  &__title {
+    margin: 0 0 fm(48px, 64px);
+    font-family: inherit;
+    font-size: fm(36px, 48px); // длинное слово не влезает — rd.js уменьшает кегль ([data-rd-fit])
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: $black;
+
+    span {
+      @include gold-text;
+    }
+
+    @include desktop {
+      margin-bottom: fd(64px, 80px);
+      font-size: fd(60px, 72px);
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @include tablet-up {
+      gap: 20px;
+    }
+
+    @include desktop {
+      flex-direction: row;
+      gap: 0;
+    }
+  }
+}
+
+.rd-stage {
+  --ov: #{fd(25px, 22.5px)}; // нахлёст «таблеток» на десктопе
+  --in: #{fd(20px, 24px)}; // отступ скобки от краёв «таблетки»
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    gap: 28px;
+  }
+
+  @include desktop {
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+
+    & + & {
+      margin-left: calc(-1 * var(--ov));
+    }
+  }
+
+  // ----- «таблетка» -----
+  &__pill {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 95px;
+    padding: 18px 20px 20px;
+    border-radius: 999px;
+    color: #fff;
+    text-align: center;
+
+    // золото на 80% — на нахлёсте «таблетки» темнеют, как в макете
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background: $gold-grad;
+      opacity: 0.8;
+      transition: opacity 0.5s $ease;
+    }
+
+    @include tablet-up {
+      flex: none;
+      width: 245px;
+      min-height: 114px;
+    }
+
+    @include desktop {
+      width: auto;
+      height: fd(140px, 170px);
+      min-height: 0;
+      padding: fd(32px, 48px) fd(16px, 20px) 0;
+    }
+  }
+
+  &__tag {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: $black;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+
+    @include desktop {
+      height: fw(24px);
+      padding: 0 fw(12px);
+      font-size: fw(12px);
+    }
+  }
+
+  &__name {
+    max-width: 210px;
+    margin: 13px 0 0;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 19px;
+    color: #fff;
+    text-wrap: balance;
+
+    @include phone {
+      max-width: none;
+    }
+
+    @include desktop {
+      max-width: fd(190px, 210px);
+      margin-top: fd(11px, 15px);
+      font-size: fd(16px, 18px);
+      line-height: fd(19px, 22px);
+    }
+  }
+
+  // ----- описание -----
+  &__desc {
+    position: relative;
+    padding: 16px 4px 0;
+
+    @include tablet-up {
+      flex: 1;
+      padding: 0;
+    }
+
+    @include desktop {
+      flex: none;
+      margin: fd(24px, 32px) var(--in) 0;
+      padding: 0;
+    }
+  }
+
+  // скобка └──┘ — только на десктопе
+  &__brace {
+    display: none;
+
+    @include desktop {
+      position: relative;
+      display: block;
+      height: fw(16px);
+      border: 1px solid $stage-line;
+      border-top: 0;
+    }
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 20px;
+    color: $black;
+
+    @include desktop {
+      max-width: calc(100% - #{fd(6px, 10px)}); // border-box: padding-left уже внутри
+      margin-top: fd(15px, 16px);
+      padding-left: fd(4px, 8px);
+      font-size: fd(12px, 14px);
+      line-height: fd(20px, 24px);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: rgba($gold, 0.6);
+      text-underline-offset: 3px;
+    }
+  }
+
+  // ----- последняя: тёмная со свечением в правом верхнем углу -----
+  &--dark {
+    .rd-stage__pill {
+      background: $black-2;
+
+      &::before {
+        display: none;
+      }
+    }
+
+    .rd-stage__tag {
+      background: $gold-grad;
+      color: $black;
+    }
+  }
+
+  &__glow {
+    position: absolute;
+    z-index: -1;
+    top: -35px;
+    right: 70px;
+    width: 236px;
+    height: 342px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba($stage-glow, 0.9) 20%, rgba($stage-glow, 0.55) 50%, rgba($stage-glow, 0.18) 78%, rgba($stage-glow, 0) 100%);
+    transform: translate(50%, -50%); // центр — на 35px выше «таблетки», на 37px (телефон — 70px) левее правого края
+    pointer-events: none;
+
+    @include tablet-up {
+      right: 37px;
+      width: 358px;
+    }
+
+    @include desktop {
+      right: fw(37px);
+      width: fw(358px);
+      height: fw(342px);
+    }
+  }
+}
+
+// пять этапов — ширины «таблеток» как в макете
+.rd-stages__list--5 .rd-stage {
+  @include desktop {
+    &:nth-child(1) {
+      flex: 1 1 fd(230px, 280px);
+    }
+
+    &:nth-child(2) {
+      flex: 1 1 fd(290px, 350px);
+    }
+
+    &:nth-child(3) {
+      flex: 1 1 fd(300px, 360px);
+    }
+
+    &:nth-child(4),
+    &:nth-child(5) {
+      flex: 1 1 fd(240px, 300px);
+    }
+  }
+}
+
+// ----- наведение (мышь): золото «таблетки» плотнеет, по ней пробегает блик слева направо, скобка золотится -----
+.rd-stage__pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(100deg, transparent 30%, rgba(#fff, 0.35) 50%, transparent 70%);
+  transform: translateX(-110%);
+  pointer-events: none;
+}
+
+.rd-stage__brace {
+  transition: border-color 0.4s $ease;
+}
+
+.rd-stage__glow {
+  transition: scale 0.8s $ease-expo;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rd-stage:hover {
+    .rd-stage__pill::before {
+      opacity: 1;
+    }
+
+    .rd-stage__pill::after {
+      transform: translateX(110%);
+      transition: transform 1s $ease-fly;
+    }
+
+    .rd-stage__brace {
+      border-color: $gold;
+    }
+
+    .rd-stage__glow {
+      scale: 1.25;
+    }
+  }
+}
+
+// ================= «Вау» (html.rd-wow-js, модуль «Етапи розробки» в rd-wow.js) =================
+.rd-wow-js {
+  // слова заголовка из размытия
+  .rd-stages__title {
+    .rd-wd {
+      display: inline-block;
+      opacity: 0;
+      translate: 0 0.6em;
+      filter: blur(10px);
+      transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+      transition-delay: calc(var(--i, 0) * 80ms);
+    }
+
+    .rd-wd:not(.rd-wd--el) {
+      background: none;
+      -webkit-text-fill-color: currentColor;
+      color: $black;
+    }
+
+    .rd-wd--el {
+      @include gold-text;
+    }
+
+    &.is-in .rd-wd {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0);
+    }
+  }
+
+  // «таблетка» выкатывается слева, подпись и название — следом; скобка прочерчивается слева направо
+  .rd-stage {
+    --d: calc(var(--c, 0) * 130ms);
+
+    &__pill {
+      opacity: 0;
+      translate: -48px 0;
+      transition: opacity 0.8s $ease-expo, translate 1.1s $ease-expo;
+      transition-delay: var(--d);
+    }
+
+    &__tag,
+    &__name {
+      opacity: 0;
+      translate: 0 12px;
+      transition: opacity 0.8s $ease-expo, translate 1s $ease-expo;
+      transition-delay: calc(var(--d) + 250ms);
+    }
+
+    &__name {
+      transition-delay: calc(var(--d) + 330ms);
+    }
+
+    &__brace {
+      clip-path: inset(0 100% 0 0);
+      transition: clip-path 0.9s $ease-fly, border-color 0.4s $ease;
+      transition-delay: calc(var(--d) + 420ms), 0s;
+    }
+
+    &__text {
+      opacity: 0;
+      translate: 0 16px;
+      transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo;
+      transition-delay: calc(var(--d) + 520ms);
+    }
+
+    &.is-in {
+      .rd-stage__pill,
+      .rd-stage__tag,
+      .rd-stage__name,
+      .rd-stage__text {
+        opacity: 1;
+        translate: 0 0;
+      }
+
+      .rd-stage__brace {
+        clip-path: inset(0 0 0 0);
+      }
+    }
+  }
+
+  // свечение тёмной «таблетки» дышит
+  .rd-stage__glow {
+    animation: rd-stage-breathe 6s $ease infinite alternate;
+  }
+}
+
+@keyframes rd-stage-breathe {
+  from {
+    opacity: 0.75;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

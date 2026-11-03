@@ -479,7 +479,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
@@ -985,9 +985,10 @@
   // Заголовок, кнопка и плашка появляются по IntersectionObserver; под курсором проступает
   // золотая сетка (общий слой .rd-wow-spot), свечение внизу тянется за курсором, на плашке — свет.
 
-  var garTick = null;
-  var gar = document.querySelector('.rd-gar');
-  if (gar) {
+  // на странице услуги таких блоков два («Переваги» и «4 гарантії»): каждый — со своим тиком
+  var garTicks = [];
+  var garTick = function () { for (var gi = 0; gi < garTicks.length; gi++) garTicks[gi](); };
+  Array.prototype.forEach.call(document.querySelectorAll('.rd-gar'), function (gar) {
     var gTitle = gar.querySelector('.rd-gar__title');
     if (gTitle) splitWords(gTitle);
     var gPanel = gar.querySelector('.rd-gar__panel');
@@ -1014,8 +1015,7 @@
       }
 
       // свечение мягко смещается к курсору (только пока блок на экране)
-      garTick = function () {
-        if (!gGlow) return;
+      if (gGlow) garTicks.push(function () {
         var r = gar.getBoundingClientRect();
         if (r.bottom < -100 || r.top > window.innerHeight + 100) return;
         var inside = mouse.y >= r.top && mouse.y <= r.bottom;
@@ -1025,7 +1025,7 @@
         gg.y = lerp(gg.y, ty, 0.05);
         var st = gg.x.toFixed(1) + 'px ' + gg.y.toFixed(1) + 'px';
         if (st !== gg.s) { gGlow.style.translate = st; gg.s = st; }
-      };
+      });
     }
 
     var gReveal = function (el) { el.classList.add('is-in'); };
@@ -1040,7 +1040,7 @@
     } else {
       gTargets.forEach(gReveal);
     }
-  }
+  });
 
   /* ================= «Вартість розробки сайту» ================= */
   // Заголовок и карточки появляются по IntersectionObserver, цены «досчитываются» от нуля;
@@ -1737,6 +1737,43 @@
       causeTargets.forEach(function (el) { causeIo.observe(el); });
     } else {
       causeTargets.forEach(function (el) { el.classList.add('is-in'); });
+    }
+  }
+  /* ================= «Етапи розробки» (страница услуги) ================= */
+  // Слова заголовка из размытия; «таблетки» выкатываются слева по очереди, скобка прочерчивается слева направо,
+  // описание всплывает. Очередь — по ряду (--c: номер в ряду по offsetTop): на десктопе 0…4, в столбик — 0.
+  var stSec = document.querySelector('.rd-stages');
+  if (stSec) {
+    var stTitle = stSec.querySelector('.rd-stages__title');
+    if (stTitle) splitWords(stTitle);
+    var stItems = Array.prototype.slice.call(stSec.querySelectorAll('.rd-stage'));
+    var stCols = function () {
+      var row = {};
+      stItems.forEach(function (it) {
+        var t = it.offsetTop;
+        row[t] = row[t] || 0;
+        it.style.setProperty('--c', row[t]++);
+      });
+    };
+    stCols();
+    var stT = 0;
+    window.addEventListener('resize', function () {
+      clearTimeout(stT);
+      stT = setTimeout(stCols, 150);
+    });
+    var stTargets = (stTitle ? [stTitle] : []).concat(stItems);
+    if ('IntersectionObserver' in window) {
+      var stIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) {
+            en.target.classList.add('is-in');
+            stIo.unobserve(en.target);
+          }
+        });
+      }, { threshold: 0.25, rootMargin: '0px 0px -6% 0px' });
+      stTargets.forEach(function (el) { stIo.observe(el); });
+    } else {
+      stTargets.forEach(function (el) { el.classList.add('is-in'); });
     }
   }
 })();

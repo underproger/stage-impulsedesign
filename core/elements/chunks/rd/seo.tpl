@@ -6,12 +6,30 @@
                 Пусто — заголовком станет первый заголовок из «Содержимого».
     content   — текст: первый абзац виден сразу, остальное раскрывается кнопкой «Розгорнути».
                 Если текст начинается с заголовка, он уходит в раскрывающуюся часть (перед вторым абзацем).
+  Страницы услуг без «Содержимого» (шаблон 21, чекбокс display_bl9): текст собирается из старых полей блока 9 —
+  text_1-bl9 (вступление), title_2-bl9 + seo-bl9 (вкладки «Наша компанія пропонує»: заголовок вкладки — <h3>, если текст
+  вкладки сам не начинается с заголовка), text_2-bl9 (окончание). Заголовка нет — заголовок страницы (pagetitle).
+  Абзацы, где только картинка, в начале текста не становятся вступлением — уходят в раскрывающуюся часть.
   Справа (на мобайле — под текстом) — золотой икосаэдр: WebGL (src/ico.js в rd-blob.js), картинка — заглушка.
   Раскрытие — rd.js, анимации — rd-wow.js.
 *}
 {set $r = $_modx->resource}
 {set $isRu = $_modx->context.key == 'web'}
 {set $c = $r.content | trim}
+{if !$c && $r['display_bl9']}
+  {set $c = $r['text_1-bl9'] | trim}
+  {set $tabs = $r['seo-bl9'] ? ($r['seo-bl9'] | json_decode : true) : []}
+  {if $tabs}
+    {set $t2 = $r['title_2-bl9'] | strip_tags | trim | preg_replace : '~\s*:$~u' : ''}
+    {if $t2}{set $c = $c ~ '<h2>' ~ $t2 ~ '</h2>'}{/if}
+    {foreach $tabs as $tab}
+      {set $tt = $tab.text | trim}
+      {if $tab.title && !($tt | preg_match : '~^<h[1-6]~iu')}{set $tt = '<h3>' ~ ($tab.title | strip_tags | trim) ~ '</h3>' ~ $tt}{/if}
+      {set $c = $c ~ $tt}
+    {/foreach}
+  {/if}
+  {set $c = ($c ~ ($r['text_2-bl9'] ?: '')) | trim}
+{/if}
 {set $title = $r['title-bl9'] | trim}
 {set $head = ''}
 {if $c | preg_match : '~^\s*<h[1-6][^>]*>.*?</h[1-6]>~isu'}
@@ -22,6 +40,13 @@
     {set $head = ''}
   {/if}
 {/if}
+{* абзацы только с картинкой в начале — в раскрывающуюся часть *}
+{set $pics = ''}
+{if $c | preg_match : '~^(<p[^>]*>\s*(<img[^>]*>\s*)+</p>\s*)+~isu'}
+  {set $pics = $c | preg_replace : '~^((?:<p[^>]*>\s*(?:<img[^>]*>\s*)+</p>\s*)+).*$~isu' : '$1'}
+  {set $c = $c | preg_replace : '~^(?:<p[^>]*>\s*(?:<img[^>]*>\s*)+</p>\s*)+~isu' : '' | trim}
+{/if}
+{if !$title}{set $title = $r.pagetitle}{/if}
 {set $intro = ''}
 {if $c | preg_match : '~^<p[^>]*>.*?</p>~isu'}
   {set $intro = $c | preg_replace : '~^<p[^>]*>(.*?)</p>.*$~isu' : '$1' | trim}
@@ -29,7 +54,7 @@
   {* однобуквенные предлоги и союзы не остаются в конце строки *}
   {set $intro = $intro | preg_replace : '~(^|[\s(«„“])([вуізаоксВУІЗАОКС])\s+~u' : '$1$2&nbsp;'}
 {/if}
-{set $rest = $head ~ $c}
+{set $rest = $head ~ $pics ~ $c}
 {set $rest = $rest | trim}
 
 <section class="rd-seo" id="seo-text" data-rd-seo>
