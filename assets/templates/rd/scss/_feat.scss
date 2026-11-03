@@ -1,8 +1,9 @@
 @use "base" as *;
 
 // ===== Страница копирайтинга: 4 преимущества под первым экраном (chunks/rd/cw-features.tpl) =====
-// Тёмная «таблетка» 120×60 с золотой иконкой, под ней заголовок 24px и сноска 14px. 4 колонки (1920: шаг 391px),
-// планшет и телефон — 2 колонки. По copywriting_1920.pdf (других ширин нет).
+// Тёмная «таблетка» 120×60 с золотой иконкой 40px (линия 2px), под ней заголовок 24px и сноска 14px. 4 колонки
+// (1920: шаг 391px; 1600 — всё ×0.83, иначе заголовки в узких колонках ломаются на 4 строки), планшет и телефон — 2 колонки. По copywriting_1920.pdf (других ширин нет); сверено с реальным
+// шрифтом (страница с localhost — с 127.0.0.1 шрифт не грузится, и вертикаль «съезжает»).
 
 $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -12,7 +13,7 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   color: $black;
 
   @include desktop {
-    padding: fw(180px) 0 fw(180px);
+    padding: fd(150px, 180px) 0;
   }
 
   &__list {
@@ -22,7 +23,7 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
     @include desktop {
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      column-gap: fw(64px);
+      column-gap: fd(48px, 64px);
     }
   }
 
@@ -41,19 +42,19 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     transition: color 0.45s $ease;
 
     @include desktop {
-      width: fw(120px);
-      height: fw(60px);
+      width: fd(100px, 120px);
+      height: fd(50px, 60px);
     }
   }
 
   &__ic {
-    width: fm(29px, 36px);
-    height: fm(29px, 36px);
+    width: fm(32px, 40px);
+    height: fm(32px, 40px);
     overflow: visible;
 
     @include desktop {
-      width: fw(36px);
-      height: fw(36px);
+      width: fd(34px, 40px);
+      height: fd(34px, 40px);
     }
   }
 
@@ -67,8 +68,8 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     transition: color $dur $ease;
 
     @include desktop {
-      margin-top: fw(19px);
-      font-size: fw(24px);
+      margin-top: fd(21px, 25px);
+      font-size: fd(20px, 24px);
     }
   }
 
@@ -79,8 +80,8 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     line-height: 1.57;
 
     @include desktop {
-      margin-top: fw(26px);
-      font-size: fw(14px);
+      margin-top: fd(20px, 24px);
+      font-size: fd(13px, 14px);
     }
 
     b,

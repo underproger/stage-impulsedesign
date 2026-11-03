@@ -14,12 +14,12 @@
         {set $ic = $it.icon ?: $order[$i % 4]}
         <li class="rd-feat__item" style="--i: {$i}">
           <span class="rd-feat__pill" aria-hidden="true">
-            <svg class="rd-feat__ic rd-feat__ic--{$ic}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="rd-feat__ic rd-feat__ic--{$ic}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
               {switch $ic}
                 {case 'feather'}
                   <path pathLength="1" d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><path pathLength="1" d="M16 8 2 22"/><path pathLength="1" d="M17.5 15H9"/>
                 {case 'list'}
-                  <path pathLength="1" d="M21 12H9m12-6H9m12 12H9"/><g class="rd-feat__dots"><circle pathLength="1" cx="4" cy="6" r="1.6"/><circle pathLength="1" cx="4" cy="12" r="1.6"/><circle pathLength="1" cx="4" cy="18" r="1.6"/></g>
+                  <path pathLength="1" d="M21 12H10m11-7H10m11 14H10"/><g class="rd-feat__dots"><circle pathLength="1" cx="4.5" cy="5" r="1.5"/><circle pathLength="1" cx="4.5" cy="12" r="1.5"/><circle pathLength="1" cx="4.5" cy="19" r="1.5"/></g>
                 {case 'stars'}
                   <path class="rd-feat__plus" pathLength="1" d="M4.5 22v-5m0-10V2M2 4.5h5m-5 15h5"/><path class="rd-feat__star" pathLength="1" d="m13 3-1.73 4.5c-.29.74-.43 1.1-.65 1.41a3 3 0 0 1-.7.7c-.31.22-.68.37-1.41.65L4 12l4.5 1.73c.74.29 1.1.43 1.41.65a3 3 0 0 1 .7.7c.22.31.37.68.65 1.41L13 21l1.73-4.5c.29-.74.43-1.1.65-1.41a3 3 0 0 1 .7-.7c.31-.22.68-.37 1.41-.65L22 12l-4.5-1.73c-.74-.29-1.1-.43-1.41-.65a3 3 0 0 1-.7-.7c-.22-.31-.37-.68-.65-1.41z"/>
                 {case 'check'}
