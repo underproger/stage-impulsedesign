@@ -504,10 +504,12 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
-    var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
+    var cwpSection = document.querySelector('[data-rd-cwp]');
+    var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись'),
+      read: (cwpSection && cwpSection.getAttribute('data-rd-read')) || (isRu ? 'читать' : 'читати') };
     var labelNow = 'click';
 
     window.addEventListener('pointermove', function (e) {
@@ -521,7 +523,8 @@
       var t = e.target;
       if (!t.closest) return;
       var inScope = t.closest(scopes);
-      var overCase = !!t.closest('.rd-case__media');
+      var overDoc = !!t.closest('a.rd-cwp__doc'); // документ «Наше портфоліо» со ссылкой — «читати»
+      var overCase = !!t.closest('.rd-case__media') || overDoc;
       root.classList.toggle('rd-cursor-on', !!inScope);
       ring.classList.toggle('is-view', overCase);
       root.classList.toggle('rd-cursor-view', overCase);
@@ -529,7 +532,7 @@
       var overBtn = !!t.closest(cursorBtns);
       root.classList.toggle('rd-cursor-btn', overBtn);
       ring.classList.toggle('is-link', !!t.closest('a, button') && !overBtn && !overCase);
-      var want = overCase ? 'view' : 'click';
+      var want = overDoc ? 'read' : (overCase ? 'view' : 'click');
       if (want !== labelNow) {
         labelNow = want;
         ringLabel.textContent = labels[want];
@@ -1814,6 +1817,86 @@
       cwsTargets.forEach(function (el) { cwsIo.observe(el); });
     } else {
       cwsTargets.forEach(function (el) { el.classList.add('is-in'); });
+    }
+  }
+
+  /* ================= Копирайтинг: «Наше портфоліо» ================= */
+  // Слова заголовка из размытия; работы поднимаются по очереди в ряду (--c), лист «печатается» сверху вниз,
+  // числа показателей «досчитываются» («100%», «до 3,5%»). Открытые «Показати ще» — так же, когда покажутся.
+  var cwp = document.querySelector('.rd-cwp');
+  if (cwp) {
+    var cwpHead = cwp.querySelector('.rd-cwp__head');
+    var cwpTitle = cwp.querySelector('.rd-cwp__title');
+    if (cwpTitle) splitWords(cwpTitle);
+    var cwpItems = Array.prototype.slice.call(cwp.querySelectorAll('.rd-cwp__item'));
+    var cwpCols = function () {
+      var row = {};
+      cwpItems.forEach(function (it) {
+        if (!it.offsetParent) return; // спрятанные «Показати ще»
+        var t = it.offsetTop;
+        row[t] = row[t] || 0;
+        it.style.setProperty('--c', row[t]++);
+      });
+    };
+    cwpCols();
+    var cwpT = 0;
+    window.addEventListener('resize', function () {
+      clearTimeout(cwpT);
+      cwpT = setTimeout(cwpCols, 150);
+    });
+    // число с запятой или точкой: «3,5» — досчитывается с одним знаком после запятой
+    var cwpCount = function (b, delay) {
+      var final = b.textContent;
+      var parts = final.split(/(\d+(?:[.,]\d+)?)/);
+      if (parts.length < 2) return;
+      b.setAttribute('aria-label', final);
+      var nums = [];
+      for (var k = 1; k < parts.length; k += 2) {
+        var sep = parts[k].indexOf(',') >= 0 ? ',' : '.';
+        var dec = (parts[k].split(/[.,]/)[1] || '').length;
+        nums.push({ k: k, to: parseFloat(parts[k].replace(',', '.')), dec: dec, sep: sep });
+      }
+      var draw = function (e) {
+        var out = parts.slice();
+        nums.forEach(function (n) {
+          var v = (n.to * e).toFixed(n.dec);
+          out[n.k] = n.sep === ',' ? v.replace('.', ',') : v;
+        });
+        b.textContent = out.join('');
+      };
+      draw(0);
+      var t0 = null;
+      var dur = 1300;
+      var step = function (t) {
+        if (t0 === null) t0 = t;
+        var p = clamp((t - t0) / dur, 0, 1);
+        draw(1 - Math.pow(1 - p, 4));
+        if (p < 1) raf(step); else b.textContent = final;
+      };
+      setTimeout(function () { raf(step); }, delay);
+    };
+    var cwpReveal = function (el) {
+      el.classList.add('is-in');
+      if (!el.classList.contains('rd-cwp__item')) return;
+      var c = parseInt(el.style.getPropertyValue('--c'), 10) || 0;
+      Array.prototype.forEach.call(el.querySelectorAll('.rd-cwp__stats b'), function (b, j) {
+        cwpCount(b, c * 130 + 750 + j * 70);
+      });
+      // после появления — переходы наведения без задержек
+      setTimeout(function () { el.classList.add('is-done'); }, c * 130 + 1800);
+    };
+    var cwpTargets = [cwpHead, cwp.querySelector('.rd-cwp__actions')].concat(cwpItems).filter(Boolean);
+    if ('IntersectionObserver' in window) {
+      var cwpIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { cwpReveal(en.target); cwpIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
+      cwpTargets.forEach(function (el) { cwpIo.observe(el); });
+      // «Показати ще» (rd.js) открыл работы — пересчитать очередь в ряду до их появления
+      cwp.addEventListener('rd:more', cwpCols);
+    } else {
+      cwpTargets.forEach(cwpReveal);
     }
   }
 

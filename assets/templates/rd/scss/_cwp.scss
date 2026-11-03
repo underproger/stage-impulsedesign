@@ -1,0 +1,438 @@
+@use "base" as *;
+
+// ===== Страница копирайтинга: «Наше портфоліо» (chunks/rd/cw-portfolio.tpl, section 5 copywriting_1920.pdf) =====
+// Светлый фон #f5f4f2, заголовок 72px + подзаголовок 20px; 4 колонки по 330 через 60: превью документа 330×467
+// (белый лист), под ним метка (золото, 18px), название (24px), показатели (16px, шаг 30). «Показати ще» — как на
+// странице портфолио. Планшет — 2 колонки, телефон — лента с прокруткой. Других ширин макета нет.
+
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-io: cubic-bezier(0.77, 0, 0.18, 1);
+$cwp-bg: #f5f4f2;
+
+.rd-cwp {
+  position: relative;
+  padding: fm(64px, 96px) 0 fm(72px, 110px);
+  background: $cwp-bg;
+  color: $black;
+
+  @include desktop {
+    padding: fd(148px, 180px) 0 fd(150px, 180px);
+  }
+
+  // ----- шапка -----
+  &__title {
+    font-size: fm(36px, 48px); // длинное слово не влезает — rd.js уменьшает кегль ([data-rd-fit])
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: $black;
+
+    span {
+      @include gold-text;
+    }
+
+    @include desktop {
+      font-size: fd(60px, 72px);
+    }
+  }
+
+  &__text {
+    margin-top: fm(16px, 24px);
+    font-size: fm(16px, 18px);
+    font-weight: 300;
+    line-height: 1.5;
+
+    @include desktop {
+      margin-top: fd(21px, 25px);
+      font-size: fd(18px, 20px);
+    }
+
+    b,
+    strong {
+      font-weight: 700;
+    }
+  }
+
+  // ----- список -----
+  &__list {
+    display: flex;
+    gap: 16px;
+    margin: fm(40px, 56px) calc(-1 * #{fm(20px, 30px)}) 0;
+    padding: 0 fm(20px, 30px) 24px; // снизу — место под тень поднятого листа
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: fm(20px, 30px);
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @include tablet-up {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 56px 30px;
+      margin: 64px 0 0;
+      padding: 0;
+      overflow: visible;
+    }
+
+    @include desktop {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: fd(64px, 80px) fd(48px, 60px);
+      margin-top: fd(68px, 81px);
+    }
+
+    // «Показати ще» (rd.js): пока список ограничен, лишние спрятаны; на телефоне — лента, видны все
+    @include tablet-up {
+      &.is-limited [data-rd-more]:not(.is-shown) {
+        display: none;
+      }
+    }
+  }
+
+  &__item {
+    flex: 0 0 76%;
+    min-width: 0;
+    scroll-snap-align: start;
+
+    @include tablet-up {
+      flex: initial;
+    }
+  }
+
+  // ----- документ: белый лист, за ним на наведении — ещё два -----
+  &__doc {
+    position: relative;
+    display: block;
+    aspect-ratio: 330 / 467;
+    isolation: isolate;
+  }
+
+  &__paper,
+  &__sheet {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+  }
+
+  &__paper {
+    z-index: 2;
+    overflow: hidden;
+    transition: translate 0.7s $ease-expo, box-shadow 0.7s $ease-expo;
+
+    img {
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      object-fit: cover;
+      object-position: 50% 0;
+      // длинный скриншот на наведении медленно «прокручивается» вниз
+      transition: object-position 4s cubic-bezier(0.45, 0, 0.25, 1);
+    }
+
+    // загнутый уголок: снаружи — фон блока, изнанка — золото
+    &::before {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      top: 0;
+      right: 0;
+      width: fw(40px);
+      height: fw(40px);
+      background: linear-gradient(225deg, $cwp-bg 0 50%, transparent 50%), $gold-grad;
+      box-shadow: -4px 4px 10px -4px rgba($black, 0.25);
+      transform-origin: 100% 0;
+      scale: 0;
+      transition: scale 0.55s $ease-expo;
+      pointer-events: none;
+    }
+  }
+
+  &__sheet {
+    z-index: 1;
+    opacity: 0;
+    box-shadow: 0 10px 24px -14px rgba($black, 0.3);
+    transition: translate 0.7s $ease-expo, opacity 0.4s $ease;
+
+    &--2 {
+      z-index: 0;
+      background: #ebe8e2;
+    }
+  }
+
+  // ----- подписи -----
+  &__tag {
+    margin-top: fm(16px, 20px);
+    font-size: fm(16px, 18px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: $gold;
+
+    @include desktop {
+      margin-top: fd(22px, 26px);
+      font-size: fd(16px, 18px);
+    }
+  }
+
+  &__name {
+    margin-top: fm(8px, 10px);
+    font-size: fm(20px, 22px);
+    font-weight: 700;
+    line-height: 1.2;
+    color: $black;
+    transition: color $dur $ease, translate 0.7s $ease-expo;
+
+    @include desktop {
+      margin-top: fd(8px, 9px);
+      font-size: fd(20px, 24px);
+    }
+
+    a {
+      color: inherit;
+    }
+  }
+
+  &__stats {
+    margin-top: fm(16px, 20px);
+    font-size: fm(14px, 16px);
+    font-weight: 300;
+    line-height: 1.875;
+
+    @include desktop {
+      margin-top: fd(13px, 16px);
+      font-size: fd(15px, 16px);
+    }
+
+    b {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  // ----- «Показати ще» -----
+  &__actions {
+    display: none;
+
+    @include tablet-up {
+      display: flex;
+      justify-content: center;
+      margin-top: 64px;
+    }
+
+    @include desktop {
+      margin-top: fd(63px, 75px);
+    }
+
+    // всё открыто — rd.js ставит hidden (display: flex выше иначе перебивает атрибут)
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  &__more {
+    gap: fw(10px);
+  }
+
+  &__more-ic {
+    flex: none;
+    width: 24px;
+    height: 24px;
+
+    @include desktop {
+      width: fw(24px);
+      height: fw(24px);
+    }
+  }
+
+  &__more.is-busy &__more-ic {
+    animation: rd-cases-spin 0.8s $ease-io;
+  }
+
+  // ----- наведение (мышь): лист приподнимается, за ним раскрывается стопка, уголок загибается золотом,
+  // название золотится и сдвигается; длинный скриншот прокручивается -----
+  @media (hover: hover) and (pointer: fine) {
+    &__item:hover {
+      .rd-cwp__paper {
+        translate: 0 -10px;
+        box-shadow: 0 28px 44px -24px rgba($black, 0.35);
+
+        &::before {
+          scale: 1;
+        }
+
+        img {
+          object-position: 50% 100%;
+        }
+      }
+
+      .rd-cwp__sheet {
+        opacity: 1;
+        translate: 10px -4px;
+      }
+
+      .rd-cwp__sheet--2 {
+        translate: 20px 2px;
+      }
+
+      .rd-cwp__name {
+        color: $gold;
+        translate: 8px 0;
+      }
+    }
+  }
+}
+
+// ================= «Вау» (html.rd-wow-js; модуль «Наше портфоліо» в rd-wow.js ставит .is-in) =================
+.rd-wow-js {
+  .rd-cwp__title {
+    .rd-wd {
+      display: inline-block;
+      opacity: 0;
+      translate: 0 0.6em;
+      filter: blur(10px);
+      transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+      transition-delay: calc(var(--i, 0) * 80ms);
+    }
+
+    .rd-wd:not(.rd-wd--el) {
+      background: none;
+      -webkit-text-fill-color: currentColor;
+      color: $black;
+    }
+  }
+
+  .rd-cwp__text {
+    opacity: 0;
+    translate: 0 24px;
+    transition: opacity 1s $ease-expo 0.3s, translate 1.1s $ease-expo 0.3s;
+  }
+
+  .rd-cwp__head.is-in {
+    .rd-cwp__title .rd-wd,
+    .rd-cwp__text {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0);
+    }
+  }
+
+  // работа поднимается; лист «печатается» сверху вниз — по нему бежит золотая линия; подписи — следом
+  .rd-cwp__item {
+    --d: calc(var(--c, 0) * 130ms);
+    opacity: 0;
+    translate: 0 40px;
+    transition: opacity 1s $ease-expo, translate 1.2s $ease-expo;
+    transition-delay: var(--d);
+
+    &.is-in {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  .rd-cwp__paper img {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 1.3s $ease-io, object-position 4s cubic-bezier(0.45, 0, 0.25, 1);
+    transition-delay: calc(var(--d) + 0.25s), 0s;
+  }
+
+  .rd-cwp__paper::after {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, $gold 15%, #f7e8b6 50%, $gold 85%, transparent);
+    box-shadow: 0 0 12px 2px rgba($gold, 0.55);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .rd-cwp__tag,
+  .rd-cwp__name,
+  .rd-cwp__stats li {
+    opacity: 0;
+    translate: 0 14px;
+  }
+
+  .rd-cwp__tag {
+    transition: opacity 0.8s $ease-expo, translate 1s $ease-expo;
+    transition-delay: calc(var(--d) + 0.55s);
+  }
+
+  .rd-cwp__name {
+    transition: opacity 0.8s $ease-expo, translate 1s $ease-expo, color $dur $ease;
+    transition-delay: calc(var(--d) + 0.65s), calc(var(--d) + 0.65s), 0s;
+  }
+
+  .rd-cwp__stats li {
+    transition: opacity 0.8s $ease-expo, translate 1s $ease-expo;
+
+    @for $k from 1 through 6 {
+      &:nth-child(#{$k}) {
+        transition-delay: calc(var(--d) + #{0.7s + $k * 0.07s});
+      }
+    }
+  }
+
+  .rd-cwp__item.is-in {
+    .rd-cwp__paper img {
+      clip-path: inset(0 0 0 0);
+    }
+
+    .rd-cwp__paper::after {
+      animation: rd-cwp-scan 1.3s $ease-io both;
+      animation-delay: calc(var(--d) + 0.25s);
+    }
+
+    .rd-cwp__tag,
+    .rd-cwp__name,
+    .rd-cwp__stats li {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  // после появления у названия — обычные переходы наведения (без задержки)
+  .rd-cwp__item.is-done .rd-cwp__name {
+    transition: color $dur $ease, translate 0.7s $ease-expo;
+  }
+
+  // сдвиг названия на наведении (правило .is-in выше иначе сильнее)
+  @media (hover: hover) and (pointer: fine) {
+    .rd-cwp__item.is-in:hover .rd-cwp__name {
+      translate: 8px 0;
+    }
+  }
+
+  .rd-cwp__actions {
+    opacity: 0;
+    translate: 0 24px;
+    transition: opacity 1s $ease-expo, translate 1.1s $ease-expo;
+
+    &.is-in {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+}
+
+@keyframes rd-cwp-scan {
+  0% {
+    top: 0;
+    opacity: 1;
+  }
+
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    top: calc(100% - 2px);
+    opacity: 0;
+  }
+}

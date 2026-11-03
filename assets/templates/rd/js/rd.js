@@ -175,6 +175,31 @@
     }
   }
 
+  /* ---------- Копирайтинг, «Наше портфоліо»: «Показати ще» открывает следующие работы ---------- */
+  var cwpBox = document.querySelector('[data-rd-cwp]');
+  if (cwpBox) {
+    var cwpList = cwpBox.querySelector('[data-rd-cwp-list]');
+    var cwpMore = cwpBox.querySelector('[data-rd-cwp-more]');
+    if (cwpList && cwpMore) {
+      var cwpPer = parseInt(cwpList.getAttribute('data-per'), 10) || 4;
+      cwpList.classList.add('is-limited');
+      cwpMore.addEventListener('click', function () {
+        var next = Array.prototype.slice.call(cwpList.querySelectorAll('[data-rd-more]:not(.is-shown)'), 0, cwpPer);
+        next.forEach(function (el) { el.classList.add('is-shown'); });
+        cwpBox.dispatchEvent(new CustomEvent('rd:more')); // rd-wow.js: очередь появления в ряду
+        cwpMore.classList.remove('is-busy');
+        void cwpMore.offsetWidth; // перезапуск оборота значка
+        cwpMore.classList.add('is-busy');
+        if (!cwpList.querySelector('[data-rd-more]:not(.is-shown)')) {
+          var wrap = cwpMore.parentNode;
+          setTimeout(function () { wrap.hidden = true; }, 500);
+        }
+        var first = next[0] && next[0].querySelector('a');
+        if (first && !cwpMore.matches(':hover')) first.focus({ preventScroll: true });
+      });
+    }
+  }
+
   /* ---------- Портфолио ---------- */
   var pf = document.querySelector('[data-rd-portfolio]');
   if (pf) {

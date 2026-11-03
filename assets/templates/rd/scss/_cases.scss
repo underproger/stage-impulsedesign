@@ -100,6 +100,11 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     @include desktop {
       margin-top: fd(100px, 118px);
     }
+
+    // всё открыто — rd.js ставит hidden (display: flex иначе перебивает атрибут)
+    &[hidden] {
+      display: none;
+    }
   }
 
   &__more {
