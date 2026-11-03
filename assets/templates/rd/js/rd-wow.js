@@ -504,7 +504,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
@@ -1754,6 +1754,20 @@
   }
 
   // золотые «линзы» вставлены — выравниваем все сетки фона в такт (rd.js)
+  /* ================= Копирайтинг: 4 преимущества ================= */
+  // Пункты поднимаются по очереди, таблетка раскрывается слева, иконка рисуется линией (CSS по .is-in).
+  var feat = document.querySelector('.rd-feat');
+  if (feat) {
+    if ('IntersectionObserver' in window) {
+      var fIo = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) { feat.classList.add('is-in'); fIo.disconnect(); }
+      }, { threshold: 0.25 });
+      fIo.observe(feat);
+    } else {
+      feat.classList.add('is-in');
+    }
+  }
+
   if (window.rdSyncGrids) window.rdSyncGrids();
   /* ================= «… незамінний, якщо» (страница услуги) ================= */
   // Слова заголовка из размытия; номер пункта выезжает из-под маски, строки всплывают — по колонкам слева направо (--c).

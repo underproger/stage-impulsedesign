@@ -1,0 +1,273 @@
+@use "base" as *;
+
+// ===== Страница копирайтинга: 4 преимущества под первым экраном (chunks/rd/cw-features.tpl) =====
+// Тёмная «таблетка» 120×60 с золотой иконкой, под ней заголовок 24px и сноска 14px. 4 колонки (1920: шаг 391px),
+// планшет и телефон — 2 колонки. По copywriting_1920.pdf (других ширин нет).
+
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+.rd-feat {
+  padding: fm(56px, 80px) 0 fm(64px, 96px);
+  background: #fff;
+  color: $black;
+
+  @include desktop {
+    padding: fw(180px) 0 fw(180px);
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: fm(40px, 56px) fm(20px, 30px);
+
+    @include desktop {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: fw(64px);
+    }
+  }
+
+  &__pill {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fm(96px, 120px);
+    height: fm(48px, 60px);
+    border-radius: 99px;
+    background: $black-2;
+    color: $gold;
+    transition: color 0.45s $ease;
+
+    @include desktop {
+      width: fw(120px);
+      height: fw(60px);
+    }
+  }
+
+  &__ic {
+    width: fm(29px, 36px);
+    height: fm(29px, 36px);
+    overflow: visible;
+
+    @include desktop {
+      width: fw(36px);
+      height: fw(36px);
+    }
+  }
+
+  &__title {
+    margin-top: fm(16px, 20px);
+    font-family: "Roboto Flex Wide", "Gotham Pro", Arial, sans-serif;
+    font-size: fm(16px, 20px);
+    font-weight: 700;
+    line-height: 1.21;
+    color: $black;
+    transition: color $dur $ease;
+
+    @include desktop {
+      margin-top: fw(19px);
+      font-size: fw(24px);
+    }
+  }
+
+  &__note {
+    margin-top: fm(12px, 16px);
+    font-size: fm(12px, 14px);
+    font-weight: 300;
+    line-height: 1.57;
+
+    @include desktop {
+      margin-top: fw(26px);
+      font-size: fw(14px);
+    }
+
+    b,
+    strong {
+      font-weight: 700;
+    }
+  }
+}
+
+// ================= «Вау» (html.rd-wow-js; появление — модуль в rd-wow.js ставит .is-in) =================
+.rd-wow-js {
+  // пункты поднимаются по очереди, таблетка раскрывается слева, иконка рисуется линией
+  .rd-feat__item {
+    opacity: 0;
+    translate: 0 36px;
+    transition: opacity 1s $ease-expo, translate 1.2s $ease-expo;
+    transition-delay: calc(var(--i) * 110ms);
+  }
+
+  .rd-feat__pill {
+    clip-path: inset(0 100% 0 0 round 99px);
+    transition: clip-path 1s $ease-expo, color 0.45s $ease;
+    transition-delay: calc(var(--i) * 110ms + 0.1s), 0s;
+  }
+
+  .rd-feat__ic > *,
+  .rd-feat__ic g > * {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 1.3s $ease-expo;
+    transition-delay: calc(var(--i) * 110ms + 0.45s);
+  }
+
+  .rd-feat.is-in {
+    .rd-feat__item {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    .rd-feat__pill {
+      clip-path: inset(0 0 0 0 round 99px);
+    }
+
+    .rd-feat__ic > *,
+    .rd-feat__ic g > * {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  // наведение: таблетка заливается золотом слева, иконка темнеет и «оживает», заголовок золотится
+  .rd-feat__pill::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: inherit;
+    background: $gold-grad;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.6s $ease-fly;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rd-feat__item:hover {
+      .rd-feat__pill {
+        color: $black;
+      }
+
+      .rd-feat__pill::before {
+        transform: scaleX(1);
+      }
+
+      .rd-feat__title {
+        color: $gold;
+      }
+
+      .rd-feat__ic--type {
+        animation: rd-feat-type 0.7s $ease;
+      }
+
+      .rd-feat__ic--feather {
+        animation: rd-feat-write 0.9s $ease;
+      }
+
+      .rd-feat__dots {
+        animation: rd-feat-dots 0.8s $ease;
+      }
+
+      .rd-feat__star {
+        animation: rd-feat-twinkle 0.9s $ease;
+      }
+
+      .rd-feat__plus {
+        animation: rd-feat-plus 0.9s $ease;
+      }
+
+      .rd-feat__ic--check,
+      .rd-feat__ic--shield {
+        animation: rd-feat-type 0.7s $ease;
+      }
+    }
+  }
+}
+
+.rd-feat__ic--feather,
+.rd-feat__star,
+.rd-feat__plus,
+.rd-feat__dots {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.rd-feat__ic--feather {
+  transform-origin: 10% 90%;
+}
+
+@keyframes rd-feat-type {
+  0%,
+  100% {
+    scale: 1;
+  }
+
+  40% {
+    scale: 1.18;
+  }
+
+  70% {
+    scale: 0.94;
+  }
+}
+
+// перо «пишет»: покачивается от кончика
+@keyframes rd-feat-write {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+
+  25% {
+    rotate: -12deg;
+  }
+
+  50% {
+    rotate: 8deg;
+  }
+
+  75% {
+    rotate: -4deg;
+  }
+}
+
+@keyframes rd-feat-dots {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  40% {
+    translate: 2px 0;
+  }
+}
+
+@keyframes rd-feat-twinkle {
+  0%,
+  100% {
+    scale: 1;
+    rotate: 0deg;
+  }
+
+  45% {
+    scale: 0.75;
+    rotate: 45deg;
+  }
+
+  75% {
+    scale: 1.12;
+    rotate: 90deg;
+  }
+}
+
+@keyframes rd-feat-plus {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  40% {
+    opacity: 0.2;
+  }
+}
