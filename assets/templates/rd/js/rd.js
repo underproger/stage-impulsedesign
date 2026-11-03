@@ -77,13 +77,17 @@
   }
 
   /* ---------- Круглые кнопки («Останні роботи», «Обговорити проект»): плавают за курсором ---------- */
+  // Тянутся, только когда курсор над своим блоком: через раскрытое меню, другую кнопку или соседний блок — нет.
+  // Плавающие кнопки («звонок», «наверх») — только когда курсор над самой кнопкой и слабее (не наезжают друг на друга).
   if (window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
       !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     Array.prototype.forEach.call(document.querySelectorAll('[data-rd-magnet]'), function (magnet) {
       var pos = { x: 0, y: 0 };
       var target = { x: 0, y: 0 };
       var running = false;
-      var STRENGTH = 0.4; // доля расстояния до курсора
+      var isFloat = magnet.classList.contains('rd-float__btn');
+      var STRENGTH = isFloat ? 0.2 : 0.4; // доля расстояния до курсора
+      var scope = isFloat ? magnet : magnet.closest('.rd-mega, .rd-mobile, .rd-header, section, footer');
       var tick = function () {
         pos.x += (target.x - pos.x) * 0.12;
         pos.y += (target.y - pos.y) * 0.12;
@@ -109,8 +113,9 @@
         var cy = r.top + r.height / 2 - pos.y;
         var dx = e.clientX - cx;
         var dy = e.clientY - cy;
-        var zone = r.width / 2 + 24; // притягивает только у самой кнопки (24px за краем)
-        if (dx * dx + dy * dy < zone * zone) {
+        var zone = r.width / 2 + (isFloat ? 0 : 24); // притягивает только у самой кнопки (24px за краем)
+        var own = !scope || (e.target && scope.contains(e.target)); // курсор над своим блоком, а не над меню поверх него
+        if (own && dx * dx + dy * dy < zone * zone) {
           target.x = dx * STRENGTH;
           target.y = dy * STRENGTH;
         } else {

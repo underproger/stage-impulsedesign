@@ -98,6 +98,7 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     height: 44%;
   }
 
+  // волны: пока «наверх» видна — гаснут, не доходя до неё (зазор между кнопками), иначе — шире
   &__wave {
     position: absolute;
     inset: 0;
@@ -146,7 +147,12 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   // ----- «наверх» -----
+  &.is-on &__wave {
+    --rd-wave: 1.32;
+  }
+
   &__up {
+    z-index: 1; // поверх волн звонка
     color: $gold;
     background: rgba($black-2, 0.9);
     -webkit-backdrop-filter: blur(10px);
@@ -273,7 +279,7 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   100% {
     opacity: 0;
-    scale: 1.85;
+    scale: var(--rd-wave, 1.85);
   }
 }
 

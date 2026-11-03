@@ -240,6 +240,8 @@
   /* ================= Переходы между страницами ================= */
   // Клик по внутренней ссылке: золотой и тёмный круги расходятся из точки клика на весь экран,
   // затем переход. Новая страница открывается из центра (если пришли переходом — html.rd-pt-in).
+  // Клик по кейсу портфолио — круги цвета проекта (фон карточки --rd-case-bg): кайма светлее, основной слой — сам цвет;
+  // цвет едет в метке rd-pt («время|x|y|цвет»), новая страница закрыта и открывается тем же цветом (html.rd-pt-tint).
   (function () {
     var pt = document.createElement('div');
     pt.className = 'rd-pt';
@@ -263,7 +265,10 @@
       el.style.maskImage = m;
     };
     var reset = function () {
-      pt.classList.remove('is-on', 'is-logo');
+      pt.classList.remove('is-on', 'is-logo', 'is-tint');
+      pt.style.removeProperty('--rd-pt-c');
+      root.classList.remove('rd-pt-tint');
+      root.style.removeProperty('--rd-pt-c');
       [gold, dark].forEach(function (el) {
         el.style.clipPath = '';
         el.style.webkitMaskImage = '';
@@ -283,9 +288,26 @@
       raf(step);
     };
 
+    // основной цвет кейса: цвет в конце фона (подложка под градиентами) или первый цвет градиента
+    var COLOR = /^(#[0-9a-f]+|rgba?\([0-9\s.,%]+\))$/i; // то же проверяет инлайн-скрипт в head.tpl
+    var caseTint = function (a) {
+      var card = a.closest('.rd-case');
+      if (!card) return '';
+      var bg = (card.style.getPropertyValue('--rd-case-bg') || '').trim();
+      if (!bg) return '#16202e'; // фон карточки по умолчанию (_portfolio.scss)
+      var tail = bg.match(/(#[0-9a-f]+|rgba?\([0-9\s.,%]+\))\s*$/i);
+      var first = bg.match(/#[0-9a-f]+\b|rgba?\([0-9\s.,%]+\)/i);
+      var c = tail ? tail[1] : (first ? first[0] : '');
+      return COLOR.test(c) ? c : '';
+    };
+
     // закрытие: круги из точки клика
-    var leave = function (url, x, y) {
+    var leave = function (url, x, y, tint) {
       busy = true;
+      if (tint) {
+        pt.style.setProperty('--rd-pt-c', tint);
+        pt.classList.add('is-tint');
+      }
       var R = radius(x, y);
       setCircle(gold, 0, x, y);
       setCircle(dark, 0, x, y);
@@ -296,7 +318,7 @@
         if (b > 0.7) pt.classList.add('is-logo');
       }, function () {
         // метка для новой страницы: время и точка клика в долях окна — оттуда она и откроется
-        var pos = (x / window.innerWidth).toFixed(4) + '|' + (y / window.innerHeight).toFixed(4);
+        var pos = (x / window.innerWidth).toFixed(4) + '|' + (y / window.innerHeight).toFixed(4) + (tint ? '|' + tint : '');
         try { sessionStorage.setItem('rd-pt', Date.now() + '|' + pos); } catch (e) { /* без метки страница откроется как обычно */ }
         window.location.href = url;
         setTimeout(reset, 5000); // переход не случился (например, отдали файл) — открываем страницу обратно
@@ -318,6 +340,7 @@
       var x = window.innerWidth * fx;
       var y = window.innerHeight * fy;
       var R = radius(x, y);
+      if (root.classList.contains('rd-pt-tint')) pt.classList.add('is-tint'); // цвет — в --rd-pt-c на <html>
       pt.classList.add('is-on', 'is-logo');
       root.classList.remove('rd-pt-in');
       setTimeout(function () { pt.classList.remove('is-logo'); }, 60);
@@ -381,7 +404,7 @@
         x = r.left + r.width / 2;
         y = r.top + r.height / 2;
       }
-      leave(url.href, x, y);
+      leave(url.href, x, y, caseTint(a));
     });
   })();
 
@@ -458,7 +481,7 @@
   });
 
   /* ---------- Курсор, прожектор, параллакс (только мышь) ---------- */
-  var mouse = { x: -9999, y: -9999, inHero: false };
+  var mouse = { x: -9999, y: -9999, inHero: false, t: null };
   var heroContent = hero && hero.querySelector('.rd-hero__content');
   var heroVisual = hero && hero.querySelector('.rd-hero__visual');
   var px = { cx: 0, cy: 0, tx: 0, ty: 0 };
@@ -489,6 +512,7 @@
       if (e.pointerType !== 'mouse') return;
       mouse.x = e.clientX;
       mouse.y = e.clientY;
+      mouse.t = e.target;
       cur.x = e.clientX;
       cur.y = e.clientY;
 
@@ -522,7 +546,8 @@
 
       if (hero) {
         var r = hero.getBoundingClientRect();
-        mouse.inHero = e.clientY >= r.top && e.clientY <= r.bottom;
+        // под раскрытым меню (мега-меню / мобильное) первый экран не реагирует
+        mouse.inHero = e.clientY >= r.top && e.clientY <= r.bottom && !t.closest('.rd-mega, .rd-mobile');
         if (mouse.inHero) {
           px.tx = (e.clientX / window.innerWidth) * 2 - 1;
           px.ty = ((e.clientY - r.top) / r.height) * 2 - 1;
@@ -549,7 +574,9 @@
       var phone = el.classList.contains('rd-header__phone');
       var wide = el.classList.contains('rd-lead__send'); // кнопка во всю ширину формы — тянется слабо
       // у вытянутых кнопок зона — прямоугольник кнопки (+14px), у круглых — круг
-      magnets.push({ el: el, x: 0, y: 0, tx: 0, ty: 0, k: phone ? 0.2 : (wide ? 0.07 : 0.35), rect: wide || el.classList.contains('rd-btn'), set: false });
+      // scope — свой блок: магнит тянется, только когда курсор над ним (не через меню поверх первого экрана)
+      magnets.push({ el: el, x: 0, y: 0, tx: 0, ty: 0, k: phone ? 0.2 : (wide ? 0.07 : 0.35), rect: wide || el.classList.contains('rd-btn'), set: false,
+        scope: el.closest('.rd-mega, .rd-mobile, .rd-header, section, footer') });
     });
   }
 
@@ -614,6 +641,7 @@
         var zone = Math.max(r.width, r.height) / 2 + 30;
         near = dx * dx + dy * dy < zone * zone;
       }
+      if (near && mg.scope && mouse.t && !mg.scope.contains(mouse.t)) near = false;
       if (near) { mg.tx = dx * mg.k; mg.ty = dy * mg.k; } else { mg.tx = 0; mg.ty = 0; }
       mg.x = lerp(mg.x, mg.tx, 0.15);
       mg.y = lerp(mg.y, mg.ty, 0.15);
@@ -1775,5 +1803,22 @@
     } else {
       stTargets.forEach(function (el) { el.classList.add('is-in'); });
     }
+  }
+  /* ================= «Прокрутка» номеров на наведении («незамінний, якщо», «4 гарантії» услуги) ================= */
+  // Номер уходит вверх и приходит снизу. Класс держится до конца анимации: курсор ушёл раньше — номер доезжает,
+  // а не прыгает на место; пока номер крутится, повторное наведение его не перезапускает.
+  if (fine) {
+    Array.prototype.forEach.call(document.querySelectorAll('.rd-cause__item, .rd-gar--num .rd-gar-card'), function (item) {
+      var num = item.querySelector('.rd-cause__num-in, .rd-gar-card__num-in');
+      if (!num) return;
+      var shown = function () { return item.classList.contains('is-in') || !!item.closest('.rd-gar__panel.is-in'); };
+      item.addEventListener('pointerenter', function (e) {
+        if (e.pointerType !== 'mouse' || !shown() || num.classList.contains('is-roll')) return;
+        num.classList.add('is-roll');
+      });
+      num.addEventListener('animationend', function (e) {
+        if (e.animationName === 'rd-cause-roll') num.classList.remove('is-roll');
+      });
+    });
   }
 })();

@@ -73,9 +73,11 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     }
   }
 
+  // номер ездит (маска, «прокрутка») — сплошное золото без background-clip: text: у текста с градиентом-клипом
+  // Chrome при сдвиге слоя мигает/рисует фон рывками; $gold и $gold-2 на глаз не отличаются
   &__num-in {
     display: block;
-    @include gold-text;
+    color: $gold;
   }
 
   &__name,
@@ -186,18 +188,20 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     }
   }
 
-  // наведение: номер «прокручивается» (уходит вверх, приходит снизу), строка золотится
+  // наведение: строка золотится (номер «прокручивается» — .is-roll ниже)
   @media (hover: hover) and (pointer: fine) {
     .rd-cause__item.is-in:hover {
-      .rd-cause__num-in {
-        animation: rd-cause-roll 0.75s $ease-io both;
-      }
-
       .rd-cause__name {
         color: $gold;
       }
     }
   }
+}
+
+// «прокрутка» номера: класс is-roll ставит rd-wow.js на наведении и снимает в конце анимации
+// (уход курсора на середине не обрывает её рывком, повторное наведение не перезапускает)
+.rd-wow-js .rd-cause__num-in.is-roll {
+  animation: rd-cause-roll 0.75s $ease-io;
 }
 
 @keyframes rd-cause-roll {

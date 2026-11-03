@@ -375,7 +375,8 @@ $gar-num-bg: #f5f3f0;
   }
 }
 
+// номер ездит (маска, «прокрутка») — сплошное золото без background-clip: text (как в «незамінний, якщо»)
 .rd-gar-card__num-in {
   display: block;
-  @include gold-text;
+  color: $gold;
 }
