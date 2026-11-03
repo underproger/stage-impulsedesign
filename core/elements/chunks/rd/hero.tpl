@@ -1,5 +1,8 @@
 {*
   Редизайн: первый экран главной.
+  Фон: почти чёрный, редкие линии «рамки» с золотыми крестиками на пересечениях (.rd-hero__frame, только десктоп),
+  тёмная каменная «планета» с тёплым отсветом под объектом (картинка hero-planet.webp, снята с шейдера).
+  Объект — жидкое золото с орбитой и двумя шариками (WebGL, src/liquid.js); заглушка — hero-liquid.webp/png.
   Поля (TV ресурса): title-banner, sub-title-banner,
   link-left-banner + link_text-left-banner (кнопка), link-right-banner + link_text-right-banner (круглая кнопка).
   В полях-ссылках можно указать ID ресурса или URL.
@@ -47,7 +50,18 @@
   ['url' => ('facebook_messenger' | option), 'icon' => 'soc-messenger.svg', 'label' => 'Messenger']
 ]}
 
-<section class="rd-hero">
+<section class="rd-hero rd-hero--main">
+  <div class="rd-hero__frame" aria-hidden="true">
+    <div class="rd-hero__frame-box">
+      <span class="rd-hero__fl rd-hero__fl--l"></span>
+      <span class="rd-hero__fl rd-hero__fl--m"></span>
+      <span class="rd-hero__fl rd-hero__fl--r"></span>
+      <span class="rd-hero__fl rd-hero__fl--t"></span>
+      <span class="rd-hero__fl rd-hero__fl--b"></span>
+      <span class="rd-hero__cross rd-hero__cross--t"></span>
+      <span class="rd-hero__cross rd-hero__cross--b"></span>
+    </div>
+  </div>
   {include 'file:chunks/rd/header.tpl'}
 
   <div class="rd-container rd-hero__inner">
@@ -70,9 +84,11 @@
 
     <div class="rd-hero__visual">
       <div class="rd-hero__glob" data-rd-glob data-src="/assets/templates/rd/js/rd-blob.js?v={$.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/js/rd-blob.js')}">
+        <img class="rd-hero__planet" src="{$img}hero-planet.webp?v={$.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/img/hero-planet.webp')}" width="1710" height="450" alt="" loading="eager" decoding="async">
+        <span class="rd-hero__halo"></span>
         <picture>
-          <source srcset="{$img}hero-blob.webp" type="image/webp">
-          <img class="rd-hero__blob" src="{$img}hero-blob.png" width="600" height="600" alt="" fetchpriority="high" loading="eager">
+          <source srcset="{$img}hero-liquid.webp" type="image/webp">
+          <img class="rd-hero__blob" src="{$img}hero-liquid.png" width="900" height="900" alt="" fetchpriority="high" loading="eager">
         </picture>
       </div>
 

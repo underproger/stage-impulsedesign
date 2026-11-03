@@ -1,6 +1,6 @@
 /*
  * Общая сборка 3D-объектов редизайна (одна копия three.js на страницу):
- *   blob.js   — золотой объект первого экрана главной ([data-rd-glob]);
+ *   liquid.js — жидкое золото с орбитой первого экрана главной ([data-rd-glob]; свой WebGL1, three.js не нужен);
  *   knot.js   — золотой узел / пирамида первого экрана страницы услуги ([data-rd-knot], [data-rd-knot="pyramid"]);
  *   spiral.js — золотая спираль блока «Digital агентство» ([data-rd-3d]);
  *   ico.js    — золотой икосаэдр SEO-блока главной ([data-rd-ico]).
@@ -12,7 +12,7 @@
  * (имя файла rd-blob.js сохранено — на него ссылаются hero.tpl, svc-hero.tpl, about.tpl и seo.tpl)
  * Без npm: esbuild 0.19.12 собран из исходников (Go), three r158 — из git; см. local/build3d.sh (--preserve-symlinks)
  */
-import './blob.js';
+import './liquid.js';
 import './knot.js';
 import './spiral.js';
 import './ico.js';
