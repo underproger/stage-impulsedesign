@@ -17,8 +17,10 @@
     word      — крупная надпись на фоне карточки, необязательно
     hover     — фото, которое проявляется на фоне при наведении, необязательно
   «Всі проекти» ведёт на страницу портфолио (100 / 404), Behance — настройка behance.
+  Параметр main=1 (страницы услуг): заголовок, подзаголовок и кейсы — с главной своего контекста (site_start),
+  один список на весь сайт. decodeJSON => 0 — иначе pdoFetch сам раскладывает MIGX в массив и json_decode ниже ломается.
 *}
-{set $r = $_modx->resource}
+{set $r = $main ? $_modx->getResource($_modx->config.site_start, ['includeTVs' => 'title-bl2,sub-title-bl2,rd_portfolio_bl2', 'tvPrefix' => '', 'decodeJSON' => 0]) : $_modx->resource}
 {set $isRu = $_modx->context.key == 'web'}
 {set $img = '/assets/templates/rd/img/'}
 {set $items = $r['rd_portfolio_bl2'] | json_decode : true}
