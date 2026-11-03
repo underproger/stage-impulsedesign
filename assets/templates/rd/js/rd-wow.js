@@ -19,7 +19,8 @@
   /* ================= Разбивка текста ================= */
 
   // Буквы: каждая — inline-block span.rd-ch (--i — порядковый номер), слова — span.rd-w без переносов.
-  // Мягкий перенос (&shy;) остаётся текстом между кусками слова — браузер может перенести по нему.
+  // Мягкий перенос (&shy;) остаётся текстом между кусками слова — браузер может перенести по нему;
+  // после дефиса внутри слова («SEO-копірайтинг») — <wbr>: перенос там же, где без разбивки.
   var charIndex = 0;
   function splitChars(el, opts) {
     opts = opts || {};
@@ -34,8 +35,9 @@
               frag.appendChild(document.createTextNode(' '));
               return;
             }
-            token.split('­').forEach(function (part, pi) {
-              if (pi > 0) frag.appendChild(document.createTextNode('­'));
+            token.replace(/-(?=[^-])/g, '-\u200B').split(/(\u00AD|\u200B)/).forEach(function (part) {
+              if (part === '\u00AD') { frag.appendChild(document.createTextNode('\u00AD')); return; }
+              if (part === '\u200B') { frag.appendChild(document.createElement('wbr')); return; }
               if (!part) return;
               var w = document.createElement('span');
               w.className = 'rd-w';

@@ -1,5 +1,7 @@
 @use "base" as *;
 
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
 // ===== Первый экран страницы услуги: .rd-hero.rd-hero--svc (chunks/rd/svc-hero.tpl) =====
 // Тот же блок, что на главной (общая хореография «вау», прожектор, подгонка заголовка — rd.js / rd-wow.js).
 // Отличия: тёмная карточка под светлой шапкой (десктоп — поля 30px и скругление 24px, мобайл — во всю ширину),
@@ -163,6 +165,168 @@
   30%,
   100% {
     stroke-dashoffset: 0;
+  }
+}
+
+// ----- вариант страницы копирайтинга: .rd-hero--copy (svc-hero.tpl nopill=1 obj='pyramid' brief=1) -----
+// Без таблетки в заголовке; под подзаголовком строка с ценой (banner_price) и метки (banner_tags: первая золотая,
+// остальные контуром, вплотную); кнопка и «Завантажити бриф» в ряд; пирамида вместо узла (место и размер — те же).
+// По copywriting_1920.pdf: текст на 18px выше, чем у Landing (заголовок в две строки), метки 28px, кнопка — через 48px.
+.rd-hero--copy {
+  .rd-hero__inner {
+    @include desktop {
+      padding-top: fd(105.6px, 116.6px);
+    }
+  }
+
+  .rd-hero__content {
+    @include desktop {
+      gap: fw(48px);
+    }
+  }
+
+  .rd-hero__price {
+    margin-top: fm(12px, 14px);
+
+    @include desktop {
+      margin-top: fw(16px);
+    }
+  }
+
+  .rd-hero__tags {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: fm(20px, 24px);
+
+    @include desktop {
+      margin-top: fw(35px);
+    }
+  }
+
+  .rd-hero__tag {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: fm(26px, 28px);
+    padding: 0 fm(9px, 10px);
+    border: 1px solid $gold;
+    border-radius: 99px;
+    font-size: fm(12px, 14px);
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    white-space: nowrap;
+
+    @include desktop {
+      height: fw(28px);
+      padding: 0 fw(10px);
+      font-size: fw(14px);
+    }
+
+    &--gold {
+      border-color: transparent;
+      background: $gold-grad;
+    }
+  }
+
+  .rd-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: fm(20px, 24px) fm(28px, 41px);
+
+    @include desktop {
+      column-gap: fw(41px);
+    }
+  }
+
+  // кольцо — у правого нижнего угла пирамиды, как на десктопе (над пирамидой оно наезжало бы на «бриф» и метки):
+  // телефон — справа (кольцо в блоке пирамиды), планшет — от низа блока (низ пирамиды = низ первого экрана)
+  .rd-works {
+    right: 0;
+    left: auto;
+    margin-left: 0;
+
+    @include tablet-up {
+      top: auto;
+      right: auto;
+      bottom: calc(var(--rd-gw) * 0.22 - 94.5px);
+      left: calc(50% + var(--rd-gw) * 0.37 - 94.5px);
+    }
+
+    @include desktop {
+      top: fd(439.5px, 464px);
+      right: 0;
+      bottom: auto;
+      left: auto;
+    }
+  }
+}
+
+// «Вау»: цена — следом за подзаголовком, метки раскрываются слева направо по очереди, бриф — после кнопки;
+// по золотой метке изредка пробегает блик
+.rd-wow-js {
+  .rd-hero--copy {
+    .rd-hero__price {
+      transition-delay: 0.98s;
+    }
+
+    .rd-hero__tag {
+      clip-path: inset(0 100% 0 0 round 99px);
+      transition: clip-path 0.9s $ease-expo;
+      transition-delay: calc(var(--t, 0) * 120ms + 1.05s);
+    }
+
+    .rd-hero__tag + .rd-hero__tag {
+      --t: 1;
+    }
+
+    .rd-hero__tag + .rd-hero__tag + .rd-hero__tag {
+      --t: 2;
+    }
+
+    .rd-hero__brief {
+      opacity: 0;
+      translate: 0 40px;
+      transition: opacity 1s $ease-expo 1.15s, translate 1.2s $ease-expo 1.15s;
+    }
+
+    .rd-hero__tag--gold::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(105deg, transparent 35%, rgba(255, 248, 225, 0.55) 50%, transparent 65%) no-repeat;
+      background-size: 250% 100%;
+      background-position: 150% 0;
+      pointer-events: none;
+
+      @media (prefers-reduced-motion: no-preference) {
+        animation: rd-tag-shine 5s $ease 2.2s infinite;
+      }
+    }
+  }
+
+  &.rd-wow-in .rd-hero--copy {
+    .rd-hero__tag {
+      clip-path: inset(0 0 0 0 round 99px);
+    }
+
+    .rd-hero__brief {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+}
+
+@keyframes rd-tag-shine {
+  0% {
+    background-position: 150% 0;
+  }
+
+  30%,
+  100% {
+    background-position: -60% 0;
   }
 }
 
