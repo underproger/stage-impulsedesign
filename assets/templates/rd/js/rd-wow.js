@@ -504,7 +504,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
@@ -1765,6 +1765,40 @@
       fIo.observe(feat);
     } else {
       feat.classList.add('is-in');
+    }
+  }
+
+  /* ================= Копирайтинг: «Корисні СЕО-тексти від професіоналів» ================= */
+  // Слова заголовка из размытия; карточки поднимаются по мере появления, в ряду — слева направо (--c).
+  var cws = document.querySelector('.rd-cws');
+  if (cws) {
+    var cwsTitle = cws.querySelector('.rd-cws__title');
+    if (cwsTitle) splitWords(cwsTitle);
+    var cwsCards = Array.prototype.slice.call(cws.querySelectorAll('.rd-cws__card'));
+    var cwsCols = function () {
+      var row = {};
+      cwsCards.forEach(function (it) {
+        var t = it.offsetTop;
+        row[t] = row[t] || 0;
+        it.style.setProperty('--c', row[t]++);
+      });
+    };
+    cwsCols();
+    var cwsT = 0;
+    window.addEventListener('resize', function () {
+      clearTimeout(cwsT);
+      cwsT = setTimeout(cwsCols, 150);
+    });
+    var cwsTargets = (cwsTitle ? [cwsTitle] : []).concat(cwsCards);
+    if ('IntersectionObserver' in window) {
+      var cwsIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { en.target.classList.add('is-in'); cwsIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.2, rootMargin: '0px 0px -6% 0px' });
+      cwsTargets.forEach(function (el) { cwsIo.observe(el); });
+    } else {
+      cwsTargets.forEach(function (el) { el.classList.add('is-in'); });
     }
   }
 
