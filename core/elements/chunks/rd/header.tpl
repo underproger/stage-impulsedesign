@@ -63,7 +63,7 @@
   ['url' => ('facebook_messenger' | option), 'icon' => 'soc-messenger.svg', 'label' => 'Messenger']
 ]}
 
-<header class="rd-header{if $light?} rd-header--light{/if}" data-rd-header>
+<header class="rd-header{if $light?} rd-header--light{/if}{if $line?} rd-header--line{/if}" data-rd-header>
   <span class="rd-header__probe" aria-hidden="true"></span>
 
   {* ===== Мега-меню (десктоп) ===== *}

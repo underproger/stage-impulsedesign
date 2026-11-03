@@ -1,0 +1,328 @@
+@use "base" as *;
+
+// ===== Страница «Портфоліо сайтів» (шаблон 10): крошки, заголовок с цитатой, кейсы «зигзагом», «Показати ще» =====
+// Карточка кейса — та же .rd-case, что в блоке «Портфоліо» главной (картинка — case-media.tpl), с модификатором
+// .rd-case--row: десктоп — текст 464 + картинка 980×450 (на 1920), через одну картинка слева (.rd-case--flip);
+// планшет и телефон — картинка сверху, текст под ней. Отступы сняты с portfolio_1920.pdf (макет только 1920).
+
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-io: cubic-bezier(0.77, 0, 0.18, 1);
+
+.rd-cases {
+  position: relative;
+  padding: fm(24px, 32px) 0 fm(80px, 110px);
+  background: #fff;
+  color: $black;
+
+  @include desktop {
+    padding: fw(44px) 0 fd(154px, 183px); // + 4px: кнопка у нас 68, в макете 72
+  }
+
+  // ----- шапка страницы -----
+  &__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: fm(16px, 24px);
+
+    @include desktop {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      column-gap: fw(40px);
+      row-gap: 0;
+    }
+  }
+
+  &__crumbs {
+    margin: 0;
+
+    @include desktop {
+      grid-column: 1 / -1;
+      margin-bottom: fw(34px);
+    }
+  }
+
+  // h1 глобально стилизован старым CSS — перебиваем явно
+  &__title {
+    margin: 0;
+    font-family: inherit;
+    font-size: fm(36px, 48px);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    color: $black;
+
+    @include desktop {
+      font-size: fd(60px, 72px);
+    }
+  }
+
+  &__quote {
+    margin: 0;
+    font-size: fm(18px, 24px);
+    font-weight: 700;
+    line-height: 1.5;
+    color: $black;
+
+    @include desktop {
+      max-width: fd(470px, 560px);
+      font-size: fd(24px, 30px);
+      text-align: right;
+    }
+
+    span {
+      @include gold-text;
+    }
+  }
+
+  // ----- список -----
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: fm(56px, 80px);
+    margin-top: fm(48px, 64px);
+
+    @include desktop {
+      gap: fd(100px, 120px);
+      margin-top: fd(70px, 83px);
+    }
+
+    // «Показати ще»: пока список ограничен (rd.js), лишние кейсы спрятаны; без скриптов видны все
+    &.is-limited [data-rd-more]:not(.is-shown) {
+      display: none;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: center;
+    margin-top: fm(48px, 64px);
+
+    @include desktop {
+      margin-top: fd(100px, 118px);
+    }
+  }
+
+  &__more {
+    gap: fw(10px);
+  }
+
+  &__more-ic {
+    flex: none;
+    width: 24px;
+    height: 24px;
+
+    @include desktop {
+      width: fw(24px);
+      height: fw(24px);
+    }
+  }
+
+  // открываем следующие — значок делает оборот
+  &__more.is-busy &__more-ic {
+    animation: rd-cases-spin 0.8s $ease-io;
+  }
+}
+
+@keyframes rd-cases-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+// крошки на светлом: ссылки тёмные, текущая — серая
+.rd-crumbs--light {
+  color: $black;
+
+  .rd-crumbs__item--current {
+    color: $gray;
+  }
+}
+
+// ----- карточка-строка -----
+.rd-case--row {
+  display: flex;
+  flex-direction: column;
+  gap: fm(24px, 32px);
+  width: auto;
+
+  @include desktop {
+    display: grid;
+    flex: initial;
+    grid-template-columns: fd(380px, 464px) minmax(0, 1fr);
+    grid-template-areas: "desc media";
+    align-items: center;
+    column-gap: fd(46px, 56px);
+    width: auto;
+    scroll-snap-align: none;
+  }
+
+  .rd-case__media {
+    @include tablet-up {
+      aspect-ratio: 980 / 450;
+    }
+
+    @include desktop {
+      grid-area: media;
+    }
+  }
+
+  .rd-case__desc {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+
+    @include desktop {
+      grid-area: desc;
+    }
+  }
+
+  .rd-case__heading {
+    gap: fm(8px, 10px);
+
+    @include desktop {
+      gap: fw(10px);
+    }
+  }
+
+  .rd-case__title {
+    font-size: fm(24px, 28px);
+
+    @include desktop {
+      font-size: fd(24px, 30px);
+    }
+  }
+
+  .rd-case__text {
+    margin-top: fm(16px, 24px);
+    font-size: fm(16px, 18px);
+    line-height: 1.78;
+
+    @include desktop {
+      margin-top: fw(32px);
+      font-size: fd(16px, 18px);
+    }
+  }
+
+  .rd-case__btn {
+    margin-top: fm(28px, 40px);
+
+    @include desktop {
+      margin-top: fw(40px);
+    }
+  }
+
+  &.rd-case--flip {
+    @include desktop {
+      grid-template-columns: minmax(0, 1fr) fd(380px, 464px);
+      grid-template-areas: "media desc";
+    }
+  }
+}
+
+// ----- ноутбук со скриншотом (кейсы без композиции; разметка — case-media.tpl) -----
+.rd-case__mock {
+  display: block;
+  filter: drop-shadow(0 3cqw 4cqw rgba(0, 0, 0, 0.35));
+}
+
+.rd-case__mock-screen {
+  display: block;
+  aspect-ratio: 16 / 10;
+  padding: 1.1cqw 1.1cqw 1.5cqw;
+  border-radius: 1.8cqw 1.8cqw 0 0;
+  background: linear-gradient(180deg, #2b2b31, #121216);
+  box-shadow: inset 0 0 0 0.12cqw rgba(255, 255, 255, 0.12);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: 50% 0;
+    border-radius: 0.3cqw;
+  }
+}
+
+// корпус: светлая полоса шире экрана, с выемкой посередине
+.rd-case__mock-base {
+  position: relative;
+  display: block;
+  height: 1.7cqw;
+  margin: 0 -8%;
+  border-radius: 0.2cqw 0.2cqw 2.4cqw 2.4cqw;
+  background: linear-gradient(180deg, #e9eaee 0%, #c7c9cf 55%, #8d9097 100%);
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 16%;
+    height: 45%;
+    translate: -50% 0;
+    border-radius: 0 0 1cqw 1cqw;
+    background: linear-gradient(180deg, #b7b9bf, #d6d8dd);
+  }
+}
+
+// ================= «Вау» (html.rd-wow-js, модуль страницы портфолио в rd-wow.js) =================
+.rd-wow-js {
+  .rd-cases__title .rd-wd {
+    display: inline-block;
+    opacity: 0;
+    translate: 0 0.6em;
+    filter: blur(10px);
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+    transition-delay: calc(var(--i, 0) * 80ms);
+  }
+
+  .rd-cases__quote,
+  .rd-cases__crumbs,
+  .rd-cases__actions {
+    opacity: 0;
+    translate: 0 24px;
+    transition: opacity 1s $ease-expo 0.3s, translate 1.1s $ease-expo 0.3s;
+  }
+
+  .rd-cases__crumbs {
+    transition-delay: 0s;
+  }
+
+  .rd-cases__head.is-in {
+    .rd-cases__title .rd-wd,
+    .rd-cases__quote,
+    .rd-cases__crumbs {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0);
+    }
+  }
+
+  .rd-cases__actions.is-in {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  // картинка слева — шторка открывается слева
+  .rd-case--flip .rd-case__media {
+    @include desktop {
+      clip-path: inset(0 100% 0 0 round var(--rd-r));
+    }
+  }
+
+  // текст кейса: тег и название, описание и кнопка — следом
+  .rd-case--row {
+    .rd-case__btn {
+      opacity: 0;
+      translate: 0 26px;
+      transition: opacity 0.9s $ease-expo 0.65s, translate 1.1s $ease-expo 0.65s, background-color $dur $ease, color 0.45s $ease;
+    }
+
+    &.is-in .rd-case__btn {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+}

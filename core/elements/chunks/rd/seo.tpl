@@ -11,10 +11,16 @@
   вкладки сам не начинается с заголовка), text_2-bl9 (окончание). Заголовка нет — заголовок страницы (pagetitle).
   Абзацы, где только картинка, в начале текста не становятся вступлением — уходят в раскрывающуюся часть.
   Справа (на мобайле — под текстом) — золотой икосаэдр: WebGL (src/ico.js в rd-blob.js), картинка — заглушка.
+  img-seo — картинка справа вместо икосаэдра (страница портфолио); тогда абзацы-картинки в начале текста не выводятся
+  (это старые картинки «справа от текста»). Заголовок из title-bl9 повторяется в тексте — повтор убирается.
+  Параметры include: intro=2 — сколько абзацев видно до «Розгорнути» (по умолчанию 1), tone='gray' — светло-серый фон.
   Раскрытие — rd.js, анимации — rd-wow.js.
 *}
 {set $r = $_modx->resource}
 {set $isRu = $_modx->context.key == 'web'}
+{set $introN = $intro ?: 1}
+{set $photo = $r['img-seo'] | trim}
+{if $photo && !($photo | preg_match : '~^(https?:)?/~')}{set $photo = '/' ~ $photo}{/if}
 {set $c = $r.content | trim}
 {if !$c && $r['display_bl9']}
   {set $c = $r['text_1-bl9'] | trim}
@@ -46,22 +52,38 @@
   {set $pics = $c | preg_replace : '~^((?:<p[^>]*>\s*(?:<img[^>]*>\s*)+</p>\s*)+).*$~isu' : '$1'}
   {set $c = $c | preg_replace : '~^(?:<p[^>]*>\s*(?:<img[^>]*>\s*)+</p>\s*)+~isu' : '' | trim}
 {/if}
+{if $photo}{set $pics = ''}{/if}
 {if !$title}{set $title = $r.pagetitle}{/if}
-{set $intro = ''}
-{if $c | preg_match : '~^<p[^>]*>.*?</p>~isu'}
-  {set $intro = $c | preg_replace : '~^<p[^>]*>(.*?)</p>.*$~isu' : '$1' | trim}
-  {set $c = $c | preg_replace : '~^<p[^>]*>.*?</p>~isu' : '' | trim}
-  {* однобуквенные предлоги и союзы не остаются в конце строки *}
-  {set $intro = $intro | preg_replace : '~(^|[\s(«„“])([вуізаоксВУІЗАОКС])\s+~u' : '$1$2&nbsp;'}
+{* заголовок блока, повторённый в тексте (<h2>5 причин…</h2> при title-bl9 «5 причин…»), — убираем повтор *}
+{set $tplain = $title | strip_tags | preg_replace : '~&nbsp;|\s+~u' : ' ' | trim}
+{if $tplain}
+  {set $tq = $.php.preg_quote($tplain, '~') | preg_replace : '~ ~u' : '(?:\s|&nbsp;)+'}
+  {set $c = $c | preg_replace : ('~<h[1-6][^>]*>\s*' ~ $tq ~ '\s*</h[1-6]>~iu') : '' | trim}
 {/if}
+{set $intro = ''}
+{set $introP = []}
+{for $k=1 to=$introN}
+  {if $c | preg_match : '~^<p[^>]*>.*?</p>~isu'}
+    {set $ip = $c | preg_replace : '~^<p[^>]*>(.*?)</p>.*$~isu' : '$1' | trim}
+    {set $c = $c | preg_replace : '~^<p[^>]*>.*?</p>~isu' : '' | trim}
+    {* однобуквенные предлоги и союзы не остаются в конце строки *}
+    {set $ip = $ip | preg_replace : '~(^|[\s(«„“])([вуізаоксВУІЗАОКС])\s+~u' : '$1$2&nbsp;'}
+    {set $introP = $.php.array_merge($introP, [$ip])}
+  {/if}
+{/for}
+{set $intro = $introP[0] ?: ''}
 {set $rest = $head ~ $pics ~ $c}
 {set $rest = $rest | trim}
 
-<section class="rd-seo" id="seo-text" data-rd-seo>
+<section class="rd-seo{if $photo} rd-seo--photo{/if}{if $tone == 'gray'} rd-seo--gray{/if}" id="seo-text" data-rd-seo>
   <div class="rd-container rd-seo__wrap">
     <div class="rd-seo__body">
       {if $title}<h2 class="rd-seo__title">{$title | strip_tags : '<span><br>'}</h2>{/if}
-      {if $intro}<p class="rd-seo__intro">{$intro}</p>{/if}
+      {if $introP | length > 1}
+        <div class="rd-seo__intro">{foreach $introP as $ip}<p>{$ip}</p>{/foreach}</div>
+      {elseif $intro}
+        <p class="rd-seo__intro">{$intro}</p>
+      {/if}
       {if $rest}
         <div class="rd-seo__more" id="rd-seo-more">
           <div class="rd-seo__more-in">
@@ -76,10 +98,16 @@
         </button>
       {/if}
     </div>
-    <div class="rd-seo__obj" data-rd-ico data-src="/assets/templates/rd/js/rd-blob.js?v={$.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/js/rd-blob.js')}" aria-hidden="true">
-      <div class="rd-seo__float">
-        <img class="rd-seo__img" src="/assets/templates/rd/img/ico.webp" width="600" height="600" alt="">
+    {if $photo}
+      <div class="rd-seo__obj rd-seo__obj--photo" aria-hidden="true">
+        <img class="rd-seo__photo" src="{$photo}" width="1000" height="1500" alt="" loading="lazy" decoding="async">
       </div>
-    </div>
+    {else}
+      <div class="rd-seo__obj" data-rd-ico data-src="/assets/templates/rd/js/rd-blob.js?v={$.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/js/rd-blob.js')}" aria-hidden="true">
+        <div class="rd-seo__float">
+          <img class="rd-seo__img" src="/assets/templates/rd/img/ico.webp" width="600" height="600" alt="">
+        </div>
+      </div>
+    {/if}
   </div>
 </section>

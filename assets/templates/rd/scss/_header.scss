@@ -634,3 +634,16 @@
     }
   }
 }
+
+// ===== Линия под шапкой вверху страницы (страница портфолио: header.tpl line=1) =====
+// Тонкая серая линия по низу места шапки в потоке — уезжает вместе со страницей, закреплённой шапке не мешает.
+.rd-header--line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #f0f0f0;
+  pointer-events: none;
+}

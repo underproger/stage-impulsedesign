@@ -385,6 +385,81 @@ $ease-in-q: cubic-bezier(0.55, 0, 0.75, 0.2); // разгон — «улетае
   }
 }
 
+// ----- вариант с фото справа (img-seo; страница портфолио) и серым фоном (tone='gray') -----
+// Десктоп: текст и фото 460×560 по центру друг друга, текст шире (до фото — 120 на 1920); мобайл — фото под текстом.
+.rd-seo--gray {
+  background: #f2f2f2;
+}
+
+.rd-seo--photo {
+  @include desktop {
+    padding-block: fd(150px, 180px);
+  }
+
+  .rd-seo__wrap {
+    @include desktop {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) fd(380px, 460px);
+      align-items: center;
+      column-gap: fd(100px, 120px);
+    }
+  }
+
+  &.is-wide .rd-seo__wrap {
+    @include desktop {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .rd-seo__body {
+    @include desktop {
+      max-width: none;
+    }
+  }
+
+  // несколько абзацев до «Розгорнути»
+  div.rd-seo__intro p {
+    margin: 0;
+
+    & + p {
+      margin-top: fm(16px, 24px);
+
+      @include desktop {
+        margin-top: fw(24px);
+      }
+    }
+  }
+
+  .rd-seo__obj--photo {
+    --s: auto;
+    position: relative;
+    top: auto;
+    right: auto;
+    width: 100%;
+    max-width: 460px;
+    height: auto;
+    margin: fm(40px, 56px) auto 0;
+
+    @include desktop {
+      max-width: none;
+      margin: 0;
+    }
+  }
+
+  .rd-seo__photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 460 / 560; // фото 1000×1500 — в рамке 460×560, по центру
+    object-fit: cover;
+    border-radius: fm(16px, 20px);
+
+    @include desktop {
+      border-radius: fw(24px);
+    }
+  }
+}
+
 // ================= «Вау» (html.rd-wow-js, модуль SEO-текста в конце rd-wow.js) =================
 .rd-wow-js {
   // заголовок: слова из размытия, золотое слово переливается

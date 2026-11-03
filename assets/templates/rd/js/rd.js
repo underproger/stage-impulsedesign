@@ -132,6 +132,49 @@
     });
   }
 
+  /* ---------- Страница портфолио: надписи на фоне карточек, «Показати ще» ---------- */
+  var cases = document.querySelector('[data-rd-cases]');
+  if (cases) {
+    // надпись ≈ 89.7% ширины карточки (как в блоке «Портфоліо»); размер в cqw — подгонка один раз
+    var fitCaseWords = function () {
+      cases.querySelectorAll('.rd-case__word').forEach(function (word) {
+        var mw = word.parentNode.clientWidth;
+        if (!mw) return; // спрятанный кейс — подгоним, когда откроется
+        var rg = document.createRange();
+        rg.selectNodeContents(word);
+        var tw = rg.getBoundingClientRect().width;
+        if (!tw || word.getAttribute('data-fit')) return;
+        var fs = parseFloat(getComputedStyle(word).getPropertyValue('--rd-wfs')) || 9.16;
+        word.style.setProperty('--rd-wfs', (fs * 0.897 * mw / tw).toFixed(3));
+        word.setAttribute('data-fit', '1');
+      });
+    };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitCaseWords);
+    else fitCaseWords();
+
+    var list = cases.querySelector('[data-rd-cases-list]');
+    var more = cases.querySelector('[data-rd-cases-more]');
+    if (list && more) {
+      var per = parseInt(list.getAttribute('data-per'), 10) || 6;
+      list.classList.add('is-limited');
+      more.addEventListener('click', function () {
+        var next = Array.prototype.slice.call(list.querySelectorAll('[data-rd-more]:not(.is-shown)'), 0, per);
+        next.forEach(function (el) { el.classList.add('is-shown'); });
+        fitCaseWords();
+        more.classList.remove('is-busy');
+        void more.offsetWidth; // перезапуск оборота значка
+        more.classList.add('is-busy');
+        if (!list.querySelector('[data-rd-more]:not(.is-shown)')) {
+          var wrap = more.parentNode;
+          setTimeout(function () { wrap.hidden = true; }, 500);
+        }
+        // фокус — на первый открывшийся кейс (клавиатура)
+        var first = next[0] && next[0].querySelector('.rd-case__title a');
+        if (first && !more.matches(':hover')) first.focus({ preventScroll: true });
+      });
+    }
+  }
+
   /* ---------- Портфолио ---------- */
   var pf = document.querySelector('[data-rd-portfolio]');
   if (pf) {

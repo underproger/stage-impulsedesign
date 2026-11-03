@@ -502,7 +502,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись') };
@@ -656,6 +656,7 @@
     }
 
     if (pfTick) pfTick();
+    if (casesTick) casesTick();
     if (mindTick) mindTick();
     if (garTick) garTick();
     if (priceTick) priceTick();
@@ -949,6 +950,7 @@
   // Заголовок и карточки появляются по IntersectionObserver; цитата «проявляется» словами
   // по мере прокрутки; фото чуть смещается внутри капсулы; на плашке — золотой свет за курсором.
 
+  var casesTick = null; // страница портфолио (модуль в конце файла)
   var mindTick = null;
   var mind = document.querySelector('.rd-mind');
   if (mind) {
@@ -1820,5 +1822,61 @@
         if (e.animationName === 'rd-cause-roll') num.classList.remove('is-roll');
       });
     });
+  }
+  /* ================= Страница портфолио ================= */
+  // Заголовок — слова из размытия, цитата и крошки всплывают; кейсы — шторкой (как в блоке «Портфоліо»), по мере въезда
+  // в кадр (открытые «Показати ще» — тоже); устройства чуть следуют за курсором, надпись на фоне — за прокруткой.
+  var casesSec = document.querySelector('[data-rd-cases]');
+  if (casesSec) {
+    var csTitle = casesSec.querySelector('.rd-cases__title');
+    if (csTitle) splitWords(csTitle);
+    var csCards = Array.prototype.map.call(casesSec.querySelectorAll('.rd-case--row'), function (el) {
+      return { el: el, media: el.querySelector('.rd-case__media'), layer: el.querySelector('.rd-case__layer'),
+        word: el.querySelector('.rd-case__word'), tx: 0, ty: 0, mx: 0, my: 0, sl: '', sw: '' };
+    });
+    if (fine) {
+      csCards.forEach(function (c) {
+        if (!c.media) return;
+        c.media.addEventListener('pointermove', function (e) {
+          var r = c.media.getBoundingClientRect();
+          c.tx = clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1);
+          c.ty = clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1);
+        });
+        c.media.addEventListener('pointerleave', function () { c.tx = 0; c.ty = 0; });
+      });
+    }
+    casesTick = function () {
+      var vh = window.innerHeight;
+      for (var i = 0; i < csCards.length; i++) {
+        var c = csCards[i];
+        if (!c.media || !c.media.offsetParent) continue; // спрятан («Показати ще»)
+        var r = c.media.getBoundingClientRect();
+        if (r.bottom < -100 || r.top > vh + 100) continue;
+        var n = (r.top + r.height / 2 - vh / 2) / vh;
+        c.mx = lerp(c.mx, c.tx, 0.08);
+        c.my = lerp(c.my, c.ty, 0.08);
+        if (Math.abs(c.mx) < 0.0005 && c.tx === 0) c.mx = 0;
+        if (Math.abs(c.my) < 0.0005 && c.ty === 0) c.my = 0;
+        if (c.layer) {
+          var sl = (c.mx * 10).toFixed(1) + 'px ' + (c.my * 6).toFixed(1) + 'px';
+          if (sl !== c.sl) { c.layer.style.translate = sl; c.sl = sl; }
+        }
+        if (c.word) {
+          var sw = (n * 90 - c.mx * 22).toFixed(1) + 'px 0px';
+          if (sw !== c.sw) { c.word.style.translate = sw; c.sw = sw; }
+        }
+      }
+    };
+    var csTargets = Array.prototype.filter.call(casesSec.querySelectorAll('.rd-cases__head, .rd-case--row, .rd-cases__actions'), Boolean);
+    if ('IntersectionObserver' in window) {
+      var csIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { en.target.classList.add('is-in'); csIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+      csTargets.forEach(function (el) { csIo.observe(el); });
+    } else {
+      csTargets.forEach(function (el) { el.classList.add('is-in'); });
+    }
   }
 })();
