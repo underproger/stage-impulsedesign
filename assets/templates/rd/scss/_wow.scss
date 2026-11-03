@@ -1126,16 +1126,16 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     animation: rd-cause-roll 0.75s $ease-io;
   }
 
-  // иконки прорисовываются линией
+  // иконки прорисовываются линией (контуры-кружки с pathLength — тоже)
   .rd-gar-ic {
-    path[pathLength] {
+    [pathLength] {
       stroke-dasharray: 1;
       stroke-dashoffset: 1;
       transition: stroke-dashoffset 1.3s $ease-io;
       transition-delay: calc(var(--i, 0) * 120ms + 450ms);
     }
 
-    circle,
+    circle:not([pathLength]),
     .rd-gar-ic__needle {
       opacity: 0;
       transition: opacity 0.5s $ease, rotate 1.2s cubic-bezier(0.3, 1.5, 0.5, 1);
@@ -1147,13 +1147,24 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     .rd-gar-ic__rocket,
     .rd-gar-ic__stack,
     .rd-gar-ic__eyes,
-    .rd-gar-ic__mouth {
+    .rd-gar-ic__mouth,
+    .rd-gar-ic__pen {
       transform-box: fill-box;
       transform-origin: 50% 50%;
     }
 
     .rd-gar-ic__mouth {
       transform-origin: 50% 0;
+    }
+
+    // «Наші тексти» (копирайтинг): карандаш качается от кончика, «хром» поворачивается вокруг центра
+    .rd-gar-ic__pen {
+      transform-origin: 0 100%;
+    }
+
+    .rd-gar-ic__lens {
+      transform-box: view-box;
+      transform-origin: 12px 12px;
     }
 
     // стрелка спидометра «разгоняется» из нуля
@@ -1165,11 +1176,11 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   }
 
   .rd-gar__panel.is-in .rd-gar-ic {
-    path[pathLength] {
+    [pathLength] {
       stroke-dashoffset: 0;
     }
 
-    circle,
+    circle:not([pathLength]),
     .rd-gar-ic__needle {
       opacity: 1;
       rotate: 0deg;
@@ -1248,6 +1259,24 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
       .rd-gar-ic__mouth {
         animation: rd-gar-grin 0.9s $ease both;
       }
+
+      // «Наші тексти»: карандаш «пишет», «хром» проворачивается на треть оборота, галочка и строки дописываются
+      .rd-gar-ic__pen {
+        animation: rd-gar-write 0.9s $ease both;
+      }
+
+      .rd-gar-ic__lens {
+        animation: rd-gar-aperture 1s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+      }
+
+      .rd-gar-ic__check,
+      .rd-gar-ic__lines {
+        animation: rd-gar-redraw 0.8s $ease-io both;
+      }
+
+      .rd-gar-ic__check {
+        animation-delay: 0.15s;
+      }
     }
 
     .rd-gar__panel.is-in .rd-gar-card--gold:hover {
@@ -1266,6 +1295,10 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
 
       .rd-gar-ic--zap {
         animation: rd-gar-flicker 0.9s linear both;
+      }
+
+      .rd-gar-ic--glasses {
+        animation: rd-gar-specs 1s $ease both;
       }
     }
   }
@@ -1358,6 +1391,56 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   to {
     scale: 1.08;
     opacity: 1;
+  }
+}
+
+// карандаш «пишет»: качается от кончика
+@keyframes rd-gar-write {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+
+  25% {
+    rotate: -10deg;
+  }
+
+  50% {
+    rotate: 7deg;
+  }
+
+  75% {
+    rotate: -3deg;
+  }
+}
+
+// «хром»: треть оборота с отскоком (фигура симметрична — встаёт на место)
+@keyframes rd-gar-aperture {
+  from {
+    rotate: 0deg;
+  }
+
+  to {
+    rotate: 120deg;
+  }
+}
+
+// очки «поправляют»: приподнимаются с наклоном
+@keyframes rd-gar-specs {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+
+  35% {
+    translate: 0 -3px;
+    rotate: -7deg;
+  }
+
+  65% {
+    translate: 0 1px;
+    rotate: 4deg;
   }
 }
 

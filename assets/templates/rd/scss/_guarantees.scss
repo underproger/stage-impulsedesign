@@ -115,6 +115,71 @@ $gar-glow: #cdb167;
   }
 }
 
+// ----- «Наші тексти для сайту» (страница копирайтинга, src='cw'): заголовок в две строки, кольцо — по центру
+// заголовка и выходит за него сверху и снизу (в макете 155…365 при заголовке 180…338), плашка — на 108px ниже
+// заголовка (= на 80px ниже кольца) -----
+.rd-gar--texts {
+  .rd-gar__wrap {
+    @include desktop {
+      row-gap: fd(86px, 107.5px);
+    }
+  }
+
+  // в макете шаг строк 27px (у главной 1.7 = 27.2 — на 7 строках набегает 1.5px)
+  .rd-gar-card__text {
+    @include desktop {
+      line-height: 1.6875;
+    }
+  }
+
+  // .rd-works--inline обнуляет margin — нужна та же специфичность + модификатор
+  .rd-gar__cta.rd-works--inline {
+    @include desktop {
+      align-self: center;
+      margin-block: fd(-28px, -26px);
+    }
+  }
+
+  // золотая карточка: текст белый, иконка 40px на тёмном круге 64px (круг шире иконки — тенью, место не занимает),
+  // поля уже — название в одну строку, как в макете
+  .rd-gar-card--gold {
+    @include desktop {
+      padding-inline: fd(30px, 36px);
+    }
+
+    .rd-gar-card__icon {
+      --ring: #{fm(10px, 12px)};
+      box-shadow: 0 0 0 var(--ring) $black-2;
+
+      @include desktop {
+        --ring: #{fw(12px)};
+      }
+    }
+
+    .rd-gar-card__title,
+    .rd-gar-card__text {
+      color: #fff;
+    }
+  }
+}
+
+// наведение на золотую карточку: волна от тёмного круга (общий rd-gar-pulse затёр бы сам круг — он тоже тень)
+@media (hover: hover) and (pointer: fine) {
+  .rd-wow-js .rd-gar--texts .rd-gar__panel.is-in .rd-gar-card--gold:hover .rd-gar-card__icon {
+    animation-name: rd-gar-pulse-ring;
+  }
+}
+
+@keyframes rd-gar-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 var(--ring) $black-2, 0 0 0 var(--ring) rgba($black-2, 0.45);
+  }
+
+  100% {
+    box-shadow: 0 0 0 var(--ring) $black-2, 0 0 0 calc(var(--ring) + 18px) rgba($black-2, 0);
+  }
+}
+
 // Круглая кнопка из первого экрана — в потоке, а не поверх объекта
 .rd-works.rd-works--inline {
   position: relative;

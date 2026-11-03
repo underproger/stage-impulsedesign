@@ -12,6 +12,10 @@
   3) страница услуги, «4 гарантії, що ваш …» (section 7):  {include 'file:chunks/rd/guarantees.tpl' num=1}
      поля — как у главной (блок 7), но светлый фон, вместо иконок крупные номера 01–04, без золотой карточки,
      свечение — в правом верхнем углу плашки. Круглая кнопка — guaranty_link_bl7, пусто — кнопка первого экрана услуги.
+  4) страница копирайтинга, «Наші тексти для сайту» (section 4):  {include 'file:chunks/rd/guarantees.tpl' src='cw'}
+     cw_texts_title — заголовок, cw_texts — MIGX «rd_icon_cards»: title, text, icon (любая иконка этой плашки;
+     пусто — по порядку: человек с карандашом, «хром», документ с галочкой, очки). Кнопка-кольцо — «Обговорити проект»,
+     ссылка — как у кнопки первого экрана (link-left-banner). Кольцо по высоте — по центру заголовка (.rd-gar--texts).
 *}
 {set $r = $_modx->resource}
 {set $isRu = $_modx->context.key == 'web'}
@@ -26,6 +30,14 @@
   {set $ctaText = $r['link_text-left-banner']}
   {if $ctaText == 'contact us'}{set $ctaText = ''}{/if}
   {set $icons = ['target', 'rocket', 'coins', 'smile']}
+{elseif $src == 'cw'}
+  {set $sid = 'texts'}
+  {set $title = $r['cw_texts_title']}
+  {set $items = $r['cw_texts'] | json_decode : true}
+  {set $ctaUrl = $r['link-left-banner'] | trim}
+  {if !$ctaUrl || $ctaUrl == '#'}{set $ctaUrl = $_modx->config.site_start | resource : 'link-left-banner'}{/if}
+  {set $ctaText = ''}
+  {set $icons = ['user-edit', 'chrome', 'file-check', 'glasses']}
 {else}
   {set $sid = 'garanty'}
   {set $title = $r['guaranty_title_bl7']}
@@ -35,7 +47,7 @@
   {set $ctaText = $r['guaranty_link_text_bl7']}
   {set $icons = ['cart', 'diamond', 'speed', 'zap']}
 {/if}
-{set $mod = $src == 'bl12' ? $sid : ($num ? 'num' : '')}
+{set $mod = $src ? $sid : ($num ? 'num' : '')}
 {if $ctaUrl && ($ctaUrl | preg_match : '/^\d+$/')}{set $ctaUrl = $ctaUrl | url}{/if}
 {if !$ctaText}{set $ctaText = $isRu ? 'Обсудить проект' : 'Обговорити проект'}{/if}
 {* размер надписи на круге — как у кнопки первого экрана *}
@@ -111,6 +123,20 @@
                   <path pathLength="1" d="M7 18v2.335c0 .533 0 .8.11.937a.5.5 0 0 0 .39.188c.176 0 .384-.167.8-.5l2.385-1.908c.487-.39.731-.585 1.002-.724.241-.122.497-.212.762-.267.299-.061.61-.061 1.235-.061H16.2c1.68 0 2.52 0 3.162-.327a3 3 0 0 0 1.311-1.311C21 15.72 21 14.88 21 13.2V7.8c0-1.68 0-2.52-.327-3.162a3 3 0 0 0-1.311-1.311C18.72 3 17.88 3 16.2 3H7.8c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C3 5.28 3 6.12 3 7.8V14c0 .93 0 1.395.102 1.777a3 3 0 0 0 2.122 2.12C5.605 18 6.07 18 7 18Z"/>
                   <path class="rd-gar-ic__mouth" pathLength="1" d="M8.5 12.5S9.813 14 12 14c2.188 0 3.5-1.5 3.5-1.5"/>
                   <g class="rd-gar-ic__eyes"><circle cx="9.25" cy="7.5" r=".5"/><circle cx="14.75" cy="7.5" r=".5"/></g>
+                {case 'user-edit'}
+                  <circle class="rd-gar-ic__ring" pathLength="1" cx="10" cy="7.5" r="4.5"/>
+                  <path pathLength="1" d="M10 15.5H7.5c-1.396 0-2.093 0-2.661.172a4 4 0 0 0-2.667 2.667C2 18.907 2 19.604 2 21"/>
+                  <path class="rd-gar-ic__pen" pathLength="1" d="m11 21 3.101-.886c.149-.043.223-.064.292-.096a1 1 0 0 0 .175-.102c.061-.045.116-.1.225-.21l6.457-6.456a1.768 1.768 0 1 0-2.5-2.5l-6.457 6.457c-.11.11-.164.164-.209.225a1 1 0 0 0-.102.175c-.032.07-.053.143-.095.292L11 21Z"/>
+                {case 'chrome'}
+                  <circle class="rd-gar-ic__ring" pathLength="1" cx="12" cy="12" r="11"/>
+                  <g class="rd-gar-ic__lens"><circle class="rd-gar-ic__ring" pathLength="1" cx="12" cy="12" r="5"/><path pathLength="1" d="M12 7h9.8m-5.47 7.5-4.9 8.49M7.67 14.5 2.77 6.01"/></g>
+                {case 'file-check'}
+                  <path pathLength="1" d="M20 12.5V6.8c0-1.68 0-2.52-.327-3.162a3 3 0 0 0-1.311-1.311C17.72 2 16.88 2 15.2 2H8.8c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C4 4.28 4 5.12 4 6.8v10.4c0 1.68 0 2.52.327 3.162a3 3 0 0 0 1.311 1.311C6.28 22 7.12 22 8.8 22H12"/>
+                  <path class="rd-gar-ic__lines" pathLength="1" d="M16 7H8m6 4H8m2 4H8"/>
+                  <path class="rd-gar-ic__check" pathLength="1" d="m14.5 19 2 2 4.5-4.5"/>
+                {case 'glasses'}
+                  <circle class="rd-gar-ic__ring" pathLength="1" cx="6" cy="15" r="4"/><circle class="rd-gar-ic__ring" pathLength="1" cx="18" cy="15" r="4"/>
+                  <path pathLength="1" d="M10 14.6c1.3-.8 2.7-.8 4 0M2 15l.95-8.5C3.05 5.6 3.6 5 4.5 5h1.2M22 15l-.95-8.5C20.95 5.6 20.4 5 19.5 5h-1.2"/>
                 {default}
                   <path pathLength="1" d="M13 2 4.093 12.688c-.348.418-.523.628-.525.804a.5.5 0 0 0 .185.397c.138.111.41.111.955.111H12l-1 8 8.907-10.688c.348-.418.523-.628.525-.804a.5.5 0 0 0-.185-.397C20.109 10 19.837 10 19.292 10H12l1-8Z"/>
               {/switch}
