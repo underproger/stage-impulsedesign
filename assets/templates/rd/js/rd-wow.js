@@ -1769,7 +1769,8 @@
   }
 
   /* ================= Копирайтинг: «Корисні СЕО-тексти від професіоналів» ================= */
-  // Слова заголовка из размытия; карточки поднимаются по мере появления, в ряду — слева направо (--c).
+  // Слова заголовка из размытия; карточки поднимаются по мере появления, в ряду — слева направо (--c);
+  // у тёмной заливка заезжает слева. Наведение — заливка/сетка/свечение (CSS по .is-dark из rd.js) + свет за курсором.
   var cws = document.querySelector('.rd-cws');
   if (cws) {
     var cwsTitle = cws.querySelector('.rd-cws__title');
@@ -1789,6 +1790,20 @@
       clearTimeout(cwsT);
       cwsT = setTimeout(cwsCols, 150);
     });
+    // свет за курсором в каждой карточке — в слое фона (под текстом); виден у карточки под курсором (.is-dark — rd.js)
+    if (fine) {
+      cwsCards.forEach(function (card) {
+        var bg = card.querySelector('.rd-cws__bg');
+        if (!bg) return;
+        var light = document.createElement('span');
+        light.className = 'rd-light rd-light--cws';
+        bg.appendChild(light);
+        card.addEventListener('pointermove', function (e) {
+          var r = card.getBoundingClientRect();
+          light.style.transform = 'translate3d(' + (e.clientX - r.left).toFixed(1) + 'px,' + (e.clientY - r.top).toFixed(1) + 'px,0)';
+        });
+      });
+    }
     var cwsTargets = (cwsTitle ? [cwsTitle] : []).concat(cwsCards);
     if ('IntersectionObserver' in window) {
       var cwsIo = new IntersectionObserver(function (entries) {
