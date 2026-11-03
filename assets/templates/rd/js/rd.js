@@ -692,6 +692,65 @@
       setTimeout(setPad, 0);
     }
 
+    // файл ТЗ: имя и размер в рамке, перетаскивание, проверка типа и размера; «×» убирает файл
+    var fileBox = form.querySelector('[data-rd-file]');
+    var fileIn = fileBox && fileBox.querySelector('.rd-file__input');
+    var fileOk = true;
+    if (fileBox && fileIn) {
+      var fText = fileBox.querySelector('.rd-file__text');
+      var fSize = fileBox.querySelector('.rd-file__size');
+      var fClear = fileBox.querySelector('.rd-file__clear');
+      var fErr = fileBox.querySelector('.rd-file__err');
+      var fEmpty = fText.getAttribute('data-empty') || fText.textContent;
+      var maxMb = parseFloat(fileBox.getAttribute('data-max')) || 10;
+      var exts = (fileIn.getAttribute('accept') || '').toLowerCase().split(',').map(function (x) { return x.trim(); });
+      var human = function (b) { return b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1).replace('.0', '') + ' MB'; };
+      var fileErr = function (msg) {
+        fileOk = !msg;
+        fileBox.classList.toggle('is-error', !!msg);
+        fErr.textContent = msg || '';
+        fErr.classList.toggle('error', !!msg);
+        if (msg) fileIn.setAttribute('aria-invalid', 'true'); else fileIn.removeAttribute('aria-invalid');
+      };
+      var showFile = function () {
+        var f = fileIn.files && fileIn.files[0];
+        fileBox.classList.toggle('is-filled', !!f);
+        fClear.hidden = !f;
+        fText.textContent = f ? f.name : fEmpty;
+        fSize.textContent = f ? human(f.size) : '';
+        if (!f) { fileErr(''); return; }
+        var ext = '.' + (f.name.split('.').pop() || '').toLowerCase();
+        if (exts.length && exts[0] && exts.indexOf(ext) === -1) fileErr(fileBox.getAttribute('data-msg-type'));
+        else if (f.size > maxMb * 1048576) fileErr(fileBox.getAttribute('data-msg-size'));
+        else fileErr('');
+      };
+      fileIn.addEventListener('change', showFile);
+      fClear.addEventListener('click', function () {
+        fileIn.value = '';
+        showFile();
+        fileIn.focus();
+      });
+      // перетаскивание файла на рамку
+      var dragN = 0;
+      fileBox.addEventListener('dragenter', function (e) { e.preventDefault(); dragN++; fileBox.classList.add('is-drag'); });
+      fileBox.addEventListener('dragover', function (e) { e.preventDefault(); });
+      fileBox.addEventListener('dragleave', function () { if (--dragN <= 0) { dragN = 0; fileBox.classList.remove('is-drag'); } });
+      fileBox.addEventListener('drop', function (e) {
+        e.preventDefault();
+        dragN = 0;
+        fileBox.classList.remove('is-drag');
+        var dt = e.dataTransfer;
+        if (!dt || !dt.files || !dt.files.length) return;
+        try {
+          fileIn.files = dt.files;
+        } catch (er) {
+          return;
+        }
+        showFile();
+      });
+      form.addEventListener('reset', function () { setTimeout(showFile, 0); });
+    }
+
     form.addEventListener('submit', function (e) {
       if (status) status.textContent = '';
       var bad = [];
@@ -701,6 +760,7 @@
       if (phone && !phoneOk(phone)) bad.push(phone);
       if (email && !emailOk(email.value.trim())) bad.push(email);
       [name, phone, email].forEach(function (input) { if (input) setErr(input, bad.indexOf(input) > -1); });
+      if (fileIn && !fileOk) bad.push(fileIn);
       if (bad.length) {
         e.preventDefault();
         e.stopPropagation(); // AjaxForm (обработчик на document) не отправит

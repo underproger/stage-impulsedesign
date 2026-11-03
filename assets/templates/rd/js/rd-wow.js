@@ -667,7 +667,7 @@
     if (garTick) garTick();
     if (priceTick) priceTick();
     if (aboutTick) aboutTick();
-    if (leadTick) leadTick();
+    for (var lt = 0; lt < leadTicks.length; lt++) leadTicks[lt]();
     if (tickerTick) tickerTick();
 
     raf(frame);
@@ -1511,9 +1511,9 @@
   // Заголовок, текст и плашка появляются по IntersectionObserver; под курсором — золотая сетка, свечение тянется
   // к курсору, на плашке — свет. Ошибка — поле «качает головой» (событие rd-lead-invalid из rd.js);
   // заявка принята (rd-lead-sent) — экран закрывается кругом из кнопки, пока грузится «Спасибо».
-  var leadTick = null;
-  var lead = document.querySelector('.rd-lead');
-  if (lead) {
+  // Блоков-форм на странице может быть несколько (копирайтинг: «Знижка 10%» и основной) — у каждого свой тик.
+  var leadTicks = [];
+  Array.prototype.forEach.call(document.querySelectorAll('.rd-lead'), function (lead) {
     var lTitle = lead.querySelector('.rd-lead__title');
     if (lTitle) splitWords(lTitle);
     var lPanel = lead.querySelector('.rd-lead__panel');
@@ -1522,7 +1522,7 @@
     var lg = { x: 0, y: 0, s: '' };
 
     if (lPanel) {
-      Array.prototype.forEach.call(lPanel.querySelectorAll('.rd-lead__ftitle, .rd-lead__fields .rd-field, .rd-lead__send, .rd-lead__agree'), function (el, i) {
+      Array.prototype.forEach.call(lPanel.querySelectorAll('.rd-lead__ftitle, .rd-lead__fields .rd-field, .rd-file, .rd-lead__send, .rd-lead__agree'), function (el, i) {
         el.style.setProperty('--i', i);
       });
     }
@@ -1545,7 +1545,7 @@
       }
 
       // свечение мягко смещается к курсору (только пока блок на экране)
-      leadTick = function () {
+      leadTicks.push(function () {
         if (!lGlow) return;
         var r = lead.getBoundingClientRect();
         if (r.bottom < -100 || r.top > window.innerHeight + 100) return;
@@ -1556,7 +1556,7 @@
         lg.y = lerp(lg.y, ty, 0.05);
         var st = lg.x.toFixed(1) + 'px ' + lg.y.toFixed(1) + 'px';
         if (st !== lg.s) { lGlow.style.translate = st; lg.s = st; }
-      };
+      });
     }
 
     if (lForm) {
@@ -1580,7 +1580,29 @@
       });
     }
 
-    var lReveal = function (el) { el.classList.add('is-in'); };
+    // «таблетка» акции: число в ней досчитывается («Знижка 10%»)
+    var lBadge = lead.querySelector('.rd-lead__badge-text');
+    var badgeCount = function () {
+      if (!lBadge) return;
+      var final = lBadge.textContent;
+      var m = final.match(/^(.*?)(\d+)(.*)$/);
+      if (!m) return;
+      var to = parseInt(m[2], 10);
+      lBadge.setAttribute('aria-label', final);
+      var t0 = null;
+      var step = function (t) {
+        if (t0 === null) t0 = t;
+        var p = clamp((t - t0) / 1100, 0, 1);
+        lBadge.textContent = m[1] + Math.round(to * (1 - Math.pow(1 - p, 3))) + m[3];
+        if (p < 1) raf(step); else lBadge.textContent = final;
+      };
+      lBadge.textContent = m[1] + '0' + m[3];
+      setTimeout(function () { raf(step); }, 350);
+    };
+    var lReveal = function (el) {
+      el.classList.add('is-in');
+      if (el.classList.contains('rd-lead__info')) badgeCount();
+    };
     var lTargets = Array.prototype.filter.call(lead.querySelectorAll('.rd-lead__info, .rd-lead__panel'), Boolean);
     if ('IntersectionObserver' in window) {
       var lIo = new IntersectionObserver(function (entries) {
@@ -1592,7 +1614,7 @@
     } else {
       lTargets.forEach(lReveal);
     }
-  }
+  });
 
   /* ================= SEO-текст (section 9) ================= */
   // Заголовок словами из размытия, абзац «проявляется» по словам, икосаэдр влетает (вращает его WebGL).
