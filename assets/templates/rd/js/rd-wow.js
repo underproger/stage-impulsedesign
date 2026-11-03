@@ -524,7 +524,8 @@
       if (!t.closest) return;
       var inScope = t.closest(scopes);
       var overDoc = !!t.closest('a.rd-cwp__doc'); // документ «Наше портфоліо» со ссылкой — «читати»
-      var overCase = !!t.closest('.rd-case__media') || overDoc;
+      // без ссылки лист открывает картинку на всю ширину — «дивитись»
+      var overCase = !!t.closest('.rd-case__media, [data-rd-zoom]') || overDoc;
       root.classList.toggle('rd-cursor-on', !!inScope);
       ring.classList.toggle('is-view', overCase);
       root.classList.toggle('rd-cursor-view', overCase);

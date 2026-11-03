@@ -436,3 +436,283 @@ $cwp-bg: #f5f4f2;
     opacity: 0;
   }
 }
+
+// ----- лист без ссылки — кнопка: открывает картинку на всю ширину (.rd-lb, rd.js) -----
+button.rd-cwp__doc {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: zoom-in;
+}
+
+.rd-cwp__doc:focus-visible {
+  outline: 2px solid $gold;
+  outline-offset: 6px;
+}
+
+// пока картинка «вылетела» в просмотр — лист на месте не виден (она возвращается в него при закрытии)
+.rd-cwp__doc.is-zoomed .rd-cwp__paper {
+  visibility: hidden;
+}
+
+// ================= Просмотр картинки на всю ширину (rd.js, [data-rd-zoom]) =================
+// Тёмный фон с размытием, картинка во всю ширину (поля 12–40px), длинная прокручивается; сверху — счётчик,
+// стрелки (пролетают, как на кнопках) и крестик. Открытие/закрытие — картинка летит из листа и обратно (FLIP).
+.rd-lb {
+  --lb-pad: #{fm(12px, 24px)};
+  --lb-bar: #{fm(72px, 88px)};
+  position: fixed;
+  z-index: 1000; // над шапкой (900) и плавающими кнопками (800)
+  inset: 0;
+  color: #fff;
+  font-family: "Roboto Flex Wide", "Gotham Pro", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+
+  @include desktop {
+    --lb-pad: #{fw(40px)};
+    --lb-bar: #{fw(104px)};
+  }
+
+  &[hidden] {
+    display: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  // фон — отдельным слоем, чтобы гас независимо от картинки
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba($black, 0.94);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    transition: opacity 0.5s $ease;
+  }
+
+  &.is-open::before {
+    opacity: 1;
+  }
+
+  &__scroll {
+    position: absolute;
+    inset: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--lb-bar) var(--lb-pad) var(--lb-pad);
+    cursor: zoom-out;
+  }
+
+  &__img {
+    display: block;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    background: #fff;
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.6);
+    transform-origin: 0 0;
+    cursor: default;
+    transition: transform 0.65s $ease-expo, opacity 0.26s $ease, translate 0.26s $ease;
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  // листание: старая уходит в сторону и гаснет, новая приходит с другой
+  &.is-swap &__img {
+    opacity: 0;
+    translate: calc(var(--dir, 1) * -48px) 0;
+  }
+
+  &.is-swap-in &__img {
+    opacity: 0;
+    translate: calc(var(--dir, 1) * 48px) 0;
+    transition: none;
+  }
+
+  // ----- панель -----
+  &__bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: fm(10px, 16px);
+    height: var(--lb-bar);
+    padding: 0 var(--lb-pad);
+    pointer-events: none;
+    opacity: 0;
+    translate: 0 -12px;
+    transition: opacity 0.4s $ease, translate 0.6s $ease-expo;
+
+    > * {
+      pointer-events: auto;
+    }
+  }
+
+  &.is-open &__bar {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: 0.25s;
+  }
+
+  &__count {
+    margin-right: auto;
+    font-size: fm(14px, 16px);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    color: $gold;
+
+    @include desktop {
+      font-size: fw(16px);
+    }
+  }
+
+  &__nav {
+    display: flex;
+    gap: fm(8px, 12px);
+  }
+
+  &.is-single &__nav,
+  &.is-single &__count {
+    visibility: hidden;
+  }
+
+  // круглые кнопки: золотая обводка, на наведении золото заливает слева, иконка темнеет
+  &__btn {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: fm(48px, 56px);
+    height: fm(48px, 56px);
+    padding: 0;
+    border: 2px solid $gold;
+    border-radius: 50%;
+    background: rgba($black, 0.5);
+    color: #fff;
+    cursor: pointer;
+    transition: color 0.4s $ease;
+
+    @include desktop {
+      width: fw(56px);
+      height: fw(56px);
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: -2px;
+      background: $gold-grad;
+      transform: translateX(-101%);
+      transition: transform 0.6s $ease-expo;
+    }
+
+    svg {
+      width: 45%;
+      height: 45%;
+      flex: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 3px;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        color: $black;
+
+        &::before {
+          transform: translateX(0);
+        }
+      }
+    }
+  }
+
+  &__btn--close {
+    background: $gold-grad;
+    border-color: transparent;
+    color: $black;
+
+    &::before {
+      background: #fff;
+    }
+  }
+
+  // стрелки «пролетают»: две копии в обрезающей рамке — одна уходит, другая приходит
+  &__fly {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    width: 45%;
+    height: 45%;
+
+    svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transition: translate 0.55s $ease-fly;
+    }
+
+    svg + svg {
+      translate: -115% 0;
+    }
+  }
+
+  &__btn--prev &__fly svg + svg {
+    translate: 115% 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &__btn--next:hover &__fly svg {
+      translate: 115% 0;
+
+      + svg {
+        translate: 0 0;
+        transition-delay: 0.06s;
+      }
+    }
+
+    &__btn--prev:hover &__fly svg {
+      translate: -115% 0;
+
+      + svg {
+        translate: 0 0;
+        transition-delay: 0.06s;
+      }
+    }
+  }
+}
+
+// свой курсор (rd-wow.js) над просмотром не нужен — обычный системный
+.rd-lb-open {
+  .rd-cursor,
+  .rd-cursor-ring {
+    opacity: 0 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rd-lb::before,
+  .rd-lb__img,
+  .rd-lb__bar {
+    transition: none !important;
+  }
+}

@@ -200,6 +200,176 @@
     }
   }
 
+  /* ---------- Просмотр картинок на всю ширину ([data-rd-zoom], «Наше портфоліо» копирайтинга) ---------- */
+  // Картинка — во всю ширину экрана (поля 12–40px), длинная прокручивается вниз; листание кнопками, ← → и свайпом;
+  // Esc / крестик — закрыть. Открывается из листа и закрывается в него (FLIP: transform), при reduced motion — сразу.
+  var zoomers = Array.prototype.slice.call(document.querySelectorAll('[data-rd-zoom]'));
+  if (zoomers.length) {
+    var lbHost = zoomers[0].closest('[data-rd-lb-close]') || document.body;
+    var lbText = function (k, d) { return lbHost.getAttribute('data-rd-lb-' + k) || d; };
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var ico = {
+      prev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>',
+      next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>',
+      close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+    };
+    var lb = document.createElement('div');
+    lb.className = 'rd-lb';
+    lb.setAttribute('role', 'dialog');
+    lb.setAttribute('aria-modal', 'true');
+    lb.setAttribute('data-rd-no-smooth', '');
+    lb.hidden = true;
+    lb.innerHTML =
+      '<div class="rd-lb__scroll"><img class="rd-lb__img" alt="" draggable="false"></div>' +
+      '<div class="rd-lb__bar">' +
+        '<span class="rd-lb__count" aria-live="polite"></span>' +
+        '<span class="rd-lb__nav">' +
+          '<button class="rd-lb__btn rd-lb__btn--prev" type="button" aria-label="' + lbText('prev', 'Previous') + '"><span class="rd-lb__fly">' + ico.prev + ico.prev + '</span></button>' +
+          '<button class="rd-lb__btn rd-lb__btn--next" type="button" aria-label="' + lbText('next', 'Next') + '"><span class="rd-lb__fly">' + ico.next + ico.next + '</span></button>' +
+        '</span>' +
+        '<button class="rd-lb__btn rd-lb__btn--close" type="button" aria-label="' + lbText('close', 'Close') + '">' + ico.close + '</button>' +
+      '</div>';
+    document.body.appendChild(lb);
+    var lbScroll = lb.querySelector('.rd-lb__scroll');
+    var lbImg = lb.querySelector('.rd-lb__img');
+    var lbCount = lb.querySelector('.rd-lb__count');
+    var lbPrev = lb.querySelector('.rd-lb__btn--prev');
+    var lbNext = lb.querySelector('.rd-lb__btn--next');
+    var lbClose = lb.querySelector('.rd-lb__btn--close');
+    if (zoomers.length < 2) lb.classList.add('is-single');
+    var lbIdx = -1;
+    var lbBusy = false;
+    var pad2 = function (n) { return (n < 10 ? '0' : '') + n; };
+    var paperOf = function (z) { return z.querySelector('.rd-cwp__paper') || z; };
+    var ready = function (cb) {
+      if (lbImg.complete && lbImg.naturalWidth) { cb(); return; }
+      var done = function () { lbImg.removeEventListener('load', done); lbImg.removeEventListener('error', done); cb(); };
+      lbImg.addEventListener('load', done);
+      lbImg.addEventListener('error', done);
+    };
+    var setImage = function (i) {
+      lbIdx = i;
+      var z = zoomers[i];
+      lbImg.src = z.getAttribute('data-rd-zoom');
+      var pic = z.querySelector('img');
+      lbImg.alt = pic ? pic.alt : '';
+      lb.setAttribute('aria-label', lbImg.alt);
+      lbCount.textContent = pad2(i + 1) + ' / ' + pad2(zoomers.length);
+      lbScroll.scrollTop = 0;
+    };
+    // лист → полная ширина: картинка стартует с места и размера листа
+    var flipFrom = function (rect) {
+      var to = lbImg.getBoundingClientRect();
+      if (!to.width) return;
+      lbImg.style.transition = 'none';
+      lbImg.style.transform = 'translate(' + (rect.left - to.left) + 'px,' + (rect.top - to.top) + 'px) scale(' + (rect.width / to.width) + ')';
+      void lbImg.offsetWidth;
+      lbImg.style.transition = '';
+      lbImg.style.transform = '';
+    };
+    var open = function (i) {
+      if (lbBusy) return;
+      lbBusy = true;
+      setImage(i);
+      lb.hidden = false;
+      document.documentElement.classList.add('rd-lock', 'rd-lb-open');
+      document.body.classList.add('rd-lock');
+      var z = zoomers[i];
+      ready(function () {
+        var rect = paperOf(z).getBoundingClientRect();
+        if (!reduce && rect.width) {
+          z.classList.add('is-zoomed');
+          flipFrom(rect);
+        }
+        requestAnimationFrame(function () { lb.classList.add('is-open'); });
+        lbClose.focus({ preventScroll: true });
+        setTimeout(function () { lbBusy = false; }, reduce ? 0 : 650);
+      });
+    };
+    var close = function () {
+      if (lb.hidden || lbBusy) return;
+      lbBusy = true;
+      var z = zoomers[lbIdx];
+      var finish = function () {
+        lb.hidden = true;
+        lb.classList.remove('is-open', 'is-closing');
+        lbImg.style.transition = '';
+        lbImg.style.transform = '';
+        zoomers.forEach(function (el) { el.classList.remove('is-zoomed'); });
+        document.documentElement.classList.remove('rd-lock', 'rd-lb-open');
+        document.body.classList.remove('rd-lock');
+        lbBusy = false;
+        if (z) z.focus({ preventScroll: true });
+      };
+      lb.classList.remove('is-open');
+      lb.classList.add('is-closing');
+      if (reduce || !z) { finish(); return; }
+      var rect = paperOf(z).getBoundingClientRect();
+      var cur = lbImg.getBoundingClientRect();
+      var visible = rect.bottom > 0 && rect.top < window.innerHeight && rect.width > 0;
+      if (visible && cur.width) {
+        // обратно в лист: от текущего места (с учётом прокрутки) — в прямоугольник листа
+        zoomers.forEach(function (el) { if (el !== z) el.classList.remove('is-zoomed'); });
+        z.classList.add('is-zoomed');
+        lbImg.style.transform = 'translate(' + (rect.left - cur.left) + 'px,' + (rect.top - cur.top) + 'px) scale(' + (rect.width / cur.width) + ')';
+      }
+      setTimeout(finish, 620);
+    };
+    var go = function (dir) {
+      if (lbBusy || zoomers.length < 2) return;
+      lbBusy = true;
+      var next = (lbIdx + dir + zoomers.length) % zoomers.length;
+      lb.style.setProperty('--dir', dir);
+      lb.classList.add('is-swap');
+      zoomers.forEach(function (el) { el.classList.remove('is-zoomed'); });
+      setTimeout(function () {
+        setImage(next);
+        ready(function () {
+          lb.classList.remove('is-swap');
+          lb.classList.add('is-swap-in');
+          void lbImg.offsetWidth;
+          lb.classList.remove('is-swap-in');
+          setTimeout(function () { lbBusy = false; }, 380);
+        });
+      }, reduce ? 0 : 260);
+    };
+    zoomers.forEach(function (z, i) {
+      z.addEventListener('click', function () { open(i); });
+    });
+    lbClose.addEventListener('click', close);
+    lbPrev.addEventListener('click', function () { go(-1); });
+    lbNext.addEventListener('click', function () { go(1); });
+    // клик мимо картинки (по полям) — закрыть
+    lbScroll.addEventListener('click', function (e) { if (e.target === lbScroll) close(); });
+    document.addEventListener('keydown', function (e) {
+      if (lb.hidden) return;
+      if (e.key === 'Escape') { e.preventDefault(); close(); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+      else if (e.key === 'Tab') {
+        // фокус — только по кнопкам просмотра
+        var f = Array.prototype.filter.call(lb.querySelectorAll('button'), function (b) { return b.offsetParent; });
+        var k = f.indexOf(document.activeElement);
+        e.preventDefault();
+        f[(k + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+      }
+    });
+    // свайп по горизонтали — листать (вертикаль остаётся прокрутке)
+    var sw = null;
+    lbScroll.addEventListener('touchstart', function (e) {
+      var t = e.touches[0];
+      sw = { x: t.clientX, y: t.clientY };
+    }, { passive: true });
+    lbScroll.addEventListener('touchend', function (e) {
+      if (!sw) return;
+      var t = e.changedTouches[0];
+      var dx = t.clientX - sw.x;
+      var dy = t.clientY - sw.y;
+      sw = null;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  }
+
   /* ---------- Портфолио ---------- */
   var pf = document.querySelector('[data-rd-portfolio]');
   if (pf) {
