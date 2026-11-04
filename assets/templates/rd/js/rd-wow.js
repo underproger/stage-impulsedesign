@@ -536,7 +536,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var cwpSection = document.querySelector('[data-rd-cwp]');
@@ -2073,6 +2073,83 @@
       csTargets.forEach(function (el) { csIo.observe(el); });
     } else {
       csTargets.forEach(function (el) { el.classList.add('is-in'); });
+    }
+  }
+
+  /* ================= Копирайтинг: «Чому ми» ================= */
+  // Слова заголовка из размытия, подзаголовок всплывает; карточка раскрывается слева, кольца прорисовываются
+  // снаружи внутрь, знак «запрещено» рисуется и «штампуется» (CSS по .is-in). Кольца живут (rd.js → window.rdRings):
+  // внутренняя и внешняя формы медленно поворачиваются в разные стороны — переход между ними «закручивается»,
+  // волны дышат; под курсором кольца ускоряются, волны растут и выгибаются к курсору, на карточке — свет.
+  // Пункты справа поднимаются по очереди (таблетка раскрывается, иконка рисуется линией).
+  var why = document.querySelector('.rd-why');
+  if (why) {
+    var whyTitle = why.querySelector('.rd-why__title');
+    if (whyTitle) splitWords(whyTitle);
+    var whyCard = why.querySelector('.rd-why__card');
+    var whySvg = why.querySelector('[data-rd-rings]');
+    var whyG = whySvg && whySvg.querySelector('.rd-why__rings');
+    var whyTargets = Array.prototype.filter.call(why.querySelectorAll('.rd-why__title, .rd-why__text, .rd-why__card, .rd-why__item'), Boolean);
+    if ('IntersectionObserver' in window) {
+      var whyIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { en.target.classList.add('is-in'); whyIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.2, rootMargin: '0px 0px -6% 0px' });
+      whyTargets.forEach(function (el) { whyIo.observe(el); });
+    } else {
+      whyTargets.forEach(function (el) { el.classList.add('is-in'); });
+    }
+    if (whyCard && fine) addLight(whyCard, 'rd-light--why', whyCard.firstChild);
+
+    if (whyG && window.rdRings) {
+      var wr = { t: 0, last: 0, on: false, run: false, hov: 0, hovT: 0, pAng: 0, pAmt: 0, pT: 0 };
+      var whyFrame = function (now) {
+        if (!wr.on || document.hidden) { wr.run = false; return; }
+        var dt = wr.last ? Math.min(0.05, (now - wr.last) / 1000) : 0;
+        wr.last = now;
+        wr.hov = lerp(wr.hov, wr.hovT, 0.06);
+        wr.pAmt = lerp(wr.pAmt, wr.pT, 0.08);
+        wr.t += dt * (1 + 2.2 * wr.hov);
+        // формы покачиваются туда-обратно (картинка остаётся той, что в макете), а не крутятся без конца
+        window.rdRings(whyG, {
+          a: 0.42 * Math.sin(wr.t * 0.31),
+          b: -0.3 * Math.sin(wr.t * 0.23),
+          amp: 1 + 0.12 * Math.sin(wr.t * 0.9) + 0.3 * wr.hov,
+          pull: wr.pAmt,
+          pullAng: wr.pAng
+        });
+        raf(whyFrame);
+      };
+      var whyStart = function () {
+        if (wr.run || !wr.on || document.hidden) return;
+        wr.run = true;
+        wr.last = 0;
+        raf(whyFrame);
+      };
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          wr.on = entries[0].isIntersecting;
+          whyStart();
+        }, { rootMargin: '80px 0px' }).observe(whySvg);
+      } else {
+        wr.on = true;
+        whyStart();
+      }
+      document.addEventListener('visibilitychange', whyStart);
+      if (fine && whyCard) {
+        whyCard.addEventListener('pointermove', function (e) {
+          var r = whySvg.getBoundingClientRect();
+          // курсор — в координатах картинки (viewBox −112 −104 224 208, центр колец — 0 0)
+          var x = (e.clientX - r.left) / r.width * 224 - 112;
+          var y = (e.clientY - r.top) / r.height * 208 - 104;
+          var dist = Math.sqrt(x * x + y * y);
+          wr.pAng = Math.atan2(y, x);
+          wr.pT = 9 * clamp(1 - (dist - 60) / 260, 0, 1);
+          wr.hovT = 1;
+        });
+        whyCard.addEventListener('pointerleave', function () { wr.hovT = 0; wr.pT = 0; });
+      }
     }
   }
 })();

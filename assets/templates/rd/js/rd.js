@@ -863,4 +863,98 @@
       });
     });
   }
+
+  /* ---------- Копирайтинг, «Чому ми»: кольца картинки «Не використовуємо AI» ([data-rd-rings]) ---------- */
+  // 15 «волнистых» колец — плавный переход от внутренней формы A к внешней B, как blend в макете. Форма — радиус
+  // по углу рядом Фурье: r(θ) = c0 + Σ (a_k cos kθ + b_k sin kθ), k ≤ 14 (снято с растра copywriting_1920.pdf;
+  // единицы — пиксели макета, от центра колец). Здесь рисуется статичная картинка; rd-wow.js оживляет те же кольца
+  // через window.rdRings(g, { a, b, amp, pull, pullAng }): a / b — поворот внутренней / внешней формы (рад),
+  // amp — множитель «волн», pull — выпуклость колец к курсору (пикс.) в сторону pullAng.
+  var ringSvgs = document.querySelectorAll('[data-rd-rings]');
+  if (ringSvgs.length) {
+    var RA = [33.35, 1.58, -4.83, 1.23, -0.14, 0.46, 0.32, -0.13, -0.51, 0.44, 0.83, -0.84, 0.96, 0.03, -0.2, -0.23, 0.95, -0.05, 0.03, 1.45, 0.39, -0.45, -1.38, -0.78, -0.08, -0.71, -0.03, 0.11, 0.1];
+    var RB = [88.87, 2.26, -0.49, 0.54, 2.7, -1.1, 0.94, 0.46, 0.38, 0.33, -2.52, 3.68, 1.59, -3.1, 1.26, -0.25, 1.12, -1.75, 1.25, 0.9, 3.37, 3.16, -1.29, 0.74, -0.12, 1.67, -0.52, -0.78, 0.44];
+    var RN = 15;
+    var RP = 96;
+    var RK = (RA.length - 1) / 2;
+    var rCos = new Float64Array(RP * RK);
+    var rSin = new Float64Array(RP * RK);
+    var pCos = new Float64Array(RP);
+    var pSin = new Float64Array(RP);
+    for (var rj = 0; rj < RP; rj++) {
+      var rth = 2 * Math.PI * rj / RP;
+      pCos[rj] = Math.cos(rth);
+      pSin[rj] = Math.sin(rth);
+      for (var rk = 1; rk <= RK; rk++) {
+        rCos[rj * RK + rk - 1] = Math.cos(rk * rth);
+        rSin[rj * RK + rk - 1] = Math.sin(rk * rth);
+      }
+    }
+    // поворот формы на угол al: r(θ − al)
+    var ringRot = function (c, al, out) {
+      out[0] = c[0];
+      for (var k = 1; k <= RK; k++) {
+        var ca = Math.cos(k * al);
+        var sa = Math.sin(k * al);
+        out[2 * k - 1] = c[2 * k - 1] * ca - c[2 * k] * sa;
+        out[2 * k] = c[2 * k - 1] * sa + c[2 * k] * ca;
+      }
+      return out;
+    };
+    var cA = new Float64Array(RA.length);
+    var cB = new Float64Array(RB.length);
+    var px = new Float64Array(RP);
+    var py = new Float64Array(RP);
+    var f1 = function (v) { return (Math.round(v * 10) / 10).toString(); };
+    window.rdRings = function (g, o) {
+      o = o || {};
+      ringRot(RA, o.a || 0, cA);
+      ringRot(RB, o.b || 0, cB);
+      var amp = o.amp == null ? 1 : o.amp;
+      var pull = o.pull || 0;
+      var pullAng = o.pullAng || 0;
+      var paths = g.children;
+      for (var i = 0; i < RN; i++) {
+        var s = i / (RN - 1);
+        var j;
+        for (j = 0; j < RP; j++) {
+          var r = cA[0] + (cB[0] - cA[0]) * s;
+          var h = 0;
+          for (var k = 1; k <= RK; k++) {
+            var n = j * RK + k - 1;
+            h += (cA[2 * k - 1] + (cB[2 * k - 1] - cA[2 * k - 1]) * s) * rCos[n] + (cA[2 * k] + (cB[2 * k] - cA[2 * k]) * s) * rSin[n];
+          }
+          r += h * amp;
+          if (pull) {
+            var dAng = Math.atan2(Math.sin(2 * Math.PI * j / RP - pullAng), Math.cos(2 * Math.PI * j / RP - pullAng));
+            r += pull * (0.35 + 0.65 * s) * Math.exp(-dAng * dAng / 0.32);
+          }
+          px[j] = r * pCos[j];
+          py[j] = r * pSin[j];
+        }
+        // замкнутый сплайн Catmull-Rom → кубические Безье
+        var d = 'M' + f1(px[0]) + ' ' + f1(py[0]);
+        for (j = 0; j < RP; j++) {
+          var j0 = (j + RP - 1) % RP;
+          var j2 = (j + 1) % RP;
+          var j3 = (j + 2) % RP;
+          d += 'C' + f1(px[j] + (px[j2] - px[j0]) / 6) + ' ' + f1(py[j] + (py[j2] - py[j0]) / 6) + ' ' +
+            f1(px[j2] - (px[j3] - px[j]) / 6) + ' ' + f1(py[j2] - (py[j3] - py[j]) / 6) + ' ' + f1(px[j2]) + ' ' + f1(py[j2]);
+        }
+        paths[i].setAttribute('d', d + 'Z');
+      }
+    };
+    Array.prototype.forEach.call(ringSvgs, function (svg) {
+      var g = svg.querySelector('.rd-why__rings');
+      if (!g) return;
+      // снаружи внутрь: --k — очередь прорисовки в «вау»
+      for (var i = 0; i < RN; i++) {
+        var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        p.setAttribute('pathLength', '1');
+        p.style.setProperty('--k', RN - 1 - i);
+        g.appendChild(p);
+      }
+      window.rdRings(g);
+    });
+  }
 })();
