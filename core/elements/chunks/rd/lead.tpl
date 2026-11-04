@@ -11,7 +11,8 @@
   Вариант «акция» (страница копирайтинга, «Знижка 10% / Замовте написання текстів вже зараз»):
     {include 'file:chunks/rd/lead.tpl' tv='cw_order' fid='form-bl4' file=1}
   поля — TV с префиксом tv: _badge (золотая «таблетка» над заголовком, пусто — без неё), _title (золото — <span>),
-  _text (жирный — <b>, остаётся в строке), _form_title, _btn (надпись кнопки). Телефон и e-mail — в одну строку,
+  _text (жирный — <b>, остаётся в строке), _form_title, _btn (надпись кнопки). Длинная «таблетка» на узком экране
+  уменьшает кегль (data-rd-fit, rd.js). Телефон и e-mail — в одну строку,
   file=1 — поле «Прикріпити файл з ТЗ» (FormIt прикладывает файл к письму; на сервере не сохраняется).
   fid — id формы: form-bl4 / form-bl8 после отправки уводят на «Спасибо» (чанк script); на одной странице — разные.
 *}
@@ -41,7 +42,7 @@
     <div class="rd-lead__info">
       {if $badge}
         {* «таблетка» со стопкой за ней; число в ней «досчитывается» (rd-wow.js) *}
-        <p class="rd-lead__badge"><span class="rd-lead__badge-back" aria-hidden="true"></span><span class="rd-lead__badge-back rd-lead__badge-back--2" aria-hidden="true"></span><span class="rd-lead__badge-text">{$badge}</span></p>
+        <p class="rd-lead__badge"><span class="rd-lead__badge-back" aria-hidden="true"></span><span class="rd-lead__badge-back rd-lead__badge-back--2" aria-hidden="true"></span><span class="rd-lead__badge-text" data-rd-fit>{$badge}</span></p>
       {/if}
       <h2 class="rd-lead__title">{$title | strip_tags : '<span><br>'}</h2>
       {if $sub}<p class="rd-lead__text">{$sub}</p>{/if}

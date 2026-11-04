@@ -44,7 +44,8 @@
     var fitAll = function () {
       Array.prototype.forEach.call(fitEls, function (t) {
         t.style.fontSize = '';
-        if (t.scrollWidth - t.clientWidth > 1) {
+        // до трёх проходов: у «таблеток» поля не уменьшаются вместе с кеглем — с одного раза чуть не хватает
+        for (var k = 0; k < 3 && t.scrollWidth - t.clientWidth > 1; k++) {
           var size = parseFloat(getComputedStyle(t).fontSize);
           t.style.fontSize = (Math.floor(size * t.clientWidth / t.scrollWidth * 10) / 10) + 'px';
         }

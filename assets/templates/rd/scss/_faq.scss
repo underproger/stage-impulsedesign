@@ -196,12 +196,12 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
     @include desktop {
       position: relative;
-      top: fd(3px, 4px); // как у заголовка блока: буквы ниже строки
+      top: fd(0px, 0.4px); // как у заголовка блока: буквы ниже строки (с поправкой на line-height 1.2)
       display: block;
-      margin: 0 0 38px;
+      margin: 0 0 fd(32px, 30.8px);
       font-size: fd(30px, 36px);
       font-weight: 700;
-      line-height: 1;
+      line-height: 1.2; // вопрос в две строки — шаг 43px, как в макете копирайтинга (в одну строку — место прежнее)
     }
   }
 

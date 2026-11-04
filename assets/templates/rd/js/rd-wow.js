@@ -80,8 +80,24 @@
         });
         child.parentNode.replaceChild(frag, child);
       } else if (child.nodeType === 1 && child.tagName !== 'BR' && child.tagName !== 'WBR') { // <wbr> — место переноса
-        child.classList.add('rd-wd', 'rd-wd--el');
-        items.push(child);
+        // вложенный элемент из нескольких слов (только текст: «<span>технічне завдання</span>») — по копии на слово:
+        // целым inline-block он не переносится между словами, и заголовок в «вау» ломался на лишнюю строку
+        var words = child.children.length ? null : child.textContent.split(/[ \t\r\n]+/).filter(Boolean);
+        if (words && words.length > 1) {
+          var efrag = document.createDocumentFragment();
+          words.forEach(function (t, k) {
+            if (k) efrag.appendChild(document.createTextNode(' '));
+            var c = child.cloneNode(false);
+            c.textContent = t;
+            c.classList.add('rd-wd', 'rd-wd--el');
+            efrag.appendChild(c);
+            items.push(c);
+          });
+          child.parentNode.replaceChild(efrag, child);
+        } else {
+          child.classList.add('rd-wd', 'rd-wd--el');
+          items.push(child);
+        }
       }
     });
     items.forEach(function (w, i) { w.style.setProperty('--i', i); });

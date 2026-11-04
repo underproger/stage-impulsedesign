@@ -680,6 +680,7 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
 .rd-lead__badge {
   position: relative;
   display: inline-flex;
+  max-width: 100%; // длинная надпись («Розрахунок вартості за 1 день») на телефоне — кегль меньше (data-rd-fit)
   margin-top: fm(16px, 19px); // место под стопку
   isolation: isolate;
 
@@ -700,6 +701,8 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
   line-height: 1;
   color: #fff;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
 
   @include desktop {
     height: fw(45px);
