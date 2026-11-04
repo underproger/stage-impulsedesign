@@ -12,14 +12,14 @@
 {set $r = $_modx->resource}
 
 {* Заголовок: последнее слово идёт вместе с золотой «таблеткой» *}
-{set $title = $r['title-banner'] | strip_tags | preg_replace : '/\s+/u' : ' ' | trim}
+{* мягкие переносы (&shy;) убираем: заголовок набран узким начертанием, длинное слово помещается целиком *}
+{set $title = $r['title-banner'] | strip_tags | replace : '&shy;' : '' | preg_replace : '/\x{00AD}/u' : '' | preg_replace : '/\s+/u' : ' ' | trim}
 {if !$title}{set $title = $r.longtitle ?: $r.pagetitle}{/if}
 {set $titleHead = $title | preg_replace : '/\s*\S+$/u' : ''}
 {set $titleLast = $title | preg_replace : '/^.*\s/u' : ''}
-{* Длина самого длинного куска, который нельзя перенести. Мягкий перенос (&shy;) в длинном слове
-   разрешает разрыв: «Профессио&shy;нальное» → ПРОФЕССИО- / НАЛЬНОЕ, и шрифт не уменьшается. *}
+{* Длина самого длинного слова — по ней кегль (CSS: ширина колонки / (длина · 0.55em)) *}
 {set $longest = 0}
-{set $words = $title | preg_split : '/\s+|&shy;|\x{00AD}/u'}
+{set $words = $title | preg_split : '/\s+/u'}
 {foreach $words as $w}
   {set $len = $w | length}
   {if $len > $longest}{set $longest = $len}{/if}
