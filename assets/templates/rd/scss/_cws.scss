@@ -135,12 +135,14 @@ $cws-glow: rgb(181, 157, 93); // золото свечения тёмной ка
 
     // текст белеет вслед за заливкой
     .rd-cws__name,
-    .rd-cws__text {
+    .rd-cws__text,
+    .rd-cws__price {
       color: #fff;
       transition-delay: 0.14s, 0s;
     }
 
-    .rd-cws__text {
+    .rd-cws__text,
+    .rd-cws__price {
       transition-delay: 0.22s;
     }
   }
@@ -164,7 +166,8 @@ $cws-glow: rgb(181, 157, 93); // золото свечения тёмной ка
     }
 
     .rd-cws__name,
-    .rd-cws__text {
+    .rd-cws__text,
+    .rd-cws__price {
       color: $black;
       transition-delay: 0.1s, 0s;
     }
@@ -236,6 +239,77 @@ $cws-glow: rgb(181, 157, 93); // золото свечения тёмной ка
   }
 }
 
+// ----- «Вартість СЕО-текстів» (cw-services.tpl src='prices'): карточки 740×256, цена прижата к низу -----
+// «від» 14px, сумма 30px, единица 16px по базовой линии суммы. Тёмная — последняя. Отступы — copywriting_1920.pdf.
+.rd-cws--prices {
+  .rd-cws__title {
+    @include desktop {
+      max-width: fd(750px, 900px); // «ВАРТІСТЬ СЕО- / ТЕКСТІВ» — две строки, как в макете
+    }
+  }
+
+  .rd-cws__card {
+    display: flex;
+    flex-direction: column;
+
+    @include desktop {
+      min-height: fd(226px, 256px);
+      padding-bottom: fd(30px, 35px);
+    }
+  }
+}
+
+.rd-cws__price {
+  margin-top: auto;
+  padding-top: fm(32px, 40px);
+  color: $black;
+  transition: color 0.45s $ease 0.1s;
+
+  @include desktop {
+    padding-top: fd(40px, 50px);
+  }
+}
+
+.rd-cws__from {
+  display: block;
+  font-size: fm(13px, 14px);
+  font-weight: 700;
+  line-height: 1.2;
+
+  @include desktop {
+    font-size: fw(14px);
+  }
+}
+
+.rd-cws__sum {
+  display: block;
+  margin-top: fm(6px, 10px);
+
+  @include desktop {
+    margin-top: fd(8px, 10px);
+  }
+}
+
+.rd-cws__value {
+  font-size: fm(26px, 30px);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+
+  @include desktop {
+    font-size: fd(26px, 30px);
+  }
+}
+
+.rd-cws__unit {
+  font-size: fm(14px, 16px);
+  font-weight: 300;
+
+  @include desktop {
+    font-size: fd(15px, 16px);
+  }
+}
+
 // ================= «Вау» (html.rd-wow-js, модуль «Корисні СЕО-тексти» в rd-wow.js ставит .is-in) =================
 .rd-wow-js {
   .rd-cws__title {
@@ -301,7 +375,8 @@ $cws-glow: rgb(181, 157, 93); // золото свечения тёмной ка
 
     // текст белеет вслед за заливкой (до неё — тёмный)
     .rd-cws__name,
-    .rd-cws__text {
+    .rd-cws__text,
+    .rd-cws__price {
       color: $black;
     }
   }

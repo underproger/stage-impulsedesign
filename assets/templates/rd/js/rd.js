@@ -842,24 +842,25 @@
     }
   }
 
-  /* ---------- Копирайтинг, «Корисні СЕО-тексти»: тёмной становится карточка под курсором ---------- */
-  // Держится, пока курсор не дошёл до другой карточки (на промежутке 20px ничего не мигает); ушёл со списка — снова первая.
-  var cwsList = document.querySelector('.rd-cws__list');
-  if (cwsList && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    var cwsCur = null;
-    Array.prototype.forEach.call(cwsList.querySelectorAll('.rd-cws__card'), function (card) {
-      card.addEventListener('pointerenter', function (e) {
-        if (e.pointerType !== 'mouse' || cwsCur === card) return;
-        if (cwsCur) cwsCur.classList.remove('is-dark');
-        cwsCur = card;
-        card.classList.add('is-dark');
-        cwsList.classList.add('is-hovering');
+  /* ---------- Копирайтинг, «Корисні СЕО-тексти» / «Вартість СЕО-текстів»: тёмной становится карточка под курсором ---------- */
+  // Держится, пока курсор не дошёл до другой карточки (на промежутке 20px ничего не мигает); ушёл со списка — снова исходная.
+  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    Array.prototype.forEach.call(document.querySelectorAll('.rd-cws__list'), function (cwsList) {
+      var cwsCur = null;
+      Array.prototype.forEach.call(cwsList.querySelectorAll('.rd-cws__card'), function (card) {
+        card.addEventListener('pointerenter', function (e) {
+          if (e.pointerType !== 'mouse' || cwsCur === card) return;
+          if (cwsCur) cwsCur.classList.remove('is-dark');
+          cwsCur = card;
+          card.classList.add('is-dark');
+          cwsList.classList.add('is-hovering');
+        });
       });
-    });
-    cwsList.addEventListener('pointerleave', function () {
-      if (cwsCur) cwsCur.classList.remove('is-dark');
-      cwsCur = null;
-      cwsList.classList.remove('is-hovering');
+      cwsList.addEventListener('pointerleave', function () {
+        if (cwsCur) cwsCur.classList.remove('is-dark');
+        cwsCur = null;
+        cwsList.classList.remove('is-hovering');
+      });
     });
   }
 })();

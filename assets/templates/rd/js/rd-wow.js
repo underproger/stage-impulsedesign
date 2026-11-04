@@ -79,7 +79,7 @@
           items.push(w);
         });
         child.parentNode.replaceChild(frag, child);
-      } else if (child.nodeType === 1 && child.tagName !== 'BR') {
+      } else if (child.nodeType === 1 && child.tagName !== 'BR' && child.tagName !== 'WBR') { // <wbr> — место переноса
         child.classList.add('rd-wd', 'rd-wd--el');
         items.push(child);
       }
@@ -100,6 +100,38 @@
       }
     });
     return items;
+  }
+
+  // Числа в тексте «досчитываются» от нуля: «100%», «до 3,5%», «150 ₴» (с запятой — с тем же числом знаков).
+  function countNums(b, delay) {
+    var final = b.textContent;
+    var parts = final.split(/(\d+(?:[.,]\d+)?)/);
+    if (parts.length < 2) return;
+    b.setAttribute('aria-label', final);
+    var nums = [];
+    for (var k = 1; k < parts.length; k += 2) {
+      var sep = parts[k].indexOf(',') >= 0 ? ',' : '.';
+      var dec = (parts[k].split(/[.,]/)[1] || '').length;
+      nums.push({ k: k, to: parseFloat(parts[k].replace(',', '.')), dec: dec, sep: sep });
+    }
+    var draw = function (e) {
+      var out = parts.slice();
+      nums.forEach(function (n) {
+        var v = (n.to * e).toFixed(n.dec);
+        out[n.k] = n.sep === ',' ? v.replace('.', ',') : v;
+      });
+      b.textContent = out.join('');
+    };
+    draw(0);
+    var t0 = null;
+    var dur = 1300;
+    var step = function (t) {
+      if (t0 === null) t0 = t;
+      var p = clamp((t - t0) / dur, 0, 1);
+      draw(1 - Math.pow(1 - p, 4));
+      if (p < 1) raf(step); else b.textContent = final;
+    };
+    setTimeout(function () { raf(step); }, delay);
   }
 
   // Слова для «проявления» при прокрутке: обычные span.rd-qw (inline — переносы и отступ строки не меняются).
@@ -1797,8 +1829,8 @@
   /* ================= Копирайтинг: «Корисні СЕО-тексти від професіоналів» ================= */
   // Слова заголовка из размытия; карточки поднимаются по мере появления, в ряду — слева направо (--c);
   // у тёмной заливка заезжает слева. Наведение — заливка/сетка/свечение (CSS по .is-dark из rd.js) + свет за курсором.
-  var cws = document.querySelector('.rd-cws');
-  if (cws) {
+  // Блоков два: «Корисні СЕО-тексти» и «Вартість СЕО-текстів» (у цен числа «досчитываются» при появлении карточки).
+  Array.prototype.forEach.call(document.querySelectorAll('.rd-cws'), function (cws) {
     var cwsTitle = cws.querySelector('.rd-cws__title');
     if (cwsTitle) splitWords(cwsTitle);
     var cwsCards = Array.prototype.slice.call(cws.querySelectorAll('.rd-cws__card'));
@@ -1834,14 +1866,18 @@
     if ('IntersectionObserver' in window) {
       var cwsIo = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) {
-          if (en.isIntersecting) { en.target.classList.add('is-in'); cwsIo.unobserve(en.target); }
+          if (en.isIntersecting) {
+            en.target.classList.add('is-in');
+            cwsIo.unobserve(en.target);
+            var val = en.target.querySelector && en.target.querySelector('.rd-cws__value');
+            if (val) countNums(val, (parseInt(en.target.style.getPropertyValue('--c'), 10) || 0) * 120 + 350);
+          }
         });
       }, { threshold: 0.2, rootMargin: '0px 0px -6% 0px' });
       cwsTargets.forEach(function (el) { cwsIo.observe(el); });
     } else {
       cwsTargets.forEach(function (el) { el.classList.add('is-in'); });
-    }
-  }
+    }  });
 
   /* ================= Копирайтинг: «Наше портфоліо» ================= */
   // Слова заголовка из размытия; работы поднимаются по очереди в ряду (--c), лист «печатается» сверху вниз,
@@ -1867,43 +1903,12 @@
       clearTimeout(cwpT);
       cwpT = setTimeout(cwpCols, 150);
     });
-    // число с запятой или точкой: «3,5» — досчитывается с одним знаком после запятой
-    var cwpCount = function (b, delay) {
-      var final = b.textContent;
-      var parts = final.split(/(\d+(?:[.,]\d+)?)/);
-      if (parts.length < 2) return;
-      b.setAttribute('aria-label', final);
-      var nums = [];
-      for (var k = 1; k < parts.length; k += 2) {
-        var sep = parts[k].indexOf(',') >= 0 ? ',' : '.';
-        var dec = (parts[k].split(/[.,]/)[1] || '').length;
-        nums.push({ k: k, to: parseFloat(parts[k].replace(',', '.')), dec: dec, sep: sep });
-      }
-      var draw = function (e) {
-        var out = parts.slice();
-        nums.forEach(function (n) {
-          var v = (n.to * e).toFixed(n.dec);
-          out[n.k] = n.sep === ',' ? v.replace('.', ',') : v;
-        });
-        b.textContent = out.join('');
-      };
-      draw(0);
-      var t0 = null;
-      var dur = 1300;
-      var step = function (t) {
-        if (t0 === null) t0 = t;
-        var p = clamp((t - t0) / dur, 0, 1);
-        draw(1 - Math.pow(1 - p, 4));
-        if (p < 1) raf(step); else b.textContent = final;
-      };
-      setTimeout(function () { raf(step); }, delay);
-    };
     var cwpReveal = function (el) {
       el.classList.add('is-in');
       if (!el.classList.contains('rd-cwp__item')) return;
       var c = parseInt(el.style.getPropertyValue('--c'), 10) || 0;
       Array.prototype.forEach.call(el.querySelectorAll('.rd-cwp__stats b'), function (b, j) {
-        cwpCount(b, c * 130 + 750 + j * 70);
+        countNums(b, c * 130 + 750 + j * 70);
       });
       // после появления — переходы наведения без задержек
       setTimeout(function () { el.classList.add('is-done'); }, c * 130 + 1800);
