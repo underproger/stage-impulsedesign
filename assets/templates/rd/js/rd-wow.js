@@ -290,13 +290,26 @@
   /* ================= Переходы между страницами ================= */
   // Клик по внутренней ссылке: золотой и тёмный круги расходятся из точки клика на весь экран,
   // затем переход. Новая страница открывается из центра (если пришли переходом — html.rd-pt-in).
+  // Пока грузится следующая страница — «импульс»: тонкая золотая линия-сигнал входит в логотип слева, прорисовывает
+  // его волну и «I», проявляется надпись, вправо бежит линия-прогресс (асимптотически к 92%), по волне пробегает блик.
+  // Новая страница закрыта тем же логотипом с полными линиями (body::after в _wow.scss) — «загружено» — и открывается.
   // Клик по кейсу портфолио — круги цвета проекта (фон карточки --rd-case-bg): кайма светлее, основной слой — сам цвет;
   // цвет едет в метке rd-pt («время|x|y|цвет»), новая страница закрыта и открывается тем же цветом (html.rd-pt-tint).
   (function () {
     var pt = document.createElement('div');
     pt.className = 'rd-pt';
     pt.setAttribute('aria-hidden', 'true');
-    pt.innerHTML = '<div class="rd-pt__gold"></div><div class="rd-pt__dark"><img class="rd-pt__logo" src="/assets/templates/rd/img/logo.svg" width="167" height="27" alt=""></div>';
+    // волна знака логотипа — осевой линией (ширина 3, как у заливки в logo.svg), «I» — отдельно, надпись — logo-word.svg
+    var WAVE = 'M1.5 15.43V18.5A3.5 3.5 0 0 0 8.5 18.5V10A3 3 0 0 1 14.5 10V18.5A3.5 3.5 0 0 0 21.5 18.5V6A4 4 0 0 1 29.5 6';
+    pt.innerHTML = '<div class="rd-pt__gold"></div><div class="rd-pt__dark"><div class="rd-pt__load">' +
+      '<span class="rd-pt__glow"></span><span class="rd-pt__line rd-pt__line--l"></span><span class="rd-pt__line rd-pt__line--r"></span>' +
+      '<img class="rd-pt__word" src="/assets/templates/rd/img/logo-word.svg" width="167" height="27" alt="">' +
+      '<svg class="rd-pt__mark" viewBox="0 0 167 27" fill="none"><defs><linearGradient id="rd-pt-lg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#BFA660"/><stop offset="1" stop-color="#BFAB73"/></linearGradient></defs>' +
+      '<rect class="rd-pt__dot" x="0" y="10" width="3" height="3" rx="1" fill="url(#rd-pt-lg)"/>' +
+      '<path class="rd-pt__wave" pathLength="1" d="' + WAVE + '" stroke="url(#rd-pt-lg)" stroke-width="3"/>' +
+      '<path class="rd-pt__i" pathLength="1" d="M29.39 7.62V23.02" stroke="#fff" stroke-width="2.78"/>' +
+      '<path class="rd-pt__glint" pathLength="1" d="' + WAVE + 'M29.39 7.62V23.02" stroke="#fff6dc" stroke-width="3"/></svg>' +
+      '</div></div>';
     document.body.appendChild(pt);
     var gold = pt.firstChild;
     var dark = pt.lastChild;
@@ -314,8 +327,23 @@
       el.style.webkitMaskImage = m;
       el.style.maskImage = m;
     };
+    // «импульс»: линия-прогресс вправо — к 92% по экспоненте, пока страница не сменилась
+    var loadRaf = 0;
+    var startLoad = function () {
+      if (pt.classList.contains('is-load')) return;
+      pt.classList.add('is-logo', 'is-load');
+      var t0 = performance.now();
+      var tick = function (now) {
+        var p = 0.92 * (1 - Math.exp(-Math.max(0, now - t0 - 1450) / 1300)); // линия справа — когда проявилась надпись
+        pt.style.setProperty('--rd-pt-p', p.toFixed(4));
+        loadRaf = raf(tick);
+      };
+      loadRaf = raf(tick);
+    };
     var reset = function () {
-      pt.classList.remove('is-on', 'is-logo', 'is-tint');
+      cancelAnimationFrame(loadRaf);
+      pt.style.removeProperty('--rd-pt-p');
+      pt.classList.remove('is-on', 'is-logo', 'is-tint', 'is-load', 'is-done');
       pt.style.removeProperty('--rd-pt-c');
       root.classList.remove('rd-pt-tint');
       root.style.removeProperty('--rd-pt-c');
@@ -365,7 +393,7 @@
       run(560, 120, function (a, b) {
         setCircle(gold, R * a, x, y);
         setCircle(dark, R * b, x, y);
-        if (b > 0.7) pt.classList.add('is-logo');
+        if (b > 0.55) startLoad();
       }, function () {
         // метка для новой страницы: время и точка клика в долях окна — оттуда она и откроется
         var pos = (x / window.innerWidth).toFixed(4) + '|' + (y / window.innerHeight).toFixed(4) + (tint ? '|' + tint : '');
@@ -391,7 +419,7 @@
       var y = window.innerHeight * fy;
       var R = radius(x, y);
       if (root.classList.contains('rd-pt-tint')) pt.classList.add('is-tint'); // цвет — в --rd-pt-c на <html>
-      pt.classList.add('is-on', 'is-logo');
+      pt.classList.add('is-on', 'is-logo', 'is-done'); // как занавес body::after: логотип целиком, линии до краёв
       root.classList.remove('rd-pt-in');
       setTimeout(function () { pt.classList.remove('is-logo'); }, 60);
       run(720, 130, function (a, b) {
@@ -417,7 +445,7 @@
       run(560, 120, function (a, b) {
         setCircle(gold, R * a, x, y);
         setCircle(dark, R * b, x, y);
-        if (b > 0.7) pt.classList.add('is-logo');
+        if (b > 0.55) startLoad();
       }, function () { setTimeout(reset, 6000); }); // перехода так и не случилось — открываем страницу обратно
     };
 
