@@ -9,8 +9,13 @@
  * Вокруг — тонкая золотая орбита (аналитически: расстояние от луча до окружности) и два золотых шарика
  * (аналитическое пересечение со сферой); задняя половина орбиты прячется за фигурой.
  *
- * Интерактив: наклон сцены к курсору, «волнение» от скорости мыши (быстрее перетекает и рябит),
- * клик / тап по объекту — всплеск. Появление: фигура вырастает, орбита прочерчивается.
+ * Интерактив: наклон сцены к курсору, «волнение» от скорости мыши (быстрее перетекает и рябит).
+ * Клик / тап по объекту: в точке касания — вмятина и золотая вспышка, от неё по поверхности бежит кольцевая волна
+ * (до 4 волн сразу, каждая со своей частотой и силой), плюс один из «характеров» по очереди без повторов:
+ * желе (сжатие вдоль касания и пружинящий отскок), закрутка спиралью, капля (из фигуры в сторону клика
+ * вытягивается капля на «шейке», отрывается и возвращается — гладкое объединение двух полей), вихрь (фигура и шарики раскручиваются в сторону удара, орбита покачивается). Частые клики
+ * (4 за ~0.7 с между ними) — «шторм»: всё сразу и сильнее, шарики делают лишний круг.
+ * Появление: фигура вырастает, орбита прочерчивается.
  * Пауза вне экрана (IntersectionObserver) и в фоновой вкладке; разрешение буфера подстраивается под
  * скорость видеокарты (меньше 45 кадров/с — буфер мельче, канвас растягивается CSS; потолок ~1 Мп / 0.45 Мп на мобильных).
  *
@@ -39,6 +44,12 @@ uniform vec3 uRingU;
 uniform vec3 uRingV;
 uniform vec3 uBall1;
 uniform vec3 uBall2;
+uniform vec4 uHit[4];   // удары: xyz — точка касания (направление в координатах фигуры), w — возраст волны, с
+uniform vec2 uHitP[4];  // x — сила (0 — слот пуст), y — частота волны
+uniform vec4 uSquash;   // желе: xyz — ось (вдоль касания), w — сжатие (пружина, ±)
+uniform float uTwist;   // доп. закрутка спиралью (пружина)
+uniform vec4 uDrop;     // капля: xyz — точка поверхности, откуда вылетает (в координатах фигуры), w — вылет (0 — капли нет)
+uniform float uRingGlow; // вспышка орбиты
 varying vec2 vUv;
 
 #define RING_R 1.62
@@ -50,12 +61,36 @@ mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
 float lobe(vec3 n, vec3 L, float k){ return pow(max(dot(n, normalize(L)), 0.0), k); }
 
 // закрученная «трилистником» капля (координаты фигуры)
+// волна от удара: кольцо бежит от точки касания по поверхности (g — хорда до точки, 0..2), в точке — вмятина
+float ripple(vec3 np, out float slope){
+  float rip = 0.0;
+  slope = 0.0;
+  for(int i = 0; i < 4; i++){
+    float A = uHitP[i].x;
+    if(A > 0.001){
+      float age = uHit[i].w;
+      float g = length(np - uHit[i].xyz);
+      float x = g - age*1.05;
+      float fade = exp(-age*1.25);
+      rip += A*(0.075*fade*sin(uHitP[i].y*x)*exp(-x*x*12.0) - 0.13*exp(-g*g*26.0)*exp(-age*4.5));
+      slope += A*fade*uHitP[i].y*0.075 + A*0.6*exp(-age*4.5);
+    }
+  }
+  return rip;
+}
+
 float sculpt(vec3 p){
   float t = uTime;
   float s1 = sin(t*0.45), s2 = sin(t*0.37 + 1.3), s3 = sin(t*0.29 + 2.1);
+  vec3 np = p / max(length(p), 1e-4); // направление в координатах фигуры (до закрутки) — к нему привязаны удары
+  // желе: сжатие вдоль оси касания, расширение поперёк (объём «сохраняется»)
+  float sq = uSquash.w;
+  vec3 ax = uSquash.xyz;
+  float pa = dot(p, ax);
+  p += ax*pa*sq - (p - ax*pa)*sq*0.45;
   vec3 q = p / uGrow / vec3(0.93, 1.08, 0.93);
   q.xy *= rot(0.35);
-  q.xz *= rot(q.y*(1.25 + 0.25*s1) + t*0.15);
+  q.xz *= rot(q.y*(1.25 + 0.25*s1 + uTwist) + t*0.15 + uTwist*0.5);
   q += (0.05 + 0.05*uAgit)*sin(q.yzx*2.6 + vec3(t*0.5, t*0.4, t*0.6));
   float r = length(q);
   vec3 n = q / max(r, 1e-4);
@@ -65,8 +100,39 @@ float sculpt(vec3 p){
           + 0.30*lobe(n, vec3(-0.3 + 0.1*s2, 1.0, 0.2), 4.0)
           + 0.16*lobe(n, vec3(0.1, -1.0, 0.1 + 0.2*s3), 3.0)
           + (0.04 + 0.03*uAgit)*sin(5.0*n.x + 4.0*n.y + t*0.8)*sin(4.0*n.z - t*0.6)
-          + uPulse*0.07*sin(9.0*n.y + 6.0*n.x - t*9.0);
-  return (r - R) * 0.39 * uGrow;
+          + uPulse*0.05*sin(9.0*n.y + 6.0*n.x - t*9.0);
+  float slope;
+  R += ripple(np, slope);
+  // деформации увеличивают «крутизну» поля — шаг луча меньше, чтобы не проскочить поверхность
+  float lip = 1.0 + abs(sq)*1.2 + abs(uTwist)*0.9 + slope*0.9;
+  float d = (r - R) * 0.39 * uGrow / lip;
+  // капля: шарик вылетает из поверхности и возвращается; гладкое объединение — «шейка», пока он близко
+  if(uDrop.w > 0.001){
+    float e = uDrop.w;
+    vec3 dn = normalize(uDrop.xyz);
+    float rb = (0.25 - 0.08*e)*uGrow;
+    vec3 c = uDrop.xyz + dn*(e*uGrow - rb*0.7);
+    float ds = (length(p - c) - rb)*0.8;
+    float k = 0.26*uGrow*(1.0 - 0.6*smoothstep(0.2, 0.7, e));
+    float hh = clamp(0.5 + 0.5*(ds - d)/k, 0.0, 1.0);
+    d = mix(ds, d, hh) - k*hh*(1.0 - hh);
+  }
+  return d;
+}
+
+// вспышка в точке удара и блик на гребне волны (для пикселя поверхности)
+float hitGlow(vec3 np){
+  float f = 0.0;
+  for(int i = 0; i < 4; i++){
+    float A = uHitP[i].x;
+    if(A > 0.001){
+      float age = uHit[i].w;
+      float g = length(np - uHit[i].xyz);
+      float x = g - age*1.05;
+      f += A*(0.9*exp(-g*g*30.0)*exp(-age*3.5) + 0.22*exp(-x*x*90.0)*exp(-age*1.6));
+    }
+  }
+  return f;
 }
 
 // мир → фигура: фигура вращается вокруг вертикали
@@ -154,7 +220,8 @@ void main(){
   vec4 col = vec4(0.0);
   float tHit = 1e5;
   float b = dot(ro, rd);
-  float h = b*b - dot(ro, ro) + BOUND*BOUND;
+  float bound = uDrop.w > 0.001 ? max(BOUND, length(uDrop.xyz) + uDrop.w + 0.25) : BOUND; // вылетевшая капля — дальше обычной границы
+  float h = b*b - dot(ro, ro) + bound*bound;
   if(h > 0.0){
     float sq = sqrt(h);
     float t = max(-b - sq, 0.0);
@@ -172,6 +239,11 @@ void main(){
       vec3 p = ro + rd*t;
       vec3 n = calcNormal(p);
       col = vec4(gold(rd, n, calcAO(p, n)), 1.0);
+      // вспышка удара: точка попадания в координатах фигуры (как в map)
+      vec3 pf = p;
+      pf.xz = mat2(uSpin.x, -uSpin.y, uSpin.y, uSpin.x) * pf.xz;
+      float hg = hitGlow(normalize(pf));
+      col.rgb += vec3(1.0, 0.82, 0.48)*hg*(0.6 + 0.4*col.rgb);
       tHit = t;
     } else {
       // сглаживание силуэта: луч прошёл совсем рядом — частичное покрытие
@@ -213,7 +285,7 @@ void main(){
   float dist = length(P - C);
   float w = pix*tc*0.75;
   float line = 1.0 - smoothstep(w*0.5, w*1.8, dist);
-  float glow = exp(-dist/(pix*tc*7.0))*0.22;
+  float glow = exp(-dist/(pix*tc*7.0))*0.22*(1.0 + uRingGlow*2.5);
   // прорисовка при появлении: дуга растёт от левого шарика
   float ang = fract(atan(dot(C, uRingV), dot(C, uRingU))/6.2831853 + 0.5);
   float rev = 1.0 - smoothstep(uReveal - 0.02, uReveal, ang);
@@ -221,7 +293,7 @@ void main(){
   // дальняя половина темнее
   float lit = 0.5 + 0.5*dot(C/RING_R, normalize(vec3(-0.5, 0.75, 0.45)));
   float front = smoothstep(-0.6, 0.6, C.z/RING_R);
-  vec3 rc = mix(vec3(0.45, 0.33, 0.14), vec3(1.0, 0.86, 0.55), lit) * mix(0.55, 1.0, front);
+  vec3 rc = mix(vec3(0.45, 0.33, 0.14), vec3(1.0, 0.86, 0.55), lit) * mix(0.55, 1.0, front) * (1.0 + uRingGlow*0.6);
   if(tc < tHit){
     col.rgb = mix(col.rgb, rc, clamp(ring, 0.0, 1.0));
     col.a = max(col.a, clamp(ring, 0.0, 1.0));
@@ -249,6 +321,60 @@ const RING_N = norm([-0.58, 0.56, 0.62]);
 const RING_U = norm(cross([0, 0, 1], RING_N)); // в плоскости, «горизонталь» орбиты
 const RING_V = cross(RING_N, RING_U);
 const RING_R = 1.62;
+const HITS = 4; // волн от ударов одновременно
+
+// поворот вектора v вокруг единичной оси k на угол a (Родриг)
+const rotAxis = (v, k, a) => {
+  const c = Math.cos(a);
+  const s = Math.sin(a);
+  const d = (v[0] * k[0] + v[1] * k[1] + v[2] * k[2]) * (1 - c);
+  const x = cross(k, v);
+  return [v[0] * c + x[0] * s + k[0] * d, v[1] * c + x[1] * s + k[1] * d, v[2] * c + x[2] * s + k[2] * d];
+};
+
+// пружина с затуханием: x — отклонение, v — скорость; k — жёсткость, c — вязкость (dt в секундах)
+const spring = (o, k, c, dt) => {
+  o.v += (-k * o.x - c * o.v) * dt;
+  o.x += o.v * dt;
+  if (Math.abs(o.x) < 1e-4 && Math.abs(o.v) < 1e-3) { o.x = 0; o.v = 0; }
+};
+
+// форма фигуры на JS (как sculpt в шейдере, без волн и желе): r − R для точки p в координатах фигуры —
+// по ней ищется поверхность в направлении капли (капля вылетает из самой поверхности)
+const shapeF = (p, st) => {
+  const t = st.time;
+  const s1 = Math.sin(t * 0.45);
+  const s2 = Math.sin(t * 0.37 + 1.3);
+  const s3 = Math.sin(t * 0.29 + 2.1);
+  let x = p[0] / st.grow / 0.93;
+  let y = p[1] / st.grow / 1.08;
+  let z = p[2] / st.grow / 0.93;
+  let c = Math.cos(0.35);
+  let s = Math.sin(0.35);
+  [x, y] = [c * x - s * y, s * x + c * y];
+  const a = y * (1.25 + 0.25 * s1 + st.twist) + t * 0.15 + st.twist * 0.5;
+  c = Math.cos(a);
+  s = Math.sin(a);
+  [x, z] = [c * x - s * z, s * x + c * z];
+  const amp = 0.05 + 0.05 * st.agit;
+  const nx = x + amp * Math.sin(y * 2.6 + t * 0.5);
+  const ny = y + amp * Math.sin(z * 2.6 + t * 0.4);
+  const nz = z + amp * Math.sin(nx * 2.6 + t * 0.6);
+  x = nx; y = ny; z = nz;
+  const r = Math.hypot(x, y, z) || 1e-4;
+  const n = [x / r, y / r, z / r];
+  const lobe = (L, k) => {
+    const l = Math.hypot(L[0], L[1], L[2]);
+    return Math.pow(Math.max((n[0] * L[0] + n[1] * L[1] + n[2] * L[2]) / l, 0), k);
+  };
+  const R = 0.86 + 0.40 * (n[0] ** 3 - 3 * n[0] * n[2] * n[2]) + 0.18 * (n[0] * n[0] - n[2] * n[2]) * n[1]
+    + 0.30 * lobe([-0.3 + 0.1 * s2, 1.0, 0.2], 4) + 0.16 * lobe([0.1, -1.0, 0.1 + 0.2 * s3], 3)
+    + (0.04 + 0.03 * st.agit) * Math.sin(5 * n[0] + 4 * n[1] + t * 0.8) * Math.sin(4 * n[2] - t * 0.6);
+  return r - R;
+};
+
+// «характеры» клика — по очереди из перемешанного набора, без повтора подряд
+const MOODS = ['jelly', 'twist', 'drop', 'whirl'];
 
 class LiquidGold {
   constructor(box, still) {
@@ -272,7 +398,8 @@ class LiquidGold {
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
     this.u = {};
-    ['uRes', 'uTime', 'uSpin', 'uTilt', 'uAgit', 'uPulse', 'uGrow', 'uReveal', 'uRingU', 'uRingV', 'uBall1', 'uBall2'].forEach((n) => {
+    ['uRes', 'uTime', 'uSpin', 'uTilt', 'uAgit', 'uPulse', 'uGrow', 'uReveal', 'uRingU', 'uRingV', 'uBall1', 'uBall2',
+      'uHit', 'uHitP', 'uSquash', 'uTwist', 'uDrop', 'uRingGlow'].forEach((n) => {
       this.u[n] = gl.getUniformLocation(prog, n);
     });
     gl.uniform3fv(this.u.uRingU, RING_U);
@@ -290,6 +417,22 @@ class LiquidGold {
     this.tilt = { x: 0, y: 0 };
     this.tiltTarget = { x: 0, y: 0 };
     this.lastMove = null;
+    // клик: волны (слоты), пружины «характеров», раскрутка, вспышка орбиты
+    this.hits = [];
+    for (let i = 0; i < HITS; i++) this.hits.push({ n: [0, 0, 1], age: 0, a: 0, f: 18 });
+    this.hitBuf = new Float32Array(HITS * 4);
+    this.hitPBuf = new Float32Array(HITS * 2);
+    this.squash = { x: 0, v: 0, ax: [0, 0, 1] };
+    this.twist = { x: 0, v: 0 };
+    this.drop = { x: 0, v: 0, dir: [0, 0, 1] };
+    this.ringTilt = { x: 0, v: 0 };
+    this.ringAxis = RING_U;
+    this.spinVel = 0;
+    this.orbitVel = 0;
+    this.ringGlow = 0;
+    this.moods = [];
+    this.lastMood = '';
+    this.taps = [];
     this.visible = true;
     this.running = false;
     // качество: доля devicePixelRatio, снижается, если кадры медленные
@@ -298,6 +441,7 @@ class LiquidGold {
     this.frames = [];
 
     box.appendChild(canvas);
+    box.rdLiquid = this; // для проверок (tools/hero_tap.py)
     this.resize();
     if (still) {
       this.render(performance.now());
@@ -385,13 +529,107 @@ class LiquidGold {
       this.lastMove = { x: e.clientX, y: e.clientY, t };
     }, { passive: true });
 
-    // клик / тап по объекту — всплеск
+    // клик / тап по объекту
     document.addEventListener('pointerdown', (e) => {
+      if (e.button > 0 || this.dead) return;
       const r = this.box.getBoundingClientRect();
       const dx = e.clientX - (r.left + r.width / 2);
       const dy = e.clientY - (r.top + r.height / 2);
-      if (dx * dx + dy * dy < Math.pow(r.width * 0.36, 2)) this.pulse = Math.min(this.pulse + 0.8, 1.2);
+      if (dx * dx + dy * dy < Math.pow(r.width * 0.36, 2)) this.tap(e.clientX, e.clientY, r);
     });
+  }
+
+  // точка касания на фигуре (в её координатах): луч камеры как в шейдере, фигура ≈ шар радиуса 1
+  hitDir(cx, cy, r) {
+    const aspect = r.width / r.height;
+    const ux = ((cx - r.left) / r.width * 2 - 1) * aspect * 0.70;
+    const uy = (1 - (cy - r.top) / r.height * 2) * 0.70;
+    let ro = [0, 0, 4.2];
+    let rd = norm([ux, uy, -1.6]);
+    const tilt = (v) => {
+      let c = Math.cos(this.tilt.y);
+      let s = Math.sin(this.tilt.y);
+      const y = c * v[1] - s * v[2];
+      let z = s * v[1] + c * v[2];
+      c = Math.cos(this.tilt.x);
+      s = Math.sin(this.tilt.x);
+      const x = c * v[0] - s * z;
+      z = s * v[0] + c * z;
+      return [x, y, z];
+    };
+    ro = tilt(ro);
+    rd = tilt(rd);
+    const b = ro[0] * rd[0] + ro[1] * rd[1] + ro[2] * rd[2];
+    const h = b * b - (ro[0] * ro[0] + ro[1] * ro[1] + ro[2] * ro[2]) + 1.0;
+    const t = h > 0 ? -b - Math.sqrt(h) : -b; // мимо шара — ближайшая к центру точка луча
+    const p = [ro[0] + rd[0] * t, ro[1] + rd[1] * t, ro[2] + rd[2] * t];
+    // мир → фигура (как map в шейдере): p.xz = M(spin) · p.xz
+    const c = Math.cos(this.spin);
+    const s = Math.sin(this.spin);
+    return norm([c * p[0] + s * p[2], p[1], -s * p[0] + c * p[2]]);
+  }
+
+  tap(cx, cy, r) {
+    const n = this.hitDir(cx, cy, r);
+    const now = performance.now();
+    this.taps = this.taps.filter((t) => now - t < 2600);
+    this.taps.push(now);
+    // «шторм»: 4 клика подряд с паузами не больше ~0.7 с
+    const quick = this.taps.length >= 4 && this.taps.slice(-4).every((t, i, a) => !i || t - a[i - 1] < 700);
+    const power = quick ? 1.45 : 0.8 + Math.random() * 0.35;
+
+    // волна от точки касания — всегда; слот — свободный или самый старый
+    const slot = this.hits.find((h) => h.a <= 0.001) || this.hits.reduce((m, h) => (h.age > m.age ? h : m));
+    slot.n = n;
+    slot.age = 0;
+    slot.a = power;
+    slot.f = 15 + Math.random() * 9;
+    this.pulse = Math.min(this.pulse + 0.35, 1.0);
+    this.ringGlow = Math.max(this.ringGlow, 0.35);
+
+    const side = cx > r.left + r.width / 2 ? 1 : -1;
+    const kick = (mood, k) => {
+      if (mood === 'jelly') {
+        this.squash.ax = n;
+        this.squash.v += 4.0 * k;
+      } else if (mood === 'twist') {
+        this.twist.v += (Math.random() < 0.5 ? -1 : 1) * 7.5 * k;
+      } else if (mood === 'drop') {
+        // капля вылетает в сторону клика от центра (в плоскости экрана — чтобы было видно по силуэту)
+        let ox = cx - (r.left + r.width / 2);
+        let oy = (r.top + r.height / 2) - cy;
+        if (Math.hypot(ox, oy) < r.width * 0.06) {
+          const a = Math.random() * Math.PI * 2;
+          ox = Math.cos(a);
+          oy = Math.sin(a);
+        }
+        const w = norm([ox, oy, Math.hypot(ox, oy) * 0.15]);
+        const c = Math.cos(this.spin);
+        const s = Math.sin(this.spin);
+        this.drop.dir = norm([c * w[0] + s * w[2], w[1], -s * w[0] + c * w[2]]);
+        this.drop.v += 3.3 * k;
+      } else if (mood === 'whirl') {
+        this.spinVel += side * 2.6 * k;
+        this.orbitVel += 3.2 * k;
+        this.ringAxis = Math.random() < 0.5 ? RING_U : RING_V;
+        this.ringTilt.v += (Math.random() < 0.5 ? -1 : 1) * 1.3 * k;
+        this.ringGlow = Math.max(this.ringGlow, 1);
+      }
+    };
+    if (quick) {
+      MOODS.forEach((m) => kick(m, 0.85));
+      this.orbitVel += 9.5; // шарики — лишний круг
+      this.ringGlow = 1.6;
+      this.pulse = 1.2;
+      this.taps.length = 0;
+      return;
+    }
+    if (!this.moods.length) {
+      this.moods = MOODS.slice().sort(() => Math.random() - 0.5);
+      if (this.moods[0] === this.lastMood) this.moods.push(this.moods.shift());
+    }
+    this.lastMood = this.moods.shift();
+    kick(this.lastMood, 1);
   }
 
   play() {
@@ -447,11 +685,45 @@ class LiquidGold {
     gl.uniform1f(u.uPulse, this.pulse);
     gl.uniform1f(u.uGrow, grow);
     gl.uniform1f(u.uReveal, reveal);
+    // удары и «характеры»
+    for (let i = 0; i < HITS; i++) {
+      const h = this.hits[i];
+      this.hitBuf.set([h.n[0], h.n[1], h.n[2], h.age], i * 4);
+      this.hitPBuf[i * 2] = h.a;
+      this.hitPBuf[i * 2 + 1] = h.f;
+    }
+    gl.uniform4fv(u.uHit, this.hitBuf);
+    gl.uniform2fv(u.uHitP, this.hitPBuf);
+    const sq = clamp(this.squash.x, -0.32, 0.32);
+    gl.uniform4f(u.uSquash, this.squash.ax[0], this.squash.ax[1], this.squash.ax[2], sq);
+    gl.uniform1f(u.uTwist, clamp(this.twist.x, -1.6, 1.6));
+    // капля: поверхность в её направлении — снаружи внутрь до входа в фигуру, потом деление пополам
+    let dr = 1.0;
+    if (this.drop.x > 0.001) {
+      const st = { time, grow, twist: clamp(this.twist.x, -1.6, 1.6), agit: this.agit };
+      const d = this.drop.dir;
+      const f = (k) => shapeF([d[0] * k, d[1] * k, d[2] * k], st);
+      let hi = 2.2;
+      while (hi > 0.3 && f(hi - 0.06) > 0) hi -= 0.06;
+      let lo = hi - 0.06;
+      for (let i = 0; i < 8; i++) {
+        const m = (lo + hi) / 2;
+        if (f(m) > 0) hi = m; else lo = m;
+      }
+      dr = hi;
+    }
+    gl.uniform4f(u.uDrop, this.drop.dir[0] * dr, this.drop.dir[1] * dr, this.drop.dir[2] * dr, clamp(this.drop.x, 0, 0.75));
+    gl.uniform1f(u.uRingGlow, this.ringGlow);
+    // орбита покачивается («вихрь»): плоскость поворачивается вокруг своей оси
+    const ru = this.ringTilt.x ? rotAxis(RING_U, this.ringAxis, this.ringTilt.x) : RING_U;
+    const rv = this.ringTilt.x ? rotAxis(RING_V, this.ringAxis, this.ringTilt.x) : RING_V;
+    gl.uniform3fv(u.uRingU, ru);
+    gl.uniform3fv(u.uRingV, rv);
     // шарики бегут по орбите навстречу друг другу; появляются вместе с орбитой
     const ballAt = (a) => {
       const c = Math.cos(a) * RING_R;
       const s = Math.sin(a) * RING_R;
-      return [RING_U[0] * c + RING_V[0] * s, RING_U[1] * c + RING_V[1] * s, RING_U[2] * c + RING_V[2] * s];
+      return [ru[0] * c + rv[0] * s, ru[1] * c + rv[1] * s, ru[2] * c + rv[2] * s];
     };
     const far = [0, 0, -99];
     gl.uniform3fv(u.uBall1, reveal > 0.02 ? ballAt(Math.PI + 0.25 + orbit) : far);
@@ -469,14 +741,29 @@ class LiquidGold {
     this.agitTarget *= Math.pow(0.93, dt);
     this.agit += (this.agitTarget - this.agit) * 0.06 * dt;
     this.pulse *= Math.pow(0.955, dt);
+    // удары: волны стареют, пружины «характеров» затухают
+    const sec = Math.min(dtMs / 1000, 0.05);
+    this.hits.forEach((h) => {
+      if (h.a <= 0.001) return;
+      h.age += sec;
+      if (h.age > 3.2) h.a = 0;
+    });
+    spring(this.squash, 110, 7, sec);
+    spring(this.twist, 40, 4.6, sec);
+    spring(this.drop, 18, 2.3, sec); // капля: медленнее остальных — успевает вытянуться на «шейке»
+    if (this.drop.x < 0) { this.drop.x = 0; this.drop.v = Math.max(this.drop.v, 0) * 0; } // капля вернулась — сливается
+    spring(this.ringTilt, 30, 3.2, sec);
+    this.spinVel *= Math.exp(-2.2 * sec);
+    this.orbitVel *= Math.exp(-1.5 * sec);
+    this.ringGlow *= Math.exp(-2.6 * sec);
     this.tilt.x += (this.tiltTarget.x - this.tilt.x) * 0.04 * dt;
     this.tilt.y += (this.tiltTarget.y - this.tilt.y) * 0.04 * dt;
 
     // перетекание быстрее, когда объект «волнуется»
     const k = 1 + this.agit * 2.2 + this.pulse * 2.5;
     this.time += 0.0058 * dt * k;
-    this.spin += 0.0021 * dt * (1 + this.agit * 1.5);
-    this.orbit += 0.0035 * dt;
+    this.spin += 0.0021 * dt * (1 + this.agit * 1.5) + this.spinVel * sec;
+    this.orbit += 0.0035 * dt + this.orbitVel * sec;
 
     this.render(now);
     if (!this.ready) {
