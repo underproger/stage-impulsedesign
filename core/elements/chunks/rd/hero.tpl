@@ -1,7 +1,7 @@
 {*
   Редизайн: первый экран главной.
   Фон: почти чёрный, редкие линии «рамки» с золотыми крестиками на пересечениях (.rd-hero__frame, только десктоп),
-  тёмная каменная «планета» с тёплым отсветом под объектом (картинка hero-planet.webp, снята с шейдера).
+  тёплое марево под объектом (планету с фона убрали 14.11.2026).
   Объект — жидкое золото с орбитой и двумя шариками (WebGL, src/liquid.js); заглушка — hero-liquid.webp/png.
   Поля (TV ресурса): title-banner, sub-title-banner,
   link-left-banner + link_text-left-banner (кнопка), link-right-banner + link_text-right-banner (круглая кнопка).
@@ -84,7 +84,6 @@
 
     <div class="rd-hero__visual">
       <div class="rd-hero__glob" data-rd-glob data-src="/assets/templates/rd/js/rd-blob.js?v={$.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/js/rd-blob.js')}">
-        <img class="rd-hero__planet" src="{$img}hero-planet.webp?v={$.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/img/hero-planet.webp')}" width="1710" height="450" alt="" loading="eager" decoding="async">
         <span class="rd-hero__halo"></span>
         <picture>
           <source srcset="{$img}hero-liquid.webp" type="image/webp">
