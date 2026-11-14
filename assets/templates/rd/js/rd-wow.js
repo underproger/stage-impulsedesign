@@ -580,7 +580,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var cwpSection = document.querySelector('[data-rd-cwp]');
@@ -1969,6 +1969,25 @@
       cwp.addEventListener('rd:more', cwpCols);
     } else {
       cwpTargets.forEach(cwpReveal);
+    }
+  }
+
+  /* ================= Страница кейса ================= */
+  // Шапка, подписи блоков, картинки, отзыв и навигация всплывают по мере появления (.is-in);
+  // обложка раскрывается снизу, кольцо «Дивитися сайт» — следом, звёзды отзыва вспыхивают по очереди (CSS).
+  var casePage = document.querySelector('.rd-case-page');
+  if (casePage) {
+    var caseTargets = Array.prototype.slice.call(casePage.querySelectorAll(
+      '.rd-chead__title, .rd-chead__sub, .rd-chead__fact, .rd-chead__cover-wrap, .rd-cblk__head > *, .rd-cblk__media > img, .rd-crev, .rd-cnav'));
+    if ('IntersectionObserver' in window) {
+      var caseIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { en.target.classList.add('is-in'); caseIo.unobserve(en.target); }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+      caseTargets.forEach(function (el) { caseIo.observe(el); });
+    } else {
+      caseTargets.forEach(function (el) { el.classList.add('is-in'); });
     }
   }
 
