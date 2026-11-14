@@ -343,6 +343,13 @@ $prl-line: rgba($black, 0.12);
     transition-delay: calc(var(--i, 0) * 70ms);
   }
 
+  // обычные слова (span.rd-wd) попадают под «… span { золото }» — возвращаем цвет; золотые — .rd-wd--el
+  .rd-prl__title .rd-wd:not(.rd-wd--el) {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: $black;
+  }
+
   .rd-prl__title .rd-wd--el {
     background: linear-gradient(110deg, $gold 0%, $gold 38%, #f7e8b6 50%, $gold 62%, $gold-2 100%);
     background-size: 260% 100%;

@@ -2069,7 +2069,7 @@
   if (blog) {
     var blogTitle = blog.querySelector('.rd-blog__title');
     if (blogTitle) splitWords(blogTitle);
-    var blogTargets = [blog.querySelector('.rd-blog__eyebrow'), blogTitle, blog.querySelector('.rd-blog__sub'), blog.querySelector('.rd-blog__bar')]
+    var blogTargets = [blog.querySelector('.rd-blog__hero'), blog.querySelector('.rd-blog__eyebrow'), blogTitle, blog.querySelector('.rd-blog__sub'), blog.querySelector('.rd-blog__bar')]
       .filter(Boolean)
       .concat(Array.prototype.slice.call(blog.querySelectorAll('.rd-blog__tab, .rd-post')));
     if ('IntersectionObserver' in window) {

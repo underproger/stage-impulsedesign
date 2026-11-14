@@ -196,8 +196,86 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
 // ----- вариант страницы «Про нас»: .rd-hero--about (svc-hero.tpl about=1, шаблон 17) -----
 // Заголовок без таблетки (золото — <span>), подзаголовок, цифры в ряд (150+ / топ 20 / 5 років: число крупно,
-// подпись из <span> — мелко золотом, пояснение — серым), кнопка; справа — 3D-спираль (spiral.js, место — как у узла).
+// подпись из <span> — мелко золотом, пояснение — серым), кнопка; справа — фото (портрет без фона, отзеркален —
+// смотрит на текст) на всю высоту карточки, гаснет к тексту; на мобайле — под текстом, гаснет кверху.
 .rd-hero--about {
+  // мобайл: фото — после текста (в разметке оно первым — для десктопа, где лежит под текстом абсолютно)
+  @include mobile {
+    display: flex;
+    flex-direction: column;
+
+    .rd-container {
+      order: 1;
+    }
+  }
+
+  .rd-hero__photo {
+    position: relative;
+    z-index: 0;
+    order: 2;
+    height: fm(320px, 520px);
+    margin-top: fm(-24px, -40px);
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 30%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 30%);
+
+    // десктоп: правые 58% карточки, сверху отступ (у снимка голова у самого края), гаснет к тексту —
+    // нелинейно: у левого края снимка следы обтравки
+    @include desktop {
+      position: absolute;
+      top: fd(40px, 56px);
+      right: 0;
+      bottom: 0;
+      width: 58%;
+      height: auto;
+      margin: 0;
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(#000, 0.25) 30%, #000 48%);
+      mask-image: linear-gradient(to right, transparent 0%, rgba(#000, 0.25) 30%, #000 48%);
+    }
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 0% 18%; // портрет — в левой части снимка (после отражения — справа)
+      transform: scaleX(-1);
+    }
+  }
+
+  // кольцо «Останні роботи»: десктоп — ниже, на плече (на высоте лица оно закрывало подбородок);
+  // мобайл — в правом нижнем углу карточки, поверх фото (визуал и колонка — static, отсчёт от карточки)
+  .rd-works {
+    @include desktop {
+      top: fd(600px, 680px);
+    }
+  }
+
+  @include mobile {
+    .rd-hero__inner,
+    .rd-hero__visual {
+      position: static;
+    }
+
+    .rd-works {
+      top: auto;
+      left: auto;
+      right: fm(16px, 30px);
+      bottom: fm(16px, 32px);
+      margin-left: 0;
+    }
+  }
+
+  // телефон: кольцо меньше и в левом нижнем углу — по центру оно закрывало лицо, справа — плавающая кнопка звонка
+  @include phone {
+    .rd-works {
+      left: fm(16px, 30px);
+      right: auto;
+      width: 132px;
+      height: 132px;
+    }
+  }
+
   // с цифрами текст выше, чем у страницы услуги, — снизу свой отступ (у услуги кнопка стоит на высоте карточки)
   .rd-hero__inner {
     @include desktop {
@@ -461,6 +539,20 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     opacity: 1;
     translate: 0 0;
     background-size: 100% 1px;
+  }
+
+  // фото «Про нас» проявляется из темноты и чуть подъезжает
+  .rd-hero--about .rd-hero__photo img {
+    opacity: 0;
+    translate: 4% 0;
+    filter: brightness(0.4);
+    transition: opacity 1.6s $ease-expo 0.3s, translate 1.8s $ease-expo 0.3s, filter 2s $ease-expo 0.3s;
+  }
+
+  &.rd-wow-in .rd-hero--about .rd-hero__photo img {
+    opacity: 1;
+    translate: 0 0;
+    filter: none;
   }
 
   &.rd-wow-in .rd-hero--copy {

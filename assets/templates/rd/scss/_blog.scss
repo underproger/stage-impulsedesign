@@ -1,9 +1,9 @@
 @use "base" as *;
 
 // ===== Блог: список статей (шаблон 4, chunks/rd/blog-list.tpl). Макета нет — язык сайта:
-// шапка как у «Послуги студії» (крошки, заголовок 72, подводка), «таблетки» разделов со счётчиками (золото заливает
-// слева, текущий раздел — тёмный), строка «94 статті» + переключатель «Популярні / Нові»; сетка карточек 3 / 2 / 1,
-// первая карточка крупная (на две колонки, картинка слева). Карточка: превью 400×222 со скруглением, раздел золотом,
+// баннер — тёмная карточка с сеткой и фото офиса справа (крошки, заголовок 72, подводка, «таблетки» разделов со
+// счётчиками: золото заливает слева, текущий — светлый), строка «94 статті» + переключатель «Популярні / Нові»;
+// сетка одинаковых карточек 3 / 2 / 1. Карточка: превью 400×222 со скруглением, раздел золотом,
 // просмотры, заголовок, описание (3 строки), «Читати» со стрелкой; наведение — превью приближается, заголовок золотится.
 
 $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -18,13 +18,75 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
-// ----- шапка -----
+// ----- баннер: тёмная карточка с движущейся сеткой (как первый экран страницы услуги), справа — фото офиса,
+// гаснущее к тексту, и золотое свечение; внутри — крошки, заголовок, подводка, «таблетки» разделов -----
 .rd-blog__top {
-  padding-top: fm(24px, 32px);
+  @include desktop {
+    padding-top: fw(10px);
+  }
+}
+
+.rd-blog__hero {
+  --rd-cell: #{fm(50px, 80px)};
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: fm(28px, 40px) 0 fm(36px, 52px);
+  color: #fff;
+  @include grid-bg-move(-1); // слои: фото (−3) → свечение (−2) → сетка (−1) → текст
 
   @include desktop {
-    padding-top: fw(44px);
+    --rd-cell: #{fw(100px)};
+    margin-inline: fw(30px);
+    padding: fd(48px, 56px) 0 fd(64px, 80px);
+    border-radius: fw(24px);
   }
+
+  // золотое свечение справа сверху
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: -2;
+    top: -40%;
+    right: -10%;
+    width: 70%;
+    height: 120%;
+    background: radial-gradient(closest-side, rgba($gold, 0.22), rgba($gold, 0) 70%);
+    pointer-events: none;
+  }
+}
+
+// фото офиса: правые 60%, гаснет к тексту и книзу; ч/б, приглушено
+.rd-blog__bg {
+  position: absolute;
+  z-index: -3;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(#000, 0.2) 30%, #000 75%);
+  mask-image: linear-gradient(to right, transparent 0%, rgba(#000, 0.2) 30%, #000 75%);
+
+  @include desktop {
+    width: 62%;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 45%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 45%);
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 70% 30%;
+    opacity: 0.55;
+    filter: grayscale(1) contrast(1.05);
+  }
+}
+
+.rd-blog__hero-in {
+  position: relative;
 }
 
 .rd-blog__crumbs {
@@ -51,14 +113,14 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
 // h1 глобально стилизован старым CSS — перебиваем явно
 .rd-blog__title {
-  max-width: fd(1200px, 1400px);
+  max-width: fd(1000px, 1200px);
   margin: 0;
   font-family: inherit;
   font-size: fm(34px, 52px);
   font-weight: 700;
   line-height: 1.02;
   text-transform: uppercase;
-  color: $black;
+  color: #fff;
 
   @include desktop {
     font-size: fd(64px, 72px);
@@ -75,7 +137,7 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   font-size: fm(16px, 18px);
   font-weight: 300;
   line-height: 1.55;
-  color: rgba($black, 0.72);
+  color: rgba(#fff, 0.72);
 
   @include desktop {
     max-width: fd(640px, 760px);
@@ -85,11 +147,11 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   span {
     font-weight: 700;
-    color: $black;
+    color: #fff;
   }
 }
 
-// ----- разделы -----
+// ----- разделы (на тёмном) -----
 .rd-blog__tabs {
   display: flex;
   flex-wrap: wrap;
@@ -98,7 +160,7 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   @include desktop {
     gap: fw(12px);
-    margin-top: fd(44px, 52px);
+    margin-top: fd(48px, 56px);
   }
 
   // телефон: одной лентой с прокруткой пальцем (иначе «таблетки» занимали пять строк); текущий раздел rd.js
@@ -119,7 +181,6 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
 .rd-blog__tab {
   flex: none;
-
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -127,12 +188,13 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   align-items: flex-start;
   gap: fw(6px);
   padding: fm(11px, 13px) fm(18px, 24px);
-  border: 1px solid rgba($black, 0.12);
+  border: 1px solid rgba(#fff, 0.2);
   border-radius: 99px;
+  background-color: rgba(#fff, 0.04);
   font-size: fm(14px, 16px);
   font-weight: 700;
   line-height: 1.2;
-  color: $black;
+  color: #fff;
   transition: color 0.45s $ease, border-color 0.45s $ease, background-color 0.45s $ease;
 
   @include desktop {
@@ -151,11 +213,11 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     transition: transform 0.6s $ease-fly;
   }
 
-  // текущий раздел — тёмная «таблетка», счётчик золотом
+  // текущий раздел — светлая «таблетка», счётчик золотом
   &.is-active {
-    border-color: $black;
-    background-color: $black;
-    color: #fff;
+    border-color: #fff;
+    background-color: #fff;
+    color: $black;
   }
 
   // наведение: золото заливает слева; текст тёмный, рамка сразу золотая (кнопка не «пропадает» во время заливки)
@@ -441,44 +503,6 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
-// первая карточка списка — крупная: на две колонки, превью слева, текст справа (телефон — как остальные, заголовок крупнее)
-.rd-blog__grid > .rd-post:first-child {
-  .rd-post__title {
-    font-size: fm(22px, 28px);
-
-    @include desktop {
-      font-size: fd(28px, 34px);
-    }
-  }
-
-  .rd-post__text {
-    -webkit-line-clamp: 4;
-  }
-
-  @include tablet-up {
-    grid-column: 1 / -1;
-
-    .rd-post__link {
-      display: grid;
-      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-      align-items: center;
-      gap: fm(20px, 32px);
-    }
-
-    .rd-post__body {
-      padding-top: 0;
-    }
-  }
-
-  @include desktop {
-    grid-column: span 2;
-
-    .rd-post__link {
-      gap: fd(28px, 36px);
-    }
-  }
-}
-
 // ----- «Показати ще» -----
 .rd-blog__foot {
   display: flex;
@@ -513,6 +537,18 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
 // ================= «Вау» (html.rd-wow-js; модуль «Блог» в rd-wow.js ставит .is-in) =================
 .rd-wow-js {
+  // фото баннера проявляется из темноты и чуть «отъезжает»
+  .rd-blog__bg img {
+    opacity: 0;
+    scale: 1.08;
+    transition: opacity 1.6s $ease-expo, scale 2.2s $ease-expo;
+  }
+
+  .rd-blog__hero.is-in .rd-blog__bg img {
+    opacity: 0.55;
+    scale: 1;
+  }
+
   .rd-blog__title .rd-wd {
     display: inline-block;
     opacity: 0;
@@ -520,6 +556,13 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     filter: blur(8px);
     transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
     transition-delay: calc(var(--i, 0) * 70ms + 0.1s);
+  }
+
+  // обычные слова (span.rd-wd) попадают под «… span { золото }» — возвращаем цвет; золотые — .rd-wd--el
+  .rd-blog__title .rd-wd:not(.rd-wd--el) {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: #fff;
   }
 
   .rd-blog__title .rd-wd--el {

@@ -17,8 +17,9 @@
     (золотом) и services-category-text (жирный — золотом); объект — тот же, что у раздела на «Послуги студії»
     (по порядку раздела среди видимых: узел, икосаэдр, пирамида, спираль — по кругу; WebGL — knot.js / ico.js / spiral.js).
   obj='knot' | 'pyramid' | 'ico' | 'spiral' — объект явно (картинка-заглушка — {obj}.png или .webp).
-  Вариант страницы «Про нас» (шаблон 17) — about=1: без таблетки, золотая 3D-спираль (как в блоке «Digital агентство»
-    главной), заголовок — title-banner-about (золото — <span>), под ним — sub_title-banner-about и цифры
+  Вариант страницы «Про нас» (шаблон 17) — about=1: без таблетки, справа фото (about_hero_img; пусто —
+    img/about-hero.webp: портрет в профиль без фона, отзеркален — смотрит на текст), гаснет к тексту; без 3D;
+    заголовок — title-banner-about (золото — <span>), под ним — sub_title-banner-about и цифры
     adv_list-banner-about (MIGX: title — «150+», «<span>топ</span> 20», «5 <span>років</span>»: подпись в <span> — мелко
     золотом, числа «досчитываются» в «вау»; text — пояснение). Крошки: «Головна / Про нас».
 *}
@@ -87,6 +88,14 @@
 {set $pos = 0}
 
 <section class="rd-hero rd-hero--svc{if $about?} rd-hero--about{elseif $nopill?} rd-hero--copy{/if}">
+  {if $about?}
+    {* фото вместо 3D: поле about_hero_img (пусто — портрет из макета), без фона (PNG/WebP с прозрачностью) *}
+    {set $aboutPhoto = $r['about_hero_img'] | trim}
+    {if !$aboutPhoto}{set $aboutPhoto = $img ~ 'about-hero.webp'}{elseif !($aboutPhoto | preg_match : '~^(https?:)?/~')}{set $aboutPhoto = '/' ~ $aboutPhoto}{/if}
+    <div class="rd-hero__photo" aria-hidden="true">
+      <img src="{$aboutPhoto}" width="1448" height="1086" alt="" fetchpriority="high" loading="eager">
+    </div>
+  {/if}
   <div class="rd-container rd-hero__inner">
     <div class="rd-hero__content">
       <div class="rd-hero__heading">
@@ -170,6 +179,7 @@
         {/foreach}
       {/if}
       {set $blob = '/assets/templates/rd/js/rd-blob.js?v=' ~ $.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/js/rd-blob.js')}
+      {if !$about?}
       {* узел и пирамида — knot.js; икосаэдр — ico.js, спираль — spiral.js (канвас — тот же класс, что у узла) *}
       <div class="rd-hero__glob rd-hero__glob--{$objName}"{if $objName == 'ico'} data-rd-ico data-rd-canvas="rd-hero__canvas"{elseif $objName == 'spiral'} data-rd-3d data-rd-canvas="rd-hero__canvas"{else} data-rd-knot="{$objName == 'pyramid' ? 'pyramid' : ''}"{/if} data-src="{$blob}">
         <picture>
@@ -177,6 +187,7 @@
           <img class="rd-hero__blob" src="{$img}{$objName}.{($objName == 'knot' || $objName == 'pyramid') ? 'png' : 'webp'}" width="600" height="600" alt="" fetchpriority="high" loading="eager">
         </picture>
       </div>
+      {/if}
 
       {if $worksUrl}
         <a class="rd-works" href="{$worksUrl}" aria-label="{$worksText}" data-rd-magnet>

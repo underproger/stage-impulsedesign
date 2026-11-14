@@ -608,7 +608,7 @@
   });
 
   /* ---------- Блог: «Популярні / Нові» и «Показати ще» ---------- */
-  // Все карточки уже в HTML (по просмотрам); видны первые step + 1 (первая — крупная), кнопка открывает ещё step.
+  // Все карточки уже в HTML (по просмотрам); видны первые step (до конца ряда), кнопка открывает ещё step.
   // Сортировка переставляет карточки по data-hits / data-date (по убыванию). Без JS — видны все, без сортировки.
   /* ---------- Статья блога: «Зміст», текущий раздел, полоска прочитанного ---------- */
   // «Зміст» собирается из <h2> текста (меньше трёх — не показываем); заголовкам — id (rd-s1, rd-s2…, если своего нет).
@@ -673,16 +673,13 @@
   if (blogGrid) {
     var bItems = Array.prototype.slice.call(blogGrid.children);
     var bStep = parseInt(blogGrid.getAttribute('data-step'), 10) || 12;
-    var bShown = bStep + 1;
+    var bShown = bStep;
     var bMore = document.querySelector('[data-rd-blog-more]');
     var bMoreN = bMore && bMore.querySelector('.rd-blog__more-n');
-    // сколько видно — до конца ряда: первая карточка крупная (на десктопе 2 колонки из 3, на планшете — весь ряд),
-    // дальше ряды по числу колонок сетки
+    // сколько видно — до конца ряда (по числу колонок сетки)
     var bFill = function (n) {
       var cols = getComputedStyle(blogGrid).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
-      if (cols < 2) return n;
-      var first = cols === 2 ? 1 : cols - 1;
-      return n <= first ? first : first + Math.ceil((n - first) / cols) * cols;
+      return Math.ceil(n / cols) * cols;
     };
     var bApply = function () {
       var vis = bFill(bShown);

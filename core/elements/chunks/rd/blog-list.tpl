@@ -1,13 +1,15 @@
 {*
   Редизайн: список статей блога (шаблон 4 «Блог - список статей»): корень блога (UA 448 /ua/blog-statti.html,
   RU 194 /blog.html) и разделы (UA 452–457, RU 195, 196, 241, 250, 280, 298). Заменяет чанк content-blog-list.
-  Макета нет — язык сайта: светлая шапка (крошки, заголовок, подводка), «таблетки» разделов со счётчиками
-  (настоящие страницы разделов; «Усі статті» — корень), переключатель «Популярні / Нові» и сетка карточек —
-  первая крупная. Карточка: превью, раздел, просмотры, заголовок, описание, «Читати».
+  Макета нет — язык сайта: баннер — тёмная карточка с движущейся сеткой (как первый экран страницы услуги),
+  справа — фото офиса (img blog-hero.webp, старый фон блога), гаснущее к тексту, золотое свечение; в баннере
+  крошки, заголовок, подводка и «таблетки» разделов со счётчиками (настоящие страницы разделов; «Усі статті» — корень).
+  Ниже — «N статей», переключатель «Популярні / Нові» и сетка одинаковых карточек: превью, раздел, просмотры,
+  заголовок, описание, «Читати».
   Данные: разделы — TV blog-category-list корня (ID через запятую; пусто — дочерние корня); статьи — дочерние
   разделов (на странице раздела — только его), опубликованные и видимые в меню (как раньше), по просмотрам (HitsPage).
   Поля статьи: blog-item-image (источник «Blog»: images/blog/), blog-item-description, HitsPage.
-  Все карточки — в HTML (для поиска); rd.js показывает по 12 («Показати ще»: data-rd-blog-more) и сортирует
+  Все карточки — в HTML (для поиска); rd.js показывает по 12 до конца ряда («Показати ще»: data-rd-blog-more) и сортирует
   (data-rd-sort: hits / date). Анимации — rd-wow.js.
 *}
 {set $r = $_modx->resource}
@@ -64,8 +66,10 @@
 <div class="rd-blog">
   {* ----- шапка ----- *}
   <section class="rd-blog__top">
-    <div class="rd-container">
-      <nav class="rd-crumbs rd-crumbs--light rd-blog__crumbs" aria-label="{$t.crumbs}">
+    <div class="rd-blog__hero">
+    <div class="rd-blog__bg" aria-hidden="true"><img src="{$img}blog-hero.webp" width="1920" height="915" alt="" fetchpriority="high"></div>
+    <div class="rd-container rd-blog__hero-in">
+      <nav class="rd-crumbs rd-blog__crumbs" aria-label="{$t.crumbs}">
         <ol class="rd-crumbs__list" itemscope itemtype="https://schema.org/BreadcrumbList">
           <li class="rd-crumbs__item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
             <a class="rd-crumbs__link" href="{$home | url}" itemprop="item"><span itemprop="name">{$t.home}</span></a>
@@ -103,6 +107,7 @@
         </nav>
       {/if}
     </div>
+    </div>
   </section>
 
   {* ----- статьи ----- *}
@@ -130,7 +135,7 @@
           {set $desc = $s['blog-item-description'] | strip_tags | trim}
           <li class="rd-post" data-hits="{$hits}" data-date="{$s.publishedon}" style="--i: {$i}">
             <a class="rd-post__link" href="{$s.id | url}">
-              <span class="rd-post__img">{if $pic}<img src="{$pic}" width="400" height="222" alt="{$s.pagetitle | escape}" loading="{$i < 4 ? 'eager' : 'lazy'}" decoding="async">{/if}</span>
+              <span class="rd-post__img">{if $pic}<img src="{$pic}" width="400" height="222" alt="{$s.pagetitle | escape}" loading="{$i < 6 ? 'eager' : 'lazy'}" decoding="async">{/if}</span>
               <span class="rd-post__body">
                 <span class="rd-post__meta">
                   {if $s.parent in $catIds}<span class="rd-post__cat">{$catName[$s.parent]}</span>{/if}
