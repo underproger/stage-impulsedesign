@@ -299,3 +299,9 @@
     </div>
   </section>
 {/if}
+
+{* модалка «Замовити SEO-аудит» — если в тексте статьи есть кнопка .seo_audit-popup_btn (статьи 316 / UA 496);
+   открывает rd.js (data-rd-dsc="audit"); старый попап (чанк seo_audit_popup) в шаблоне больше не подключается *}
+{if $r.content | preg_match : '~seo_audit-popup_btn~'}
+  {include 'file:chunks/rd/discuss.tpl' kind='audit'}
+{/if}

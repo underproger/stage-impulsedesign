@@ -301,8 +301,8 @@ $case-light: #f4f3ef;
   }
 
   // старый текст кейса (portfolio-content-text) — во всю ширину: заголовки как у блоков, картинки по ширине
+  // текст — строкой для чтения, картинки и раскладки — во всю ширину контейнера
   &__legacy {
-    max-width: fd(1100px, 1240px);
     font-size: fm(15px, 17px);
     font-weight: 300;
     line-height: 1.78;
@@ -347,6 +347,237 @@ $case-light: #f4f3ef;
 
     b {
       font-weight: 700;
+    }
+
+    // ----- «богатые» старые кейсы (44 шт., одна разметка): коллаж устройств, планшеты, «Адаптація під мобільні»,
+    // ссылка на сайт на фото. Старый CSS раскладывал их только внутри .main_services_old .inner — здесь заново,
+    // в пропорциях старой раскладки (коллаж 1200×685, полоса 1200×550). Старый wow.js прятал и «вбрасывал»
+    // картинки издалека (fadeIn…Big — прокрутка вбок) — выключено; лёгкий параллакс skrollr (transform) оставлен,
+    // поэтому центровка — свойством translate.
+    .wow {
+      visibility: visible !important;
+      animation: none !important;
+    }
+
+    > h2,
+    > h3,
+    > p:not(:has(img)) {
+      max-width: fd(940px, 1080px);
+    }
+
+    > p > img:only-child {
+      width: 100%;
+    }
+
+    .portfolio__imgs_5 {
+      position: relative;
+      display: block;
+      height: auto;
+      aspect-ratio: 1200 / 685;
+      margin: fm(8px, 16px) 0 0;
+      overflow: visible;
+
+      > div {
+        position: static;
+      }
+
+      img {
+        position: absolute;
+        height: auto;
+        max-width: none;
+        margin: 0;
+        border-radius: 0;
+      }
+    }
+
+    .portfolio__img_1 img {
+      top: 50%;
+      left: 50%;
+      width: 46%;
+      translate: -50% -60%;
+    }
+
+    .portfolio__img_2 img {
+      top: 34%;
+      left: 45%;
+      width: 47%;
+    }
+
+    .portfolio__img_3 img {
+      top: 30%;
+      left: 17%;
+      width: 21%;
+    }
+
+    .portfolio__img_4 img {
+      top: 54%;
+      left: 4%;
+      width: 27%;
+    }
+
+    .portfolio__img_5 img {
+      top: 51%;
+      left: 84%;
+      width: 9%;
+    }
+
+    .portfolio__img_parallax {
+      position: relative;
+      z-index: 1;
+      padding: fm(16px, 32px) 0 fm(24px, 56px);
+
+      img {
+        width: 77%;
+        margin: 0 auto;
+        border-radius: 0;
+      }
+    }
+
+    // «Адаптація сайту під мобільні»: фото-подложка, слева телефоны, справа крупная надпись (вторая строка — золото)
+    .portfolio__cols_2 {
+      position: relative;
+      display: flex;
+      align-items: center;
+      height: auto;
+      aspect-ratio: 1200 / 550;
+      margin: fm(16px, 24px) 0;
+      overflow: hidden;
+      border-radius: fm(12px, 20px);
+      isolation: isolate;
+
+      @include phone {
+        flex-direction: column-reverse;
+        justify-content: center;
+        gap: 20px;
+        aspect-ratio: auto;
+        padding: 32px 16px;
+      }
+    }
+
+    .portfolio__cols_bg {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+
+      img {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        object-fit: cover;
+        border-radius: 0;
+      }
+    }
+
+    .portfolio__col_1,
+    .portfolio__col_2 {
+      position: relative;
+      display: flex;
+    }
+
+    .portfolio__col_1 {
+      width: 55%;
+      justify-content: center;
+
+      img {
+        width: 65%;
+        margin: 0;
+        border-radius: 0;
+      }
+
+      @include phone {
+        width: 100%;
+      }
+    }
+
+    .portfolio__col_2 {
+      width: 45%;
+      flex-direction: column;
+      align-items: flex-start;
+
+      p {
+        margin: 0 !important;
+        font-size: fm(20px, 30px);
+        font-weight: 700;
+        line-height: 1.25;
+        text-transform: uppercase;
+        color: #fff;
+
+        @include desktop {
+          font-size: fd(32px, 40px);
+        }
+
+        & + p {
+          @include gold-text;
+        }
+      }
+
+      @include phone {
+        width: 100%;
+        align-items: center;
+        text-align: center;
+      }
+    }
+
+    // ссылка на сайт поверх фото — золотая «таблетка» (заливка слева на наведении)
+    .portfolio__href {
+      position: relative;
+      margin-top: fm(16px, 24px);
+      overflow: hidden;
+      border-radius: fm(12px, 20px);
+    }
+
+    .portfolio__href_bg img {
+      width: 100%;
+      margin: 0;
+      border-radius: 0;
+    }
+
+    .portfolio__href_link {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      max-width: calc(100% - 32px);
+      padding: 0.7em 1.5em;
+      overflow: hidden;
+      border-radius: 99px;
+      box-shadow: inset 0 0 0 2px $gold;
+      background: rgba($black, 0.55);
+      font-size: fm(13px, 20px);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      color: $gold;
+      translate: -50% -50%;
+      isolation: isolate;
+      transition: color 0.45s $ease;
+
+      @include desktop {
+        font-size: fd(20px, 24px);
+      }
+
+      &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: $gold-grad;
+        transform: scaleX(0);
+        transform-origin: right center;
+        transition: transform 0.6s $ease-fly;
+      }
+
+      @include hover {
+        color: $black;
+
+        &::before {
+          transform: scaleX(1);
+          transform-origin: left center;
+        }
+      }
     }
   }
 
@@ -716,5 +947,79 @@ $case-light: #f4f3ef;
   .rd-crev.is-in .rd-crev__star {
     opacity: 1;
     scale: 1;
+  }
+}
+
+// ----- скриншоты телефонов старого кейса (portfolio-content-mobile): лента в рамках телефонов, листается вбок -----
+.rd-cmob__list {
+  display: flex;
+  gap: fm(16px, 24px);
+  // тень телефонов — вниз (ленту прокрутки она не должна упираться в край: снизу запас, отрицательный отступ его прячет)
+  margin: 0 0 fm(-32px, -36px);
+  padding: 4px 4px fm(48px, 56px);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: rgba($gold, 0.5) transparent;
+  list-style: none;
+
+  @include desktop {
+    gap: fw(28px);
+    margin-bottom: fw(-40px);
+    padding-bottom: fw(60px);
+  }
+}
+
+.rd-cmob__phone {
+  flex: none;
+  width: fm(180px, 220px);
+  padding: fm(7px, 9px);
+  overflow: hidden;
+  border-radius: fm(28px, 34px);
+  background: #121216;
+  box-shadow: 0 30px 40px -18px rgba($black, 0.4), inset 0 0 0 1px rgba(#fff, 0.08);
+  scroll-snap-align: start;
+
+  @include desktop {
+    width: fd(220px, 250px);
+    padding: fw(10px);
+    border-radius: fw(38px);
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: fm(21px, 26px);
+
+    @include desktop {
+      border-radius: fw(29px);
+    }
+  }
+}
+
+// ссылка «Сайт» в характеристиках старого кейса
+.rd-chead__link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: $gold;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  transition: color 0.45s $ease;
+
+  @include hover {
+    color: $gold;
+  }
+}
+
+// «вау»: части старого текста кейса всплывают по мере прокрутки (rd-wow.js ставит .is-in)
+.rd-wow-js .rd-cblk__legacy > * {
+  opacity: 0;
+  translate: 0 40px;
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), translate 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &.is-in {
+    opacity: 1;
+    translate: 0 0;
   }
 }

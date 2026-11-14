@@ -13,8 +13,11 @@
                   image (+ image2 — вторая колонка), flush (картинка до низа полосы, без отступа);
     case_review_text / _name / _role / _photo / _stars — отзыв (пусто — без отзыва).
   Блоки подряд с одним фоном идут одной полосой; два текстовых подряд — через тонкую линию.
-  Старый кейс (шаблон 22), переведённый на этот шаблон без заполненных блоков: выводится его старый текст
-  portfolio-content-text (с картинками) одной полосой во всю ширину; характеристики — из старых «Услуга» / «Срок».
+  Старый кейс (шаблон 22 — с миграции 37 у него та же разметка, что у 18) без заполненных блоков: выводится его старый
+  текст portfolio-content-text (с картинками) одной полосой во всю ширину — <h1> текста становится <h2>, старые «богатые»
+  раскладки (portfolio__imgs_5 — коллаж устройств, __img_parallax, __cols_2 «Адаптація під мобільні», __href — ссылка
+  на сайт) оформлены заново в _case.scss, анимации старого wow.js в них выключены; характеристики — из старых «Услуга» /
+  «Срок» / «Сайт»; скриншоты телефонов (portfolio-content-mobile) — лентой под текстом.
 *}
 {set $r = $_modx->resource}
 {set $isRu = $_modx->context.key == 'web'}
@@ -31,6 +34,7 @@
   {set $meta = []}
   {if $r['portfolio-banner-service']}{set $meta[] = ['title' => $isRu ? 'Услуга' : 'Послуга', 'text' => $r['portfolio-banner-service']]}{/if}
   {if $r['portfolio-banner-term']}{set $meta[] = ['title' => $isRu ? 'Срок разработки' : 'Строк розробки', 'text' => $r['portfolio-banner-term']]}{/if}
+  {if ($r['portfolio-banner-site'] | trim) && ($r['portfolio-banner-site_url'] | trim)}{set $meta[] = ['title' => 'Сайт', 'text' => $r['portfolio-banner-site'], 'url' => ($r['portfolio-banner-site_url'] | trim)]}{/if}
 {/if}
 {set $cover = $r['case_cover'] | trim}
 {if $cover && !($cover | preg_match : '#^(https?:)?/#')}{set $cover = '/' ~ $cover}{/if}
@@ -98,7 +102,7 @@
           {foreach $meta as $i => $m}
             <div class="rd-chead__fact" style="--i: {$i}">
               <dt class="rd-chead__label">{$m.title | strip_tags}</dt>
-              <dd class="rd-chead__value">{$m.text | strip_tags : '<br>'}</dd>
+              <dd class="rd-chead__value">{if $m.url}<a class="rd-chead__link" href="{$m.url}" target="_blank" rel="noopener">{$m.text | strip_tags}</a>{else}{$m.text | strip_tags : '<br>'}{/if}</dd>
             </div>
           {/foreach}
         </dl>
@@ -174,10 +178,33 @@
     {/foreach}
   {/if}
 
-  {* старый кейс без новых блоков — его прежний текст с картинками *}
+  {* старый кейс без новых блоков — его прежний текст с картинками: <h1> → <h2> (h1 страницы — заголовок выше),
+     подпись-ссылка блока portfolio__href (домен сайта) становится ссылкой на сайт.
+     В регулярках латинская «e» — как \x65: проверка pdoTools на модификатор eval ложно срабатывает на ней *}
   {if !$blocks && ($r['portfolio-content-text'] | trim)}
+    {set $legacy = $r['portfolio-content-text'] | replace : '<strong>' : '<b>' | replace : '</strong>' : '</b>' | preg_replace : '~<(/?)h1\b~i' : '<$1h2'}
+    {if $site}
+      {set $legacy = $legacy | preg_replace : '~<div class="portfolio__hr\x65f_link">(.*?)</div>~su' : ('<a class="portfolio__href_link" href="' ~ ($site | escape) ~ '" target="_blank" rel="noopener">$1</a>')}
+    {/if}
     <section class="rd-cblk rd-cblk--white rd-cblk--legacy">
-      <div class="rd-container"><div class="rd-cblk__legacy">{$r['portfolio-content-text'] | replace : '<strong>' : '<b>' | replace : '</strong>' : '</b>'}</div></div>
+      <div class="rd-container"><div class="rd-cblk__legacy">{$legacy}</div></div>
+    </section>
+  {/if}
+  {* скриншоты телефонов старого кейса (MIGX portfolio-content-mobile) — лентой в рамках телефонов *}
+  {set $mob = !$blocks ? ($r['portfolio-content-mobile'] | json_decode : true) : []}
+  {if $mob}
+    <section class="rd-cblk rd-cblk--light rd-cmob">
+      <div class="rd-container">
+        <ul class="rd-cmob__list" data-rd-no-smooth>
+          {foreach $mob as $mi}
+            {set $mImg = $mi.image | trim}
+            {if $mImg}
+              {if !($mImg | preg_match : '#^(https?:)?/#')}{set $mImg = '/' ~ $mImg}{/if}
+              <li class="rd-cmob__phone"><img src="{$mImg}" alt="{$r.pagetitle | escape}" loading="lazy" decoding="async"></li>
+            {/if}
+          {/foreach}
+        </ul>
+      </div>
     </section>
   {/if}
 

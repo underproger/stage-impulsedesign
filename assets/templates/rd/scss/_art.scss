@@ -803,16 +803,63 @@ $art-line: rgba($black, 0.1);
     display: none;
   }
 
-  // кнопка попапа SEO-аудита (статья 316)
+  // кнопка «Замовити SEO-аудит» в тексте статей 316 / UA 496: <div class="seo_audit-popup"><p class="seo_audit-popup_btn">.
+  // rd.js делает из абзаца кнопку сайта (.rd-lead__send: тёмная заливка слева направо, текст золотеет, стрелка
+  // «пролетает») и открывает по ней модалку SEO-аудита; без JS — просто золотая «таблетка»
+  .seo_audit-popup {
+    display: flex;
+    justify-content: center;
+    margin: fm(28px, 36px) 0;
+
+    @include desktop {
+      margin: fw(44px) 0;
+    }
+  }
+
   .seo_audit-popup_btn {
     display: inline-flex;
-    padding: 14px 28px;
-    border: 2px solid $gold;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    min-height: 60px;
+    margin: 0;
+    padding: 14px fm(28px, 40px);
     border-radius: 40px;
+    background: $gold-grad;
+    box-shadow: 0 14px 40px rgba($gold, 0.32);
+    font-family: inherit;
+    font-size: fm(15px, 16px);
     font-weight: 700;
-    color: $black;
-    text-decoration: none;
+    line-height: 1.2;
+    letter-spacing: 0.06em;
+    text-align: center;
+    color: #fff;
     cursor: pointer;
+    transition: box-shadow 0.5s $ease;
+
+    @include desktop {
+      gap: fw(10px);
+      min-height: fw(68px);
+      padding: fw(16px) fw(44px);
+      border-radius: fw(40px);
+      font-size: fw(16px);
+    }
+
+    @include hover {
+      color: #fff;
+      box-shadow: 0 18px 50px rgba($black, 0.28);
+    }
+
+    // правила картинок текста статьи (отступы, скругление) стрелке не нужны
+    .rd-arrow img {
+      max-width: none;
+      height: 100%;
+      margin: 0 !important;
+      border-radius: 0;
+    }
   }
 }
 
@@ -1264,6 +1311,22 @@ $art-line: rgba($black, 0.1);
       opacity: 1;
       translate: 0 0;
       filter: blur(0);
+    }
+  }
+
+  // кнопка SEO-аудита в тексте: всплывает, по ней один раз пробегает блик (как у кнопки формы заявки)
+  .rd-art__content .seo_audit-popup_btn {
+    opacity: 0;
+    translate: 0 24px;
+    transition: opacity 1s $ease-expo, translate 1.2s $ease-expo, box-shadow 0.5s $ease;
+
+    &.is-in {
+      opacity: 1;
+      translate: 0 0;
+
+      .rd-lead__send-fill::after {
+        animation: rd-lead-sweep 1.3s cubic-bezier(0.77, 0, 0.18, 1) 0.5s both;
+      }
     }
   }
 

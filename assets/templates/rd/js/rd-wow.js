@@ -1753,12 +1753,10 @@
     }
   });
 
-  /* ================= Модалка «Обговорити проект» (chunks/rd/discuss.tpl) ================= */
-  // Открытие, круг фона и появление строк — rd.js + _dsc.scss. Здесь: свет за курсором на плашке, ошибка — поле
+  /* ================= Модалки «Обговорити проект» и «Замовити SEO-аудит» (chunks/rd/discuss.tpl) ================= */
+  // Открытие и появление строк — rd.js + _dsc.scss. Здесь: свет за курсором на плашке, ошибка — поле
   // «качает головой» (rd-lead-invalid), заявка принята (rd-lead-sent) — экран закрывается кругом из кнопки.
-  (function () {
-    var dsc = document.querySelector('[data-rd-dsc]');
-    if (!dsc) return;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-rd-dsc]'), function (dsc) {
     var dPanel = dsc.querySelector('.rd-dsc__panel');
     var dForm = dsc.querySelector('[data-rd-lead]');
     if (fine && dPanel) {
@@ -1783,10 +1781,10 @@
     dForm.addEventListener('rd-lead-sent', function () {
       var btn = dForm.querySelector('.rd-lead__send');
       if (!btn || !window.rdPtCover) return;
-      var b = btn.getBoundingClientRect();
-      window.rdPtCover(b.left + b.width / 2, b.top + b.height / 2);
+      var bx = btn.getBoundingClientRect();
+      window.rdPtCover(bx.left + bx.width / 2, bx.top + bx.height / 2);
     });
-  })();
+  });
 
   /* ================= SEO-текст (section 9) ================= */
   // Заголовок словами из размытия, абзац «проявляется» по словам, икосаэдр влетает (вращает его WebGL).
@@ -2136,7 +2134,7 @@
     var artTitle = artTop.querySelector('.rd-art__title');
     if (artTitle) splitWords(artTitle);
     raf(function () { raf(function () { artTop.classList.add('is-in'); }); });
-    var artTargets = Array.prototype.slice.call(document.querySelectorAll('.rd-art__bio, .rd-art__nav, .rd-art__reviews, .rd-art__more-title, .rd-art__more .rd-post'));
+    var artTargets = Array.prototype.slice.call(document.querySelectorAll('.rd-art__content .seo_audit-popup_btn, .rd-art__bio, .rd-art__nav, .rd-art__reviews, .rd-art__more-title, .rd-art__more .rd-post'));
     if ('IntersectionObserver' in window) {
       var artIo = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) {
@@ -2331,6 +2329,25 @@
         if (!e404M.run) { e404M.run = true; raf(e404Tick); }
       });
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(e404Spot.size);
+    }
+  }
+
+  /* ================= Старый текст кейса (case.tpl, .rd-cblk__legacy) ================= */
+  // Части текста (абзацы, фото-полосы, коллаж, «Адаптація під мобільні», ссылка на сайт) всплывают по мере прокрутки.
+  var legacyCase = document.querySelector('.rd-cblk__legacy');
+  if (legacyCase) {
+    var lgItems = Array.prototype.slice.call(legacyCase.children);
+    if ('IntersectionObserver' in window) {
+      var lgIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          en.target.classList.add('is-in');
+          lgIo.unobserve(en.target);
+        });
+      }, { threshold: 0, rootMargin: '0px 0px -6% 0px' });
+      lgItems.forEach(function (el) { lgIo.observe(el); });
+    } else {
+      lgItems.forEach(function (el) { el.classList.add('is-in'); });
     }
   }
 

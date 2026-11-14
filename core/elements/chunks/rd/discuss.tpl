@@ -7,9 +7,15 @@
   стили — _dsc.scss. Форма — chunks/rd/discuss-form.tpl через AjaxForm (те же письма и хуки, что у формы заявки),
   после отправки — страница «Спасибо» (ID 40, переход делает rd.js по data-thanks).
   Данные: ClientConfig — phone-1, e-mail, telegram, viber, whatsapp.
+  Вариант kind='audit' — модалка «Замовити SEO-аудит» (blog-article.tpl, если в тексте статьи есть кнопка
+  .seo_audit-popup_btn — так было в статьях «SEO аудит сайта при создании…»): свои заголовок, текст и форма
+  (e-mail обязателен, поле «Адреса сайту», тема письма «Заказать SEO Аудит», как у старого попапа);
+  открывают .seo_audit-popup_btn и ссылки «#seo-audit».
 *}
 {set $isRu = $_modx->context.key == 'web'}
 {set $img = '/assets/templates/rd/img/'}
+{set $audit = $kind == 'audit'}
+{set $dKey = $audit ? 'audit' : 'discuss'}
 {set $d = $isRu ? [
   'title' => 'Обсудить <span>проект</span>',
   'text' => 'Оставьте контакты и пару слов об идее — мы свяжемся с вами, чтобы обсудить детали.',
@@ -25,6 +31,11 @@
   'msg' => 'Месенджери',
   'close' => 'Закрити'
 ]}
+{if $audit}
+  {set $d = $.php.array_replace($d, $isRu
+    ? ['title' => 'Заказать <span>SEO-аудит</span>', 'text' => 'Проверим сайт или проект ещё до разработки: технические ошибки, структуру и потенциал продвижения. Оставьте контакты — мы свяжемся с вами как можно скорее.']
+    : ['title' => 'Замовити <span>SEO-аудит</span>', 'text' => 'Перевіримо сайт або проєкт ще до розробки: технічні помилки, структуру та потенціал просування. Залиште контакти — ми зв’яжемося з вами якнайшвидше.'])}
+{/if}
 {set $dPhone = ('phone-1' | option)}
 {set $dPhoneHref = $dPhone | preg_replace : '/[^0-9+]/' : ''}
 {set $dMail = ('e-mail' | option)}
@@ -34,7 +45,7 @@
   ['url' => ('viber' | option), 'icon' => 'soc-viber.svg', 'label' => 'Viber'],
   ['url' => ('whatsapp' | option), 'icon' => 'soc-whatsapp.svg', 'label' => 'WhatsApp']
 ]}
-<div class="rd-dsc" id="rd-discuss" role="dialog" aria-modal="true" aria-labelledby="rd-dsc-title" hidden data-rd-dsc data-contacts="{$dCnt | url}" data-thanks="{40 | url}">
+<div class="rd-dsc" id="rd-{$dKey}" role="dialog" aria-modal="true" aria-labelledby="rd-{$dKey}-title" hidden data-rd-dsc="{$dKey}" data-contacts="{$dCnt | url}" data-thanks="{40 | url}">
   <div class="rd-dsc__backdrop" data-rd-dsc-close aria-hidden="true"></div>
   <div class="rd-dsc__scroll" data-rd-no-smooth>
     <div class="rd-dsc__panel" tabindex="-1">
@@ -43,7 +54,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
       </button>
       <div class="rd-dsc__info">
-        <p class="rd-dsc__title" id="rd-dsc-title">{$d.title}</p>
+        <p class="rd-dsc__title" id="rd-{$dKey}-title">{$d.title}</p>
         <p class="rd-dsc__text">{$d.text}</p>
         <ul class="rd-dsc__contacts">
           {if $dPhone}
@@ -69,7 +80,7 @@
           &form=`@FILE chunks/rd/discuss-form.tpl`
           &snippet=`FormIt`
           &hooks=`spam,email,FormItSaveForm,GoogleSheetsSaveForm`
-          &emailSubject=`Заявка "Обсудить проект"`
+          &emailSubject=`{$audit ? 'Заказать SEO Аудит' : 'Заявка "Обсудить проект"'}`
           &emailTo=`[[++form-mail]]`
           &emailFrom=`[[++form-mail]]`
           &emailFromName=`[[++site_name]]`
@@ -79,12 +90,13 @@
           &fiarFromName=`[[++site_name]]`
           &fiarFrom=`[[++form-mail]]`
           &spamCheckIp=`true`
-          &validate=`name:required,phone:minLength=^10^:required,workemail:blank,first-name:blank`
+          &validate=`name:required,phone:minLength=^10^:required,{$audit ? 'email:required:email,' : ''}workemail:blank,first-name:blank`
           &validationErrorMessage=`Пожалуйста, заполните обязательные поля*`
           &successMessage=`Ваше сообщение было успешно отправлено!`
           &frontend_css=``
           &frontend_js=``
           &formFields=`name,phone,email,theme,title,link,first-name`
+          &rdKind=`{$dKey}`
         ]]
       </div>
     </div>

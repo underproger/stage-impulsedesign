@@ -977,7 +977,7 @@
       var email = byName('email');
       if (name && !name.value.trim()) bad.push(name);
       if (phone && !phoneOk(phone)) bad.push(phone);
-      if (email && !emailOk(email.value.trim())) bad.push(email);
+      if (email && ((email.required && !email.value.trim()) || !emailOk(email.value.trim()))) bad.push(email); // e-mail обязателен у формы SEO-аудита
       [name, phone, email].forEach(function (input) { if (input) setErr(input, bad.indexOf(input) > -1); });
       if (fileIn && !fileOk) bad.push(fileIn);
       if (bad.length) {
@@ -1028,26 +1028,30 @@
     });
   });
 
-  /* ---------- Модалка «Обговорити проект» (chunks/rd/discuss.tpl, весь сайт) ---------- */
-  // Открывают ссылки data-rd-discuss, если ведут на «Контакти» (data-contacts), пустые или «#discuss», и любые
-  // ссылки на «#discuss» (в тексте страницы). Ctrl/⌘/Shift/средняя кнопка — обычный переход по ссылке.
-  // Фон проявляется, плашка поднимается, строки появляются по очереди (--i). Esc, крестик,
-  // клик по фону — закрыть; Tab ходит по кругу внутри, после закрытия фокус — на кнопке. Адрес с #discuss
-  // открывает модалку сразу. Заявка принята — переход на «Спасибо» (data-thanks); событие для «вау» — rd-lead-sent.
-  var dsc = document.querySelector('[data-rd-dsc]');
-  if (dsc) {
-    var dscHtml = document.documentElement;
+  /* ---------- Модалки «Обговорити проект» и «Замовити SEO-аудит» (chunks/rd/discuss.tpl, [data-rd-dsc]) ---------- */
+  // «Обговорити проект» (data-rd-dsc="discuss", весь сайт) открывают ссылки data-rd-discuss, если ведут на «Контакти»
+  // (data-contacts), пустые или «#discuss», и любые ссылки на «#discuss» (в тексте страницы).
+  // «Замовити SEO-аудит» (data-rd-dsc="audit", статьи с кнопкой в тексте) — .seo_audit-popup_btn (это <p> в тексте статьи:
+  // делаем кнопкой — role, tabindex, Enter / пробел) и ссылки «#seo-audit». Ctrl/⌘/Shift/средняя кнопка — обычный переход.
+  // Фон проявляется, плашка поднимается, строки появляются по очереди (--i). Esc, крестик, клик по фону — закрыть;
+  // Tab ходит по кругу внутри, после закрытия фокус — на кнопке. Адрес с #discuss / #seo-audit открывает сразу.
+  // Заявка принята — переход на «Спасибо» (data-thanks); событие для «вау» — rd-lead-sent.
+  var dscHtml = document.documentElement;
+  var dscReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var dscPath = function (href) {
+    try {
+      return new URL(href, document.baseURI).pathname.replace(/\/+$/, '');
+    } catch (er) {
+      return null;
+    }
+  };
+  var dscOpenNow = null; // открытая модалка (одна за раз)
+  window.rdModals = {};
+  Array.prototype.forEach.call(document.querySelectorAll('[data-rd-dsc]'), function (dsc) {
+    var kind = dsc.getAttribute('data-rd-dsc') || 'discuss';
     var dscForm = dsc.querySelector('form');
     var dscScroll = dsc.querySelector('.rd-dsc__scroll');
     var dscClose = dsc.querySelector('.rd-dsc__close');
-    var dscReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-    var dscPath = function (href) {
-      try {
-        return new URL(href, document.baseURI).pathname.replace(/\/+$/, '');
-      } catch (er) {
-        return null;
-      }
-    };
     var dscContacts = dscPath(dsc.getAttribute('data-contacts') || '');
     var dscOpener = null;
     var dscTimer = 0;
@@ -1065,10 +1069,13 @@
       dsc.classList.remove('is-open', 'is-closing');
       dscHtml.classList.remove('rd-lock', 'rd-dsc-open');
       document.body.classList.remove('rd-lock');
+      if (dscOpenNow === dsc) dscOpenNow = null;
     };
     var dscShow = function (opener) {
       if (!dsc.hidden && !dsc.classList.contains('is-closing')) return;
+      if (dscOpenNow && dscOpenNow !== dsc) return;
       clearTimeout(dscTimer);
+      dscOpenNow = dsc;
       dscOpener = opener && opener.nodeType === 1 ? opener : null;
       dscHtml.style.setProperty('--rd-sbw', Math.max(0, window.innerWidth - dscHtml.clientWidth) + 'px');
       dsc.classList.remove('is-open', 'is-closing');
@@ -1093,16 +1100,45 @@
         dscOpener = null;
       }, dscReduce.matches ? 0 : 450);
     };
-    window.rdDiscuss = { open: dscShow, close: dscHide };
+    window.rdModals[kind] = { open: dscShow, close: dscHide };
+    if (kind === 'discuss') window.rdDiscuss = window.rdModals[kind];
 
+    // какие клики открывают эту модалку
+    var hash = kind === 'audit' ? 'seo-audit' : 'discuss';
+    var hashRe = new RegExp('#' + hash + '$');
+    var openerSel = kind === 'audit' ? '.seo_audit-popup_btn, a[href$="#seo-audit"]' : 'a[data-rd-discuss], a[href$="#discuss"]';
+    if (kind === 'audit') {
+      Array.prototype.forEach.call(document.querySelectorAll('.seo_audit-popup_btn'), function (b) {
+        if (b.tagName === 'A' || b.tagName === 'BUTTON') return;
+        // кнопка сайта: заливка слева направо, текст золотеет, стрелка «пролетает» (стили — _art.scss, _lead.scss)
+        var label = b.textContent.replace(/\s+/g, ' ').trim();
+        if (label && !b.querySelector('.rd-lead__send-text')) {
+          var arr = '/assets/templates/rd/img/arrow-up-right';
+          b.textContent = '';
+          b.insertAdjacentHTML('beforeend', '<span class="rd-lead__send-fill" aria-hidden="true"><span></span></span><span class="rd-lead__send-text"></span>' +
+            '<span class="rd-lead__send-arrow rd-arrow" aria-hidden="true"><img class="rd-arrow__a" src="' + arr + '.svg" width="24" height="24" alt=""><img class="rd-arrow__b" src="' + arr + '-gold.svg" width="24" height="24" alt=""></span>');
+          b.querySelector('.rd-lead__send-text').textContent = label;
+          b.classList.add('rd-lead__send');
+          b.removeAttribute('style');
+        }
+        b.setAttribute('role', 'button');
+        b.setAttribute('tabindex', '0');
+        b.setAttribute('aria-haspopup', 'dialog');
+        b.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dscShow(b); }
+        });
+      });
+    }
     // перехват — на погружении (capture): старый custom.js вешает на все a[href^="#"] свою прокрутку к якорю
-    // (preventDefault и ошибка, если якоря нет) — до него событие не доходит; переход между страницами — тоже
+    // (preventDefault и ошибка, если якоря нет), старый script.js — свой попап на #audit-btn; до них событие не доходит
     document.addEventListener('click', function (e) {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      var a = e.target.closest && e.target.closest('a[data-rd-discuss], a[href$="#discuss"]');
+      var a = e.target.closest && e.target.closest(openerSel);
       if (!a || dsc.contains(a)) return;
-      var href = (a.getAttribute('href') || '').trim();
-      if (!/#discuss$/.test(href) && href && href !== '#' && dscPath(href) !== dscContacts) return; // ссылку поменяли на другую страницу
+      if (a.tagName === 'A' && kind === 'discuss') {
+        var href = (a.getAttribute('href') || '').trim();
+        if (!hashRe.test(href) && href && href !== '#' && dscPath(href) !== dscContacts) return; // ссылку поменяли на другую страницу
+      }
       e.preventDefault();
       e.stopPropagation();
       dscShow(a);
@@ -1137,7 +1173,7 @@
     window.addEventListener('pageshow', function (e) {
       if (e.persisted && !dsc.hidden) { clearTimeout(dscTimer); dscUnlock(); }
     });
-    if (/^#discuss$/.test(location.hash)) {
+    if (location.hash === '#' + hash) {
       setTimeout(function () { dscShow(null); }, 400);
     }
     if (window.jQuery && dscForm) {
@@ -1147,7 +1183,7 @@
         if (thanks) window.location.href = thanks;
       });
     }
-  }
+  });
 
   /* ---------- Видео поверх страницы ([data-rd-video] — ID YouTube; страница «Відгуки») ---------- */
   // Плеер создаётся по клику (youtube-nocookie, автозапуск) и удаляется при закрытии — до клика YouTube не грузится.
