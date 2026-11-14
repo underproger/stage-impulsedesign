@@ -124,7 +124,7 @@
           {if $pic && !($pic | preg_match : '~^(https?:)?//~')}
             {set $pic = $pic | preg_replace : '~^/+~' : ''}
             {if !($pic | preg_match : '~^(images|assets|img)/~')}{set $pic = 'images/blog/' ~ $pic}{/if}
-            {set $pic = '/' ~ $pic}
+            {set $pic = '/' ~ ($pic | preg_replace : '~/{2,}~' : '/')}
           {/if}
           {set $hits = ($s['HitsPage'] ?: 0) + 0}
           {set $desc = $s['blog-item-description'] | strip_tags | trim}

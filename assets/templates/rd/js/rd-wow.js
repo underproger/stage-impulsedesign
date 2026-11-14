@@ -585,7 +585,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl, .rd-studio, .rd-team, .rd-cnt, .rd-blog';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl, .rd-studio, .rd-team, .rd-cnt, .rd-blog, .rd-art, .rd-art__more';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var cwpSection = document.querySelector('[data-rd-cwp]');
@@ -2035,6 +2035,29 @@
       svclTargets.forEach(function (el) { svclIo.observe(el); });
     } else {
       svclTargets.forEach(svclShow);
+    }
+  }
+
+  /* ================= Блог: статья (blog-article.tpl) ================= */
+  // Шапка: слова заголовка из размытия, раздел, описание и мета всплывают, превью раскрывается справа.
+  // После текста: автор, соседние статьи, отзывы, заголовок «Читайте також» и карточки — снизу по мере прокрутки.
+  var artTop = document.querySelector('.rd-art__top');
+  if (artTop) {
+    var artTitle = artTop.querySelector('.rd-art__title');
+    if (artTitle) splitWords(artTitle);
+    raf(function () { raf(function () { artTop.classList.add('is-in'); }); });
+    var artTargets = Array.prototype.slice.call(document.querySelectorAll('.rd-art__bio, .rd-art__nav, .rd-art__reviews, .rd-art__more-title, .rd-art__more .rd-post'));
+    if ('IntersectionObserver' in window) {
+      var artIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          en.target.classList.add('is-in');
+          artIo.unobserve(en.target);
+        });
+      }, { threshold: 0, rootMargin: '0px 0px -8% 0px' });
+      artTargets.forEach(function (el) { artIo.observe(el); });
+    } else {
+      artTargets.forEach(function (el) { el.classList.add('is-in'); });
     }
   }
 

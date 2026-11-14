@@ -610,6 +610,59 @@
   /* ---------- Блог: «Популярні / Нові» и «Показати ще» ---------- */
   // Все карточки уже в HTML (по просмотрам); видны первые step + 1 (первая — крупная), кнопка открывает ещё step.
   // Сортировка переставляет карточки по data-hits / data-date (по убыванию). Без JS — видны все, без сортировки.
+  /* ---------- Статья блога: «Зміст», текущий раздел, полоска прочитанного ---------- */
+  // «Зміст» собирается из <h2> текста (меньше трёх — не показываем); заголовкам — id (rd-s1, rd-s2…, если своего нет).
+  // На десктопе <details> открыт, на телефоне — свёрнут. Текущий раздел — последний <h2> выше трети экрана.
+  var art = document.querySelector('[data-rd-art]');
+  if (art) {
+    var toc = document.querySelector('[data-rd-toc]');
+    var heads = Array.prototype.slice.call(art.querySelectorAll('h2')).filter(function (h) { return h.textContent.trim(); });
+    var tocLinks = [];
+    if (toc && heads.length >= 3) {
+      var tocList = toc.querySelector('ol');
+      heads.forEach(function (h, k) {
+        if (!h.id) h.id = 'rd-s' + (k + 1);
+        var li = document.createElement('li');
+        var a = document.createElement('a');
+        a.href = location.pathname + location.search + '#' + h.id;
+        a.textContent = h.textContent.replace(/\s+/g, ' ').trim();
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (history.replaceState) history.replaceState(null, '', '#' + h.id);
+          if (window.innerWidth < 1200) toc.open = false;
+        });
+        li.appendChild(a);
+        tocList.appendChild(li);
+        tocLinks.push(a);
+      });
+      toc.hidden = false;
+      toc.open = window.innerWidth >= 1200;
+    }
+    var bar = document.querySelector('[data-rd-progress]');
+    var artQueued = false;
+    var artTick = function () {
+      artQueued = false;
+      var b = art.getBoundingClientRect();
+      if (bar) {
+        var total = b.height - window.innerHeight * 0.6;
+        var pr = total > 0 ? Math.min(1, Math.max(0, -b.top / total)) : 1;
+        bar.style.transform = 'scaleX(' + pr.toFixed(4) + ')';
+      }
+      if (tocLinks.length) {
+        var cur = -1;
+        var line = window.innerHeight / 3;
+        heads.forEach(function (h, k) { if (h.getBoundingClientRect().top <= line) cur = k; });
+        tocLinks.forEach(function (a, k) { a.classList.toggle('is-current', k === cur); });
+      }
+    };
+    window.addEventListener('scroll', function () {
+      if (!artQueued) { artQueued = true; requestAnimationFrame(artTick); }
+    }, { passive: true });
+    window.addEventListener('resize', artTick);
+    artTick();
+  }
+
   // текущий раздел в ленте «таблеток» на телефоне — в поле зрения (лента прокручивается, страница — нет)
   var blogTabs = document.querySelector('.rd-blog__tabs');
   var blogActive = blogTabs && blogTabs.querySelector('.rd-blog__tab.is-active');
