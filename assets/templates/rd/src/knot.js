@@ -11,7 +11,8 @@
  * поворот ROT (ось·угол), масштаб SCALE (доля стороны блока на единицу кривой), сдвиг CENTER.
  * Узел вращается вокруг своей оси симметрии (z кривой) — силуэт всё время похож на макет.
  *
- * Разметка: .rd-hero__glob[data-rd-knot] > picture > img.rd-hero__blob (svc-hero.tpl).
+ * Разметка: .rd-hero__glob[data-rd-knot] > picture > img.rd-hero__blob (svc-hero.tpl);
+ * разделы «Послуги студії»: .rd-svcl__float[data-rd-knot] > img (svc-list.tpl). Блоков может быть несколько (mount.js).
  * Канвас .rd-hero__canvas вставляется в .rd-hero__glob; после первого кадра на нём .is-webgl (картинка гаснет).
  * Без WebGL / при reduced motion остаётся картинка (rd-wow.js через 3 с ставит .is-fallback).
  *
@@ -43,6 +44,7 @@ import {
   DirectionalLight,
   NoToneMapping,
 } from 'three';
+import { mountAll } from './mount.js';
 
 const CAMERA_Z = 3900; // далеко — почти без перспективы, как рендер в макете
 const PAD = 1.25; // канвас больше блока: наклон и покачивание не обрезаются
@@ -355,18 +357,5 @@ class GoldKnot {
   }
 }
 
-function init() {
-  const box = document.querySelector('[data-rd-knot]');
-  if (!box) return;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  try {
-    const test = document.createElement('canvas');
-    if (!(test.getContext('webgl2') || test.getContext('webgl'))) return;
-    new GoldKnot(box);
-  } catch (e) {
-    /* без WebGL остаётся картинка */
-  }
-}
-
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
+// все блоки [data-rd-knot] (первый экран услуги; разделы «Послуги студії» — .rd-svcl__float)
+mountAll('[data-rd-knot]', (box) => new GoldKnot(box));

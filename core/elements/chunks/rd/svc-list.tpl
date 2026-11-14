@@ -1,7 +1,8 @@
 {*
   Редизайн: страница «Послуги студії» (шаблон 19 «Услуги - Список услуг»; UA 383 /ua/poslugy.html, RU 80 /services.html).
   Макета нет — собрана из языка сайта: шапка как у «Портфоліо сайтів», разделы — тёмные карточки с сеткой и золотым
-  3D-объектом (картинки той же серии: узел, икосаэдр, пирамида, спираль — по кругу), под каждой — плитки услуг.
+  3D-объектом (WebGL той же серии, что на главной и страницах услуг: узел, икосаэдр, пирамида, спираль — по кругу;
+  картинка — заглушка), под каждой — плитки услуг.
   Данные — дерево: разделы — дочерние ресурсы страницы (шаблон 20), услуги — их дочерние; как и раньше, только
   опубликованные и видимые в меню (hidemenu = 0), по порядку в дереве.
   Поля страницы (TV): svcl_title — заголовок (золото — <span>; пусто — pagetitle), svcl_quote — подводка справа.
@@ -21,6 +22,7 @@
 {if !$title}{set $title = $r.pagetitle}{/if}
 {set $quote = $r['svcl_quote'] | strip_tags : '<span><b><br>' | trim}
 {set $objs = ['knot', 'ico', 'pyramid', 'spiral']}
+{set $blob = '/assets/templates/rd/js/rd-blob.js?v=' ~ $.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/js/rd-blob.js')}
 
 {set $cats = $_modx->getResources(
   ['parent' => $r.id, 'published' => 1, 'deleted' => 0, 'hidemenu' => 0],
@@ -88,9 +90,22 @@
               <span class="rd-arrow" aria-hidden="true"><img class="rd-arrow__a" src="{$img}arrow-up-right.svg" width="24" height="24" alt="" loading="lazy"><img class="rd-arrow__b" src="{$img}arrow-up-right.svg" width="24" height="24" alt="" loading="lazy"></span>
             </a>
           </div>
-          <div class="rd-svcl__obj" aria-hidden="true">
-            <img src="{$img}{$obj}.webp" width="600" height="600" alt="" loading="lazy" decoding="async">
-          </div>
+          {* 3D (rd-blob.js, грузит rd.js по data-src первого 3D-блока): узел и пирамида — knot.js на .rd-svcl__float,
+             икосаэдр — ico.js, спираль — spiral.js на .rd-svcl__obj; картинка — заглушка до первого кадра,
+             без WebGL и при reduced motion *}
+          {if $obj == 'knot' || $obj == 'pyramid'}
+            <div class="rd-svcl__obj rd-svcl__obj--{$obj}" aria-hidden="true">
+              <div class="rd-svcl__float" data-rd-knot="{$obj == 'pyramid' ? 'pyramid' : ''}" data-src="{$blob}">
+                <img src="{$img}{$obj}.webp" width="600" height="600" alt="" loading="lazy" decoding="async">
+              </div>
+            </div>
+          {else}
+            <div class="rd-svcl__obj rd-svcl__obj--{$obj}" {$obj == 'ico' ? 'data-rd-ico' : 'data-rd-3d'} data-src="{$blob}" aria-hidden="true">
+              <div class="rd-svcl__float">
+                <img src="{$img}{$obj}.webp" width="600" height="600" alt="" loading="lazy" decoding="async">
+              </div>
+            </div>
+          {/if}
         </div>
 
         {if $items}

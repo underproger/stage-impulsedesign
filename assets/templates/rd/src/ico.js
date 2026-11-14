@@ -7,7 +7,8 @@
  * Поза подобрана по силуэту картинки макета (ico.webp, 600×600; совпадение силуэтов 99.5%, tools/ico_fit.py):
  * поворот ROT (ось·угол), описанная окружность острого икосаэдра — 0.3257 стороны картинки.
  *
- * Разметка: .rd-seo__obj[data-rd-ico] > .rd-seo__float > img.rd-seo__img.
+ * Разметка: .rd-seo__obj[data-rd-ico] > .rd-seo__float > img.rd-seo__img;
+ * разделы «Послуги студії»: .rd-svcl__obj[data-rd-ico] > .rd-svcl__float > img (svc-list.tpl). Блоков может быть несколько.
  * Канвас вставляется в .rd-seo__float; после первого кадра на .rd-seo__obj ставится .is-webgl (картинка гаснет).
  * Без WebGL / при reduced motion остаётся картинка.
  *
@@ -36,6 +37,7 @@ import {
   DirectionalLight,
   NoToneMapping,
 } from 'three';
+import { mountAll } from './mount.js';
 
 const CAMERA_Z = 3900; // далеко — почти без перспективы, как рендер в макете
 const PAD = 1.2; // канвас больше блока: наклон и покачивание не обрезаются
@@ -403,19 +405,8 @@ class GoldIco {
   }
 }
 
-function init() {
-  const obj = document.querySelector('[data-rd-ico]');
-  const box = obj && obj.querySelector('.rd-seo__float');
-  if (!box) return;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  try {
-    const test = document.createElement('canvas');
-    if (!(test.getContext('webgl2') || test.getContext('webgl'))) return;
-    new GoldIco(obj, box);
-  } catch (e) {
-    /* без WebGL остаётся картинка */
-  }
-}
-
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
+// все блоки [data-rd-ico] (SEO-блок — .rd-seo__float; разделы «Послуги студії» — .rd-svcl__float)
+mountAll('[data-rd-ico]', (obj) => {
+  const box = obj.querySelector('.rd-seo__float, .rd-svcl__float');
+  if (box) new GoldIco(obj, box);
+});

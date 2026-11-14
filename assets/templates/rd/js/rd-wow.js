@@ -605,7 +605,8 @@
       root.classList.toggle('rd-cursor-on', !!inScope);
       ring.classList.toggle('is-view', overCase);
       root.classList.toggle('rd-cursor-view', overCase);
-      // над кнопками курсор исчезает — кнопка сама едет за мышью (магнит) и становится «курсором»
+      // над кнопками курсор остаётся (кнопка ещё и тянется за мышью — магнит): кольцо ближе к точке, оба в режиме
+      // «разница» — видны и на золотой заливке, и на тёмном фоне (_wow.scss, .rd-cursor-btn)
       var overBtn = !!t.closest(cursorBtns);
       root.classList.toggle('rd-cursor-btn', overBtn);
       ring.classList.toggle('is-link', !!t.closest('a, button') && !overBtn && !overCase);
@@ -1993,7 +1994,7 @@
 
   /* ================= Страница «Послуги студії» ================= */
   // Слова заголовка из размытия; подводка, якоря и плитки всплывают (плитки — по ряду слева направо, --c);
-  // карточка раздела раскрывается сбоку, объект «прилетает» и чуть наклоняется за курсором (--mx / --my).
+  // карточка раздела раскрывается сбоку, 3D-объект «прилетает» (наклон к курсору — сам 3D-модуль, rd-blob.js).
   var svcl = document.querySelector('.rd-svcl');
   if (svcl) {
     var svclTitle = svcl.querySelector('.rd-svcl__title');
@@ -2029,21 +2030,6 @@
       svclTargets.forEach(function (el) { svclIo.observe(el); });
     } else {
       svclTargets.forEach(svclShow);
-    }
-    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-      Array.prototype.forEach.call(svcl.querySelectorAll('[data-rd-svcl-card]'), function (card) {
-        var obj = card.querySelector('.rd-svcl__obj');
-        if (!obj) return;
-        card.addEventListener('pointermove', function (e) {
-          var b = card.getBoundingClientRect();
-          obj.style.setProperty('--mx', clamp((e.clientX - b.left) / b.width * 2 - 1, -1, 1).toFixed(3));
-          obj.style.setProperty('--my', clamp((e.clientY - b.top) / b.height * 2 - 1, -1, 1).toFixed(3));
-        });
-        card.addEventListener('pointerleave', function () {
-          obj.style.setProperty('--mx', 0);
-          obj.style.setProperty('--my', 0);
-        });
-      });
     }
   }
 

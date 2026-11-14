@@ -7,7 +7,8 @@
  * радиус витка 88.7, трубка 43.9, шаг 123.4 (px картинки), 2.95 витка, камера почти без перспективы;
  * на экране ось повёрнута на −60°, как картинка в макете.
  *
- * Разметка: .rd-about__obj[data-rd-3d] > .rd-about__float > img.rd-about__spiral.
+ * Разметка: .rd-about__obj[data-rd-3d] > .rd-about__float > img.rd-about__spiral;
+ * разделы «Послуги студії»: .rd-svcl__obj[data-rd-3d] > .rd-svcl__float > img (svc-list.tpl). Блоков может быть несколько.
  * Канвас вставляется в .rd-about__float; когда нарисован первый кадр, на .rd-about__obj ставится .is-webgl
  * (картинка гаснет). Без WebGL / при reduced motion остаётся картинка.
  *
@@ -35,6 +36,7 @@ import {
   DirectionalLight,
   NoToneMapping,
 } from 'three';
+import { mountAll } from './mount.js';
 
 const CAMERA_Z = 3900; // далеко — почти без перспективы, как рендер в макете
 const PAD = 1.45; // канвас больше блока: наклон и покачивание не обрезаются
@@ -329,19 +331,8 @@ class GoldSpiral {
   }
 }
 
-function init() {
-  const obj = document.querySelector('[data-rd-3d]');
-  const box = obj && obj.querySelector('.rd-about__float');
-  if (!box) return;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  try {
-    const test = document.createElement('canvas');
-    if (!(test.getContext('webgl2') || test.getContext('webgl'))) return;
-    new GoldSpiral(obj, box);
-  } catch (e) {
-    /* без WebGL остаётся картинка */
-  }
-}
-
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
+// все блоки [data-rd-3d] (section 6 — .rd-about__float; разделы «Послуги студії» — .rd-svcl__float)
+mountAll('[data-rd-3d]', (obj) => {
+  const box = obj.querySelector('.rd-about__float, .rd-svcl__float');
+  if (box) new GoldSpiral(obj, box);
+});

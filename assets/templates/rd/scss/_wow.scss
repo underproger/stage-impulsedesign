@@ -281,12 +281,23 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     margin: -3px 0 0 -3px;
     border-radius: 50%;
     background: $gold;
+    // размер — шириной/высотой: transform занят координатами (rd-wow.js), а scale умножил бы и их
+    transition: opacity 0.3s $ease, width 0.4s $ease-expo, height 0.4s $ease-expo, margin 0.4s $ease-expo;
   }
 
+  // кольцо в режиме «разница» со страницей: на тёмном — белое, на светлом — тёмное (раньше «разница» стояла у ::before
+  // и смешивалась только внутри кольца — на белых блоках кольцо пропадало); золотые состояния — обычные
   .rd-cursor-ring {
     width: 40px;
     height: 40px;
     margin: -20px 0 0 -20px;
+    mix-blend-mode: difference;
+
+    &.is-link,
+    &.is-blob,
+    &.is-view {
+      mix-blend-mode: normal;
+    }
 
     &::before {
       content: "";
@@ -294,7 +305,6 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
       inset: 0;
       border: 1px solid rgba(#fff, 0.9);
       border-radius: 50%;
-      mix-blend-mode: difference;
       transition: transform 0.5s $ease-expo, background-color 0.4s $ease, border-color 0.4s $ease;
     }
 
@@ -340,15 +350,29 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
 
   }
 
-  // над кнопками (.rd-btn, стрелки услуг, круглые .rd-works) курсора нет — кнопка сама «курсор»
+  // над кнопками (.rd-btn, стрелки услуг, круглые .rd-works, кнопка формы) курсор остаётся: кольцо обнимает
+  // точку ближе, оба — золото в режиме «разница»: на золотой заливке кнопки — тёмные, на тёмном фоне — золотые,
+  // поэтому видны всё время, пока золото затекает в кнопку
   &.rd-cursor-on.rd-cursor-btn {
-    .rd-cursor,
+    .rd-cursor {
+      width: 8px;
+      height: 8px;
+      margin: -4px 0 0 -4px;
+      mix-blend-mode: difference;
+    }
+
     .rd-cursor-ring {
-      opacity: 0;
+      mix-blend-mode: difference;
     }
 
     .rd-cursor-ring::before {
-      transform: scale(0.4);
+      transform: scale(0.8);
+      border-width: 1.5px;
+      border-color: $gold;
+    }
+
+    .rd-cursor-ring.is-down::before {
+      transform: scale(0.6);
     }
   }
 

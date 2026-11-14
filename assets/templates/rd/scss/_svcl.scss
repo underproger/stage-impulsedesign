@@ -131,16 +131,17 @@ $svcl-light: #f4f3ef;
     transition: transform 0.6s $ease-fly;
   }
 
+  // наведение: золото заливает слева направо; текст остаётся тёмным (на белом и на золоте читается всё время),
+  // рамка сразу золотая — кнопка не «пропадает», пока идёт заливка
   @include hover {
-    border-color: transparent;
-    color: #fff;
+    border-color: $gold;
 
     &::before {
       transform: scaleX(1);
     }
 
     .rd-svcl__tab-n {
-      color: #fff;
+      color: $black;
     }
   }
 }
@@ -326,12 +327,17 @@ $svcl-light: #f4f3ef;
   }
 }
 
-// объект: парит, на десктопе чуть наклоняется за курсором (rd-wow.js: --mx / --my от -1 до 1)
+// объект: золотой 3D (rd-blob.js — knot.js / ico.js / spiral.js; сам вращается, наклоняется к курсору и покачивается).
+// .rd-svcl__float — квадрат объекта (по нему модуль считает масштаб), канвас больше квадрата и по центру;
+// картинка — заглушка до первого кадра (.is-webgl — на .rd-svcl__float у узла и пирамиды, на .rd-svcl__obj у остальных),
+// без WebGL и при reduced motion — парит сама.
 .rd-svcl__obj {
   position: relative;
   display: flex;
   justify-content: center;
+  align-items: center;
   padding: 0 fm(20px, 40px) fm(20px, 32px);
+  pointer-events: none;
 
   @include tablet-up {
     padding: fm(20px, 24px);
@@ -340,31 +346,67 @@ $svcl-light: #f4f3ef;
   @include desktop {
     padding: fd(24px, 32px);
   }
+}
+
+.rd-svcl__float {
+  position: relative;
+  width: min(100%, #{fm(190px, 280px)});
+  aspect-ratio: 1;
+
+  @include tablet-up {
+    width: 100%;
+  }
 
   img {
     display: block;
-    width: min(100%, #{fm(190px, 280px)});
-    height: auto;
+    width: 100%;
+    height: 100%;
     animation: rd-svcl-float 6s ease-in-out infinite;
     animation-delay: calc(var(--d, 0) * -2s);
-    transform: perspective(800px) rotateY(calc(var(--mx, 0) * 14deg)) rotateX(calc(var(--my, 0) * -10deg));
-    transition: transform 0.9s $ease-expo;
-
-    @include tablet-up {
-      width: 100%;
-    }
+    transition: opacity 0.6s ease, visibility 0s linear 0.6s;
 
     @media (prefers-reduced-motion: reduce) {
       animation: none;
     }
   }
+
+  // спираль: картинка повёрнута, как 3D-спираль (и как в блоке «Digital агентство»)
+  .rd-svcl__obj--spiral & img {
+    rotate: -60deg;
+  }
+
+  .is-webgl & img,
+  &.is-webgl img {
+    opacity: 0;
+    visibility: hidden;
+    animation: none;
+  }
+
+  // канвас: размер задаёт скрипт (больше квадрата — наклон и покачивание не обрезаются)
+  canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: auto;
+    height: auto;
+    max-width: none; // старый CSS сайта ограничивает canvas шириной родителя
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .is-webgl & canvas,
+  &.is-webgl canvas {
+    opacity: 1;
+  }
 }
 
-.rd-svcl__cat:nth-of-type(2) .rd-svcl__obj img {
+.rd-svcl__cat:nth-of-type(2) .rd-svcl__float img {
   --d: 1;
 }
 
-.rd-svcl__cat:nth-of-type(3) .rd-svcl__obj img {
+.rd-svcl__cat:nth-of-type(3) .rd-svcl__float img {
   --d: 2;
 }
 
@@ -415,6 +457,8 @@ $svcl-light: #f4f3ef;
   border-radius: fm(16px, 20px);
   background: $svcl-light;
   color: $black;
+  // текст светлеет плавно, пока тёмная заливка идёт слева направо (серый посередине читается на обоих фонах)
+  transition: color 0.5s $ease;
 
   @include desktop {
     min-height: fd(240px, 270px);
@@ -601,8 +645,10 @@ $svcl-light: #f4f3ef;
     transition-delay: 0.3s;
   }
 
+  // своя задержка — только у появления; цвет и рамка при наведении — без задержки (иначе transition выше их затирает)
   .rd-svcl__tab {
-    transition-delay: calc(var(--i, 0) * 90ms + 0.4s);
+    --td: calc(var(--i, 0) * 90ms + 0.4s);
+    transition: opacity 1s $ease-expo var(--td), translate 1.2s $ease-expo var(--td), color 0.45s $ease, border-color 0.45s $ease;
   }
 
   .rd-svct {
