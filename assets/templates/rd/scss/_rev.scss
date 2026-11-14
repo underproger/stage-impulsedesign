@@ -1,0 +1,1411 @@
+@use "base" as *;
+
+// ===== Страница «Відгуки» (шаблон 16, chunks/rd/reviews.tpl). Макета нет — язык сайта:
+// светлая шапка (крошки, заголовок 72, справа — средняя оценка звёздами и число отзывов, кнопка к форме);
+// тёмный блок видеоотзывов (движущаяся сетка, карточки: фото с золотой кнопкой «плей», цитата, кто);
+// светлый блок «Відгуки про співпрацю»: белые карточки отзывов (кейсы и easyComm) + липкая тёмная форма отзыва
+// (поля — .rd-field и кнопка .rd-lead__send из _lead.scss, звёзды easyComm). Видео — поверх страницы (.rd-vid).
+
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$rev-bg: #f5f4f2; // как фон «Портфоліо»
+$rev-text: #3c3c44;
+$rev-line: rgba($black, 0.1);
+
+.rd-rev {
+  background: #fff;
+  color: $black;
+
+  blockquote {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    quotes: none;
+  }
+}
+
+// ----- звёзды: серые снизу, золотые сверху обрезаны по --p (доля оценки) -----
+.rd-rev__stars {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  --rd-st: 16px;
+
+  @include desktop {
+    --rd-st: #{fw(16px)};
+  }
+
+  &--big {
+    --rd-st: #{fm(20px, 22px)};
+
+    @include desktop {
+      --rd-st: #{fw(24px)};
+    }
+  }
+
+  &-bg,
+  &-fg {
+    display: flex;
+    gap: calc(var(--rd-st) * 0.18);
+
+    svg {
+      width: var(--rd-st);
+      height: var(--rd-st);
+      fill: currentColor;
+    }
+  }
+
+  &-bg {
+    color: rgba($black, 0.12);
+  }
+
+  &-fg {
+    position: absolute;
+    inset: 0;
+    color: $gold;
+    clip-path: inset(0 calc(100% - var(--p, 100%)) 0 0);
+  }
+}
+
+// ===== первый экран =====
+.rd-rev__top {
+  padding: fm(24px, 32px) 0 fm(48px, 64px);
+
+  @include desktop {
+    padding: fw(44px) 0 fd(72px, 88px);
+  }
+}
+
+.rd-rev__crumbs {
+  margin: 0 0 fm(16px, 24px);
+
+  @include desktop {
+    margin-bottom: fw(34px);
+  }
+}
+
+.rd-rev__head {
+  display: grid;
+  gap: fm(28px, 40px);
+
+  @include desktop {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: fw(60px);
+  }
+}
+
+// h1 глобально стилизован старым CSS — перебиваем явно
+.rd-rev__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: fm(40px, 64px);
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  color: $black;
+
+  @include desktop {
+    font-size: fd(72px, 88px);
+  }
+
+  span {
+    @include gold-text;
+  }
+}
+
+.rd-rev__lead {
+  max-width: 34em;
+  margin-top: fm(16px, 24px);
+  font-size: fm(16px, 18px);
+  font-weight: 300;
+  line-height: 1.6;
+  color: #5c5e64;
+
+  @include desktop {
+    margin-top: fw(28px);
+    font-size: fd(18px, 20px);
+  }
+}
+
+.rd-rev__sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: fm(20px, 28px) fm(28px, 40px);
+
+  @include desktop {
+    flex-wrap: nowrap;
+    gap: fw(40px);
+    padding-bottom: fw(6px);
+  }
+}
+
+.rd-rev__score,
+.rd-rev__count {
+  display: flex;
+  align-items: center;
+  gap: fm(12px, 16px);
+
+  // телефон: число над звёздами / подписью — оценка и число отзывов помещаются в одну строку
+  @include phone {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  @include desktop {
+    gap: fw(16px);
+  }
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+// между оценкой и числом — тонкая черта
+.rd-rev__score:not([hidden]) + .rd-rev__count:not([hidden]) {
+  padding-left: fm(28px, 40px);
+  border-left: 1px solid $rev-line;
+
+  @include desktop {
+    padding-left: fw(40px);
+  }
+}
+
+.rd-rev__num {
+  font-size: fm(48px, 60px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: $black;
+
+  @include desktop {
+    font-size: fd(64px, 76px);
+  }
+}
+
+.rd-rev__score-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rd-rev__cap {
+  font-size: fm(13px, 14px);
+  font-weight: 400;
+  line-height: 1.3;
+  color: #6d6f73;
+
+  @include desktop {
+    font-size: fw(14px);
+  }
+}
+
+.rd-rev__count .rd-rev__cap {
+  max-width: 6em;
+  font-size: fm(15px, 16px);
+  font-weight: 700;
+  color: $black;
+
+  @include desktop {
+    font-size: fw(16px);
+  }
+}
+
+.rd-rev__go {
+  @include phone {
+    width: 100%;
+  }
+}
+
+// ===== видеоотзывы =====
+.rd-rev__video {
+  --rd-cell: 100px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: fm(72px, 100px) 0 fm(80px, 110px);
+  color: #fff;
+  @include grid-bg-move(-1);
+
+  @include desktop {
+    --rd-cell: #{fw(100px)};
+    padding: fd(110px, 140px) 0 fd(130px, 170px);
+  }
+
+  // золотое свечение снизу слева, как у блока заявки
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: -2;
+    left: -10%;
+    bottom: -38%;
+    width: min(70%, 900px);
+    aspect-ratio: 1432 / 1369;
+    background: url("../img/lead-glow.webp") center / 100% 100% no-repeat;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+// заголовки секций (h2 глобально стилизован старым CSS — перебиваем)
+.rd-rev__h2 {
+  margin: 0;
+  font-family: inherit;
+  font-size: fm(32px, 48px);
+  font-weight: 700;
+  line-height: 1.08;
+  text-transform: uppercase;
+  color: $black;
+
+  @include desktop {
+    font-size: fd(56px, 68px);
+  }
+
+  span {
+    @include gold-text;
+  }
+
+  &--light {
+    color: #fff;
+  }
+}
+
+.rd-rev__vlist {
+  display: grid;
+  gap: fm(16px, 24px);
+  margin-top: fm(32px, 48px);
+
+  @include desktop {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: fw(24px);
+    margin-top: fd(56px, 72px);
+  }
+}
+
+.rd-vrev {
+  position: relative;
+  display: grid;
+  gap: fm(20px, 28px);
+  padding: fm(16px, 20px);
+  border-radius: fm(20px, 24px);
+  background: rgba(#fff, 0.03);
+  box-shadow: inset 0 0 0 1px rgba(#fff, 0.07);
+  isolation: isolate;
+  overflow: hidden;
+
+  // планшет и десктоп: фото слева во всю высоту карточки (обрезается по бокам)
+  @include tablet-up {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    align-items: stretch;
+  }
+
+  @include desktop {
+    gap: fw(32px);
+    padding: fw(20px);
+    border-radius: fw(24px);
+  }
+
+  &__media {
+    position: relative;
+    overflow: hidden;
+    border-radius: fm(14px, 16px);
+    background: #222229;
+    aspect-ratio: 360 / 388;
+
+    @include phone {
+      max-width: 360px;
+    }
+
+    @include tablet-up {
+      aspect-ratio: auto;
+      min-height: fm(300px, 340px);
+    }
+
+    @include desktop {
+      border-radius: fw(16px);
+    }
+  }
+
+  &__photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+    filter: grayscale(1) contrast(1.05);
+    transition: transform 1.2s $ease-expo, filter 0.8s $ease;
+
+    @include tablet-up {
+      position: absolute;
+      inset: 0;
+    }
+  }
+
+  // кнопка «плей»: золотой круг по центру фото, по контуру расходятся волны
+  &__play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: fm(64px, 76px);
+    height: fm(64px, 76px);
+    margin: fm(-32px, -38px) 0 0 fm(-32px, -38px);
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: $gold-grad;
+    color: $black;
+    cursor: pointer;
+    transition: scale 0.5s $ease-expo;
+    -webkit-tap-highlight-color: transparent;
+
+    @include desktop {
+      width: fw(80px);
+      height: fw(80px);
+      margin: fw(-40px) 0 0 fw(-40px);
+    }
+
+    svg {
+      position: relative;
+      z-index: 1;
+      width: 40%;
+      height: 40%;
+      margin-left: 6%;
+      fill: currentColor;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 4px;
+    }
+  }
+
+  &__wave {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 0 0 rgba($gold, 0.55);
+    animation: rd-vrev-wave 2.4s $ease infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 0 fm(4px, 8px) fm(8px, 8px);
+
+    @include tablet-up {
+      align-self: stretch;
+      padding: fm(8px, 12px) fm(4px, 12px) fm(4px, 8px) 0;
+    }
+
+    @include desktop {
+      padding: fw(16px) fw(16px) fw(8px) 0;
+    }
+  }
+
+  &__quote {
+    width: fm(36px, 44px);
+    height: auto;
+    fill: $gold;
+
+    @include desktop {
+      width: fw(44px);
+    }
+  }
+
+  &__text {
+    margin-top: fm(16px, 20px) !important;
+    font-size: fm(16px, 17px);
+    font-weight: 300;
+    line-height: 1.65;
+    color: rgba(#fff, 0.82);
+
+    @include desktop {
+      margin-top: fw(20px) !important;
+      font-size: fd(16px, 18px);
+    }
+  }
+
+  &__who {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: fm(20px, 24px);
+
+    @include desktop {
+      margin-top: auto;
+      padding-top: fw(28px);
+    }
+  }
+
+  &__name {
+    font-size: fm(18px, 20px);
+    font-weight: 700;
+    line-height: 1.25;
+    color: #fff;
+
+    @include desktop {
+      font-size: fd(20px, 22px);
+    }
+  }
+
+  &__pos {
+    font-size: fm(14px, 15px);
+    line-height: 1.4;
+    color: $gold;
+
+    @include desktop {
+      font-size: fw(15px);
+    }
+  }
+
+  // «Дивитися відео»: круг с «плей», на наведении заливается золотом слева, надпись золотится
+  &__watch {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 12px;
+    margin: fm(20px, 24px) 0 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: fm(15px, 16px);
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: color 0.45s $ease;
+
+    @include desktop {
+      gap: fw(12px);
+      margin-top: fw(24px);
+      font-size: fw(16px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $gold;
+      outline-offset: 4px;
+      border-radius: 4px;
+    }
+  }
+
+  &__watch-ic {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    overflow: hidden;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px $gold;
+    color: $gold;
+    isolation: isolate;
+    transition: color 0.45s $ease;
+
+    @include desktop {
+      width: fw(44px);
+      height: fw(44px);
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: $gold-grad;
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 0.6s $ease-fly;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+      margin-left: 2px;
+      fill: currentColor;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &__media:hover &__photo,
+    &:has(&__watch:hover) &__photo {
+      transform: scale(1.05);
+      filter: grayscale(0.2) contrast(1.05);
+    }
+
+    &__play:hover {
+      scale: 1.08;
+    }
+
+    &__watch:hover {
+      color: $gold;
+
+      .rd-vrev__watch-ic {
+        color: $black;
+
+        &::before {
+          transform: scaleX(1);
+          transform-origin: left center;
+        }
+      }
+    }
+  }
+}
+
+@keyframes rd-vrev-wave {
+  0% {
+    box-shadow: 0 0 0 0 rgba($gold, 0.55);
+  }
+
+  80%,
+  100% {
+    box-shadow: 0 0 0 26px rgba($gold, 0);
+  }
+}
+
+// ===== «Відгуки про співпрацю» + форма =====
+.rd-rev__main {
+  padding: fm(72px, 100px) 0 fm(80px, 110px);
+  background: $rev-bg;
+
+  @include desktop {
+    padding: fd(110px, 140px) 0 fd(130px, 170px);
+  }
+}
+
+.rd-rev__grid {
+  display: grid;
+  gap: fm(40px, 56px);
+
+  @include desktop {
+    grid-template-columns: minmax(0, 1fr) fd(460px, 540px);
+    align-items: start;
+    gap: fd(48px, 80px);
+  }
+}
+
+.rd-rev__col {
+  min-width: 0;
+}
+
+.rd-rev__list {
+  display: grid;
+  gap: fm(14px, 20px);
+  margin-top: fm(28px, 40px);
+
+  @include desktop {
+    gap: fw(20px);
+    margin-top: fd(40px, 56px);
+  }
+}
+
+.rd-rcard {
+  position: relative;
+  padding: fm(20px, 28px);
+  border-radius: fm(18px, 20px);
+  background: #fff;
+  box-shadow: 0 1px 0 rgba($black, 0.04);
+  transition: translate 0.6s $ease-expo, box-shadow 0.6s $ease;
+
+  @include desktop {
+    padding: fw(32px);
+    border-radius: fw(20px);
+  }
+
+  &[hidden] {
+    display: none;
+  }
+
+  @include hover {
+    translate: 0 -4px;
+    box-shadow: 0 24px 48px rgba($black, 0.08);
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px fm(12px, 16px);
+
+    @include desktop {
+      gap: fw(12px) fw(16px);
+    }
+  }
+
+  &__ava {
+    flex: none;
+    width: fm(48px, 56px);
+    height: fm(48px, 56px);
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: 50% 30%;
+    filter: grayscale(1);
+
+    @include desktop {
+      width: fw(56px);
+      height: fw(56px);
+    }
+
+    &--letter {
+      display: grid;
+      place-items: center;
+      background: $gold-grad;
+      font-size: fm(20px, 22px);
+      font-weight: 700;
+      line-height: 1;
+      color: #fff;
+      filter: none;
+
+      @include desktop {
+        font-size: fw(22px);
+      }
+    }
+  }
+
+  &__who {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    margin-right: auto;
+  }
+
+  &__name {
+    font-size: fm(16px, 18px);
+    font-weight: 700;
+    line-height: 1.3;
+    color: $black;
+
+    @include desktop {
+      font-size: fw(18px);
+    }
+  }
+
+  &__role {
+    font-size: fm(13px, 14px);
+    line-height: 1.4;
+    color: #75777c;
+
+    @include desktop {
+      font-size: fw(14px);
+    }
+  }
+
+  &__text {
+    margin-top: fm(16px, 20px) !important;
+    font-size: fm(15px, 17px);
+    font-weight: 300;
+    line-height: 1.65;
+    color: $rev-text;
+
+    @include desktop {
+      margin-top: fw(20px) !important;
+      font-size: fd(16px, 18px);
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  // ответ студии из админки easyComm
+  &__reply {
+    margin-top: fm(16px, 20px);
+    padding: fm(14px, 16px) fm(16px, 20px);
+    border-left: 2px solid $gold;
+    border-radius: 0 12px 12px 0;
+    background: $rev-bg;
+    font-size: fm(14px, 15px);
+    line-height: 1.6;
+    color: $rev-text;
+
+    @include desktop {
+      margin-top: fw(20px);
+      padding: fw(16px) fw(20px);
+      font-size: fw(15px);
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__reply-who {
+    margin-bottom: 4px !important;
+    font-weight: 700;
+    color: $gold;
+  }
+
+  // кейс: название · «Дивитися кейс» ↗ — на наведении золото, стрелка пролетает
+  &__link {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: fm(16px, 20px);
+    font-size: fm(14px, 15px);
+    font-weight: 700;
+    line-height: 1.3;
+    color: $black;
+    transition: color 0.45s $ease;
+
+    @include desktop {
+      gap: fw(6px);
+      margin-top: fw(20px);
+      font-size: fw(15px);
+    }
+
+    .rd-arrow {
+      width: 18px;
+      height: 18px;
+
+      @include desktop {
+        width: fw(18px);
+        height: fw(18px);
+      }
+    }
+
+    @include hover {
+      color: $gold;
+      @include arrow-fly;
+    }
+  }
+
+  &__sep {
+    color: $gold;
+  }
+}
+
+// пусто — подсказка (карточек нет: ни кейсов, ни опубликованных отзывов)
+.rd-rev__empty {
+  display: none;
+  margin-top: fm(28px, 40px);
+  padding: fm(20px, 28px);
+  border: 1px dashed rgba($black, 0.18);
+  border-radius: 20px;
+  font-size: fm(15px, 17px);
+  color: #5c5e64;
+}
+
+.rd-rev__list:not(:has(.rd-rcard)) + .rd-rev__empty {
+  display: block;
+}
+
+.rd-rev__more {
+  margin-top: fm(28px, 36px);
+
+  &[hidden] {
+    display: none;
+  }
+
+  @include desktop {
+    margin-top: fw(36px);
+  }
+}
+
+.rd-rev__more-n {
+  color: $gold;
+}
+
+// ----- форма отзыва: тёмная плашка с сеткой и золотым свечением, на десктопе липнет -----
+.rd-rev__aside {
+  scroll-margin-top: 100px;
+
+  @include desktop {
+    position: sticky;
+    top: fw(110px);
+  }
+}
+
+.rd-rev__panel {
+  --rd-cell: 60px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: fm(28px, 40px) fm(20px, 40px) fm(24px, 32px);
+  border-radius: fm(20px, 24px);
+  color: #fff;
+  @include grid-bg-move(-1);
+
+  @include desktop {
+    --rd-cell: #{fw(60px)};
+    padding: fd(36px, 44px) fd(36px, 44px) fd(28px, 32px);
+    border-radius: fw(24px);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: -2;
+    left: -30%;
+    bottom: -60%;
+    width: 120%;
+    aspect-ratio: 1432 / 1369;
+    background: url("../img/lead-glow.webp") center / 100% 100% no-repeat;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .ec-antispam {
+    display: none !important;
+  }
+
+  .rd-field__label i {
+    margin-left: 0.1em;
+    font-style: normal;
+    color: $gold;
+  }
+
+  .rd-lead__send {
+    margin-top: fm(24px, 28px);
+
+    @include desktop {
+      margin-top: fw(28px);
+    }
+  }
+
+  .rd-lead__status:not(:empty) {
+    margin-top: 12px;
+  }
+}
+
+.rd-rev__ftitle {
+  font-size: fm(26px, 30px);
+  font-weight: 700;
+  line-height: 1.15;
+  text-transform: uppercase;
+  color: #fff;
+
+  @include desktop {
+    font-size: fd(28px, 32px);
+  }
+
+  span {
+    @include gold-text;
+  }
+}
+
+.rd-rev__fsub {
+  margin-top: fm(10px, 12px);
+  font-size: fm(14px, 15px);
+  font-weight: 300;
+  line-height: 1.55;
+  color: $gray;
+
+  @include desktop {
+    margin-top: fw(12px);
+    font-size: fw(15px);
+  }
+}
+
+.rd-rev__fields {
+  margin-top: fm(4px, 8px);
+}
+
+// ошибки easyComm: .has-error на .form-group, текст — в .ec-error (сама показывает/прячет)
+.rd-rev__panel {
+  .rd-field__err.ec-error:not(:empty) {
+    max-height: 60px;
+    padding-top: 6px;
+    padding-bottom: 4px;
+    opacity: 1;
+  }
+
+  .rd-field.has-error {
+    .rd-field__label {
+      color: #ff7b72;
+    }
+
+    .rd-field__line::before,
+    .rd-field__line::after {
+      background: #ff7b72;
+    }
+  }
+}
+
+// звёзды оценки (easyComm: active — выбрано, active2 — под курсором, active-disabled — правее курсора)
+.rd-rev__rate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-top: fm(22px, 26px);
+  padding: 0 fm(0px, 16px);
+
+  @include desktop {
+    gap: fw(10px) fw(16px);
+    margin-top: fw(26px);
+    padding: 0 fw(16px);
+  }
+
+  .ec-rating {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .ec-rating-stars {
+    display: flex;
+    float: none;
+    gap: 4px;
+    margin: 0;
+
+    // старый CSS сайта рисует звёзды фоновой картинкой (ec-stars*.png) — у нас SVG
+    span {
+      display: block;
+      float: none;
+      width: 30px;
+      height: 30px;
+      margin: 0;
+      padding: 2px;
+      background: none !important;
+      border-radius: 6px;
+      color: rgba(#fff, 0.16);
+      cursor: pointer;
+      transition: color 0.3s $ease, scale 0.4s $ease-expo;
+      -webkit-tap-highlight-color: transparent;
+
+      @include desktop {
+        width: fw(30px);
+        height: fw(30px);
+      }
+
+      svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
+      }
+
+      &.active,
+      &.active2 {
+        color: $gold;
+      }
+
+      &.active-disabled {
+        color: rgba(#fff, 0.16);
+      }
+
+      &:focus-visible {
+        outline: 2px solid $gold;
+        outline-offset: 1px;
+      }
+
+      @include hover {
+        scale: 1.15;
+      }
+    }
+  }
+
+  .ec-rating-description {
+    float: none;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: $gold;
+  }
+
+  .rd-field__err {
+    flex-basis: 100%;
+    padding: 0;
+  }
+}
+
+.rd-rev__rate-label {
+  font-size: fm(15px, 16px);
+  font-weight: 300;
+  color: #6d6f73;
+
+  @include desktop {
+    font-size: fw(16px);
+  }
+}
+
+// в форме отзыва поле текста ниже — четыре строки
+.rd-rev__panel .rd-field--area {
+  margin-top: fm(6px, 8px);
+
+  .rd-field__input {
+    min-height: 140px;
+
+    @include desktop {
+      min-height: fw(148px);
+    }
+  }
+}
+
+.rd-rev__note {
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.6;
+  color: $gray;
+
+  @include desktop {
+    margin-top: fw(16px);
+    font-size: fw(12px);
+  }
+}
+
+// отправлено: форма спрятана (easyComm), вместо неё — галочка и текст
+.rd-rev__success:empty {
+  display: none;
+}
+
+.rd-rev__ok {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: fm(8px, 12px) 0;
+  animation: rd-rev-ok 0.8s $ease-expo both;
+
+  &-ic {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: $gold-grad;
+    color: $black;
+
+    svg {
+      width: 30px;
+      height: 30px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 24;
+      stroke-dashoffset: 24;
+      animation: rd-rev-check 0.6s $ease 0.35s forwards;
+    }
+  }
+
+  &-title {
+    margin-top: 8px !important;
+    font-size: fm(24px, 28px);
+    font-weight: 700;
+    line-height: 1.2;
+    color: #fff;
+  }
+
+  &-text {
+    font-size: fm(15px, 16px);
+    font-weight: 300;
+    line-height: 1.6;
+    color: $gray;
+  }
+}
+
+@keyframes rd-rev-ok {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes rd-rev-check {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+// ===== видео поверх страницы (rd.js, [data-rd-video]) =====
+.rd-vid {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: fm(56px, 72px) fm(12px, 30px);
+  background: rgba(10, 10, 13, 0.92);
+  opacity: 0;
+  transition: opacity 0.4s $ease;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &.is-open {
+    opacity: 1;
+  }
+
+  &__frame {
+    position: relative;
+    width: min(100%, 1280px, (100vh - 160px) * 16 / 9);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: fm(12px, 20px);
+    background: #000;
+    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6);
+    scale: 0.94;
+    transition: scale 0.7s $ease-expo;
+
+    iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+  }
+
+  &.is-open &__frame {
+    scale: 1;
+  }
+
+  // крестик — как у модалки «Обговорити проект»: золото затекает слева, крестик поворачивается
+  &__close {
+    position: absolute;
+    top: fm(12px, 20px);
+    right: fm(12px, 20px);
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(#fff, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(#fff, 0.16);
+    color: #fff;
+    cursor: pointer;
+    isolation: isolate;
+    transition: color 0.4s $ease;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: $gold-grad;
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 0.6s $ease-fly;
+    }
+
+    svg {
+      width: 22px;
+      height: 22px;
+      transition: rotate 0.6s $ease-expo;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $gold;
+      outline-offset: 3px;
+    }
+
+    @include hover {
+      color: $black;
+
+      &::before {
+        transform: scaleX(1);
+        transform-origin: left center;
+      }
+
+      svg {
+        rotate: 90deg;
+      }
+    }
+  }
+}
+
+html.rd-vid-open {
+  padding-right: var(--rd-sbw, 0px);
+}
+
+// ================= «Вау» (html.rd-wow-js, модуль в rd-wow.js) =================
+.rd-wow-js {
+  // заголовки — по словам (splitWords); золотой <span> остаётся золотым, остальные слова — цветом заголовка
+  .rd-rev__title .rd-wd,
+  .rd-rev__h2 .rd-wd {
+    display: inline-block;
+    opacity: 0;
+    translate: 0 0.35em;
+    filter: blur(8px);
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+    transition-delay: calc(var(--i, 0) * 70ms + 0.15s);
+  }
+
+  .rd-rev__title .rd-wd:not(.rd-wd--el),
+  .rd-rev__h2 .rd-wd:not(.rd-wd--el) {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: inherit;
+  }
+
+  .rd-rev__title.is-in .rd-wd,
+  .rd-rev__h2.is-in .rd-wd {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+  }
+
+  .rd-rev__lead,
+  .rd-rev__sum,
+  .rd-vrev,
+  .rd-rcard,
+  .rd-rev__panel {
+    opacity: 0;
+    translate: 0 40px;
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, box-shadow 0.6s $ease;
+    transition-delay: calc(var(--i, 0) * 110ms), calc(var(--i, 0) * 110ms), 0s;
+
+    &.is-in {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  .rd-rcard.is-in {
+    transition: opacity 0.9s $ease-expo, translate 0.6s $ease-expo, box-shadow 0.6s $ease;
+    transition-delay: calc(var(--i, 0) * 110ms), 0s, 0s;
+  }
+
+  // звёзды карточек заполняются слева, когда карточка появилась
+  .rd-rcard .rd-rev__stars-fg,
+  .rd-rev__sum .rd-rev__stars-fg {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.2s $ease-expo 0.35s;
+  }
+
+  .rd-rcard.is-in .rd-rev__stars-fg,
+  .rd-rev__sum.is-in .rd-rev__stars-fg {
+    clip-path: inset(0 calc(100% - var(--p, 100%)) 0 0);
+  }
+
+  // фото видеоотзыва проявляется из темноты, «плей» выпрыгивает
+  .rd-vrev__photo {
+    opacity: 0;
+    scale: 1.12;
+    transition: opacity 1.2s $ease, scale 1.6s $ease-expo, transform 1.2s $ease-expo, filter 0.8s $ease;
+  }
+
+  .rd-vrev.is-in .rd-vrev__photo {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .rd-vrev__play {
+    scale: 0;
+    transition: scale 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s;
+  }
+
+  .rd-vrev.is-in .rd-vrev__play {
+    scale: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rd-vrev.is-in .rd-vrev__play:hover {
+      scale: 1.08;
+      transition-delay: 0s;
+      transition-duration: 0.5s;
+    }
+  }
+
+  // свет за курсором на тёмных карточках
+  .rd-vrev__light {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .rd-light--vrev {
+    --rd-lr: 380px;
+    background: radial-gradient(closest-side, rgba($gold, 0.16), rgba($gold, 0.05) 45%, transparent 70%);
+  }
+
+  .rd-vrev.is-lit .rd-light--vrev {
+    opacity: 1;
+  }
+
+  // форма: строки по очереди, линии полей прорисовываются (общие правила «вау» прячут их вне блока заявки)
+  .rd-rev__panel {
+    .rd-rev__ftitle,
+    .rd-rev__fsub,
+    .rd-field,
+    .rd-rev__rate,
+    .rd-lead__send,
+    .rd-rev__note {
+      opacity: 0;
+      translate: 0 24px;
+      transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo;
+      transition-delay: calc(var(--j, 0) * 80ms + 250ms);
+    }
+
+    .rd-field__line::before {
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 1.1s cubic-bezier(0.77, 0, 0.18, 1), background-color 0.3s $ease;
+      transition-delay: calc(var(--j, 0) * 80ms + 400ms), 0s;
+    }
+
+    &.is-in {
+      .rd-rev__ftitle,
+      .rd-rev__fsub,
+      .rd-field,
+      .rd-rev__rate,
+      .rd-lead__send,
+      .rd-rev__note {
+        opacity: 1;
+        translate: 0 0;
+      }
+
+      .rd-field__line::before {
+        transform: scaleX(1);
+      }
+
+      .rd-lead__send-fill::after {
+        animation: rd-lead-sweep 1.3s cubic-bezier(0.77, 0, 0.18, 1) 1.1s both;
+      }
+    }
+
+    &.is-lit .rd-light--lead {
+      opacity: 1;
+    }
+  }
+
+  .rd-rev__plight {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  // звёзды формы «загораются» по очереди, когда плашка появилась
+  .rd-rev__panel.is-in .ec-rating-stars span:not(.active):not(.active2) {
+    animation: rd-rev-twinkle 1.2s $ease both;
+    animation-delay: calc(var(--s, 0) * 90ms + 0.9s);
+  }
+}
+
+@keyframes rd-rev-twinkle {
+  0%,
+  100% {
+    color: rgba(#fff, 0.16);
+  }
+
+  45% {
+    color: $gold;
+  }
+}

@@ -585,8 +585,8 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl, .rd-studio, .rd-team, .rd-cnt, .rd-blog, .rd-art, .rd-art__more, .rd-dsc';
-    var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn, .rd-dsc__close, .rd-dsc__msg';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl, .rd-studio, .rd-team, .rd-cnt, .rd-blog, .rd-art, .rd-art__more, .rd-dsc, .rd-rev, .rd-vid';
+    var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn, .rd-dsc__close, .rd-dsc__msg, .rd-vrev__play, .rd-vrev__watch-ic, .rd-vid__close';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var cwpSection = document.querySelector('[data-rd-cwp]');
     var labels = { click: ringLabel.textContent, view: (pfSection && pfSection.getAttribute('data-rd-view')) || (isRu ? 'смотреть' : 'дивитись'),
@@ -2210,6 +2210,82 @@
       cntTargets.forEach(function (el) { cntIo.observe(el); });
     } else {
       cntTargets.forEach(cntShow);
+    }
+  }
+
+  /* ================= Відгуки (reviews.tpl) ================= */
+  // Заголовки — слова из размытия; вступление и итог всплывают, оценка и число досчитываются, звёзды заполняются слева.
+  // Видеоотзывы: карточки по очереди, фото проявляется из темноты, «плей» выпрыгивает; свет за курсором.
+  // Карточки отзывов — по очереди (те, что появились вместе), звёзды заполняются. Форма: строки по очереди (--j),
+  // линии полей прорисовываются, звёзды «загораются»; ошибка — поле «качает головой» (rd-lead-invalid из rd.js).
+  var revPage = document.querySelector('[data-rd-rev]');
+  if (revPage) {
+    var revTargets = [];
+    Array.prototype.forEach.call(revPage.querySelectorAll('.rd-rev__title, .rd-rev__h2'), function (t) {
+      splitWords(t);
+      revTargets.push(t);
+    });
+    var revSum = revPage.querySelector('.rd-rev__sum');
+    revTargets = revTargets.concat([revPage.querySelector('.rd-rev__lead'), revSum].filter(Boolean));
+    var revV = Array.prototype.slice.call(revPage.querySelectorAll('.rd-vrev'));
+    var revC = Array.prototype.slice.call(revPage.querySelectorAll('.rd-rcard'));
+    var revPanel = revPage.querySelector('.rd-rev__panel');
+    revV.forEach(function (c, i) { c.style.setProperty('--i', i % 2); });
+    revTargets = revTargets.concat(revV, revC);
+    if (revPanel) {
+      revTargets.push(revPanel);
+      Array.prototype.forEach.call(revPanel.querySelectorAll('.rd-rev__ftitle, .rd-rev__fsub, .rd-field, .rd-rev__rate, .rd-lead__send, .rd-rev__note'), function (el, j) {
+        el.style.setProperty('--j', j);
+      });
+    }
+    var revShow = function (el, k) {
+      if (el.classList.contains('rd-rcard')) el.style.setProperty('--i', k);
+      el.classList.add('is-in');
+      if (el === revSum) {
+        Array.prototype.forEach.call(el.querySelectorAll('.rd-rev__score:not([hidden]) .rd-rev__num, .rd-rev__count:not([hidden]) .rd-rev__num'), function (num, m) {
+          countNums(num, 300 + m * 150);
+        });
+      }
+    };
+    if ('IntersectionObserver' in window) {
+      var revIo = new IntersectionObserver(function (entries) {
+        var k = 0;
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          revShow(en.target, en.target.classList.contains('rd-rcard') ? k++ : 0);
+          revIo.unobserve(en.target);
+        });
+      }, { threshold: 0, rootMargin: '0px 0px -8% 0px' });
+      revTargets.forEach(function (el) { revIo.observe(el); });
+    } else {
+      revTargets.forEach(function (el) { el.classList.add('is-in'); });
+    }
+    if (fine) {
+      revV.forEach(function (c) {
+        addLight(c, 'rd-light--vrev', c.firstChild, 'rd-vrev__light');
+        c.addEventListener('pointerenter', function () { c.classList.add('is-lit'); });
+        c.addEventListener('pointerleave', function () { c.classList.remove('is-lit'); });
+      });
+      if (revPanel) {
+        addLight(revPanel, 'rd-light--lead', revPanel.firstChild, 'rd-rev__plight');
+        revPanel.addEventListener('pointerenter', function () { revPanel.classList.add('is-lit'); });
+        revPanel.addEventListener('pointerleave', function () { revPanel.classList.remove('is-lit'); });
+      }
+    }
+    var revForm2 = revPage.querySelector('[data-rd-rev-form]');
+    if (revForm2) {
+      revForm2.addEventListener('rd-lead-invalid', function (e) {
+        (e.detail || []).forEach(function (input) {
+          var f = input.closest('.rd-field');
+          if (!f) return;
+          f.classList.remove('is-shake');
+          void f.offsetWidth;
+          f.classList.add('is-shake');
+        });
+      });
+      revForm2.addEventListener('animationend', function (e) {
+        if (e.animationName === 'rd-lead-shake') e.target.classList.remove('is-shake');
+      });
     }
   }
 

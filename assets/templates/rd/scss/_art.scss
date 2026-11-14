@@ -1098,7 +1098,7 @@ $art-line: rgba($black, 0.1);
     color: rgba($black, 0.7);
   }
 
-  // звёзды рейтинга: easyComm ставит классы active / hover на <span>
+  // звёзды рейтинга: easyComm ставит классы active / active2 / active-disabled на <span>
   .ec-rating-stars {
     display: inline-flex;
     gap: 4px;
@@ -1112,9 +1112,14 @@ $art-line: rgba($black, 0.1);
       cursor: pointer;
       transition: background-color 0.25s $ease;
 
+      // easyComm: active — выбрано, active2 — под курсором и левее, active-disabled — правее курсора
       &.active,
-      &.hover {
+      &.active2 {
         background: $gold;
+      }
+
+      &.active-disabled {
+        background: rgba($black, 0.16);
       }
     }
   }

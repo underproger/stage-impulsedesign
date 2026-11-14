@@ -1139,6 +1139,252 @@
     }
   }
 
+  /* ---------- Видео поверх страницы ([data-rd-video] — ID YouTube; страница «Відгуки») ---------- */
+  // Плеер создаётся по клику (youtube-nocookie, автозапуск) и удаляется при закрытии — до клика YouTube не грузится.
+  // Esc / крестик / клик мимо видео — закрыть, фокус возвращается на кнопку; страница не прокручивается.
+  var vidBtns = document.querySelectorAll('[data-rd-video]');
+  if (vidBtns.length) {
+    var vidRoot = document.documentElement;
+    var vidRu = (vidRoot.getAttribute('lang') || '') === 'ru';
+    var vid = document.createElement('div');
+    vid.className = 'rd-vid';
+    vid.hidden = true;
+    vid.setAttribute('role', 'dialog');
+    vid.setAttribute('aria-modal', 'true');
+    vid.setAttribute('aria-label', vidRu ? 'Видео' : 'Відео');
+    vid.innerHTML = '<div class="rd-vid__frame"></div><button class="rd-vid__close" type="button" aria-label="' + (vidRu ? 'Закрыть' : 'Закрити') +
+      '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>';
+    document.body.appendChild(vid);
+    var vidFrame = vid.querySelector('.rd-vid__frame');
+    var vidClose = vid.querySelector('.rd-vid__close');
+    var vidOpener = null;
+    var vidTimer = 0;
+    var vidReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var vidShow = function (id, opener) {
+      clearTimeout(vidTimer);
+      vidOpener = opener;
+      vidFrame.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) +
+        '?autoplay=1&rel=0&modestbranding=1&playsinline=1" title="YouTube" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+      vidRoot.style.setProperty('--rd-sbw', Math.max(0, window.innerWidth - vidRoot.clientWidth) + 'px');
+      vid.hidden = false;
+      vidRoot.classList.add('rd-lock', 'rd-vid-open');
+      document.body.classList.add('rd-lock');
+      void vid.offsetWidth;
+      requestAnimationFrame(function () { vid.classList.add('is-open'); });
+      vidClose.focus({ preventScroll: true });
+    };
+    var vidHide = function () {
+      if (vid.hidden) return;
+      vid.classList.remove('is-open');
+      vidTimer = setTimeout(function () {
+        vid.hidden = true;
+        vidFrame.innerHTML = '';
+        vidRoot.classList.remove('rd-lock', 'rd-vid-open');
+        document.body.classList.remove('rd-lock');
+        if (vidOpener) vidOpener.focus({ preventScroll: true });
+      }, vidReduce ? 0 : 400);
+    };
+    Array.prototype.forEach.call(vidBtns, function (b) {
+      b.addEventListener('click', function () { vidShow(b.getAttribute('data-rd-video'), b); });
+    });
+    vidClose.addEventListener('click', vidHide);
+    vid.addEventListener('click', function (e) { if (e.target === vid) vidHide(); });
+    document.addEventListener('keydown', function (e) {
+      if (vid.hidden) return;
+      if (e.key === 'Escape') { e.preventDefault(); vidHide(); }
+      if (e.key === 'Tab') { e.preventDefault(); vidClose.focus(); } // внутри — только крестик (iframe держит фокус сам)
+    });
+  }
+
+  /* ---------- Страница «Відгуки» (reviews.tpl) ---------- */
+  // Средняя оценка и число отзывов — по карточкам на странице (data-rating > 0 — оценённые); «Показати ще» по 6;
+  // форма easyComm ([data-rd-rev-form]): подписи полей, проверка до отправки (имя, текст, e-mail), звёзды с клавиатуры,
+  // «отправляем…», тексты ошибок — свои (data-msg); сообщения easyComm без поля — в строку статуса, а не alert().
+  var rev = document.querySelector('[data-rd-rev]');
+  if (rev) {
+    var revCards = Array.prototype.slice.call(rev.querySelectorAll('.rd-vrev, .rd-rcard'));
+    var revRated = revCards.map(function (c) { return parseFloat(c.getAttribute('data-rating')) || 0; }).filter(function (v) { return v > 0; });
+    var revScore = rev.querySelector('[data-rd-rev-score]');
+    var revCount = rev.querySelector('[data-rd-rev-count]');
+    if (revScore && revRated.length) {
+      var avg = revRated.reduce(function (a, b) { return a + b; }, 0) / revRated.length;
+      var avgTxt = (Math.round(avg * 10) / 10).toFixed(1);
+      revScore.querySelector('[data-rd-rev-avg]').textContent = avgTxt;
+      var stars = revScore.querySelector('[data-rd-rev-stars]');
+      stars.style.setProperty('--p', (avg / 5 * 100).toFixed(1) + '%');
+      stars.setAttribute('aria-label', avgTxt + ' / 5');
+      revScore.hidden = false;
+    }
+    if (revCount && revCards.length) {
+      var n = revCards.length;
+      var forms = (revCount.getAttribute('data-forms') || '').split('|');
+      var n10 = n % 10;
+      var n100 = n % 100;
+      var form = (n10 === 1 && n100 !== 11) ? 0 : (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) ? 1 : 2;
+      revCount.querySelector('[data-rd-rev-n]').textContent = n;
+      revCount.querySelector('[data-rd-rev-word]').textContent = forms[form] || forms[0] || '';
+      revCount.hidden = false;
+    }
+
+    // «Показати ще»: видно 6 карточек, дальше — по 6
+    var revList = rev.querySelector('[data-rd-rev-list]');
+    var revMore = rev.querySelector('[data-rd-rev-more]');
+    if (revList && revMore) {
+      var rCards = Array.prototype.slice.call(revList.querySelectorAll('.rd-rcard'));
+      var rShown = 6;
+      var rApply = function () {
+        rCards.forEach(function (c, i) { c.hidden = i >= rShown; });
+        var left = rCards.length - rShown;
+        revMore.hidden = left <= 0;
+        var nEl = revMore.querySelector('.rd-rev__more-n');
+        if (nEl) nEl.textContent = left > 0 ? '(' + left + ')' : '';
+      };
+      revMore.addEventListener('click', function () {
+        var first = rCards[rShown];
+        rShown += 6;
+        rApply();
+        if (first) first.focus({ preventScroll: true });
+      });
+      rCards.forEach(function (c) { c.setAttribute('tabindex', '-1'); });
+      rApply();
+    }
+
+    var revForm = rev.querySelector('[data-rd-rev-form]');
+    if (revForm) {
+      var rfStatus = revForm.querySelector('[data-rd-rev-status]');
+      var rfInputs = Array.prototype.slice.call(revForm.querySelectorAll('.rd-field__input'));
+      var rfField = function (input) { return input.closest('.rd-field'); };
+      var rfSync = function (input) { rfField(input).classList.toggle('is-filled', input.value.trim() !== ''); };
+      var rfErr = function (input, on, msg) {
+        var f = rfField(input);
+        var err = f.querySelector('.rd-field__err');
+        f.classList.toggle('has-error', on);
+        if (on) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
+        if (err) {
+          err.textContent = on ? (msg || err.getAttribute('data-msg') || '') : '';
+          err.style.display = '';
+        }
+      };
+      rfInputs.forEach(function (input) {
+        rfSync(input);
+        input.addEventListener('input', function () {
+          rfSync(input);
+          if (rfField(input).classList.contains('has-error')) rfErr(input, false);
+        });
+        input.addEventListener('blur', function () { rfSync(input); });
+      });
+      revForm.addEventListener('reset', function () { setTimeout(function () { rfInputs.forEach(rfSync); }, 0); });
+
+      // звёзды: клавиатура (стрелки, Enter / пробел), aria-checked; клик — easyComm (custom.js)
+      var rfStars = Array.prototype.slice.call(revForm.querySelectorAll('.ec-rating-stars > span'));
+      rfStars.forEach(function (s, i) { s.style.setProperty('--s', i); });
+      var rfMark = function () {
+        var val = parseInt((revForm.querySelector('input[name="rating"]') || {}).value, 10) || 0;
+        rfStars.forEach(function (s, i) {
+          var on = i + 1 === val;
+          s.setAttribute('aria-checked', on ? 'true' : 'false');
+          s.tabIndex = (val ? on : i === rfStars.length - 1) ? 0 : -1;
+        });
+      };
+      rfStars.forEach(function (s, i) {
+        s.addEventListener('click', function () { setTimeout(rfMark, 0); });
+        s.addEventListener('keydown', function (e) {
+          var to = null;
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); s.click(); return; }
+          if (e.key === 'ArrowRight' || e.key === 'ArrowUp') to = Math.min(rfStars.length - 1, i + 1);
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') to = Math.max(0, i - 1);
+          if (to === null) return;
+          e.preventDefault();
+          rfStars[to].click();
+          rfStars[to].focus();
+        });
+      });
+      revForm.addEventListener('reset', function () {
+        setTimeout(function () {
+          rfStars.forEach(function (s) { s.classList.remove('active', 'active2', 'active-disabled'); });
+          var d = revForm.querySelector('.ec-rating-description');
+          if (d) d.textContent = '';
+          rfMark();
+        }, 0);
+      });
+
+      // проверка до отправки: имя и текст обязательны, e-mail — если указан
+      var rfByName = function (nm) { return revForm.querySelector('[name="' + nm + '"]'); };
+      revForm.addEventListener('submit', function (e) {
+        if (rfStatus) rfStatus.textContent = '';
+        var bad = [];
+        var nm = rfByName('user_name');
+        var tx = rfByName('text');
+        var em = rfByName('user_email');
+        [nm, tx, em].forEach(function (inp) { if (inp) rfErr(inp, false); });
+        if (nm && !nm.value.trim()) bad.push(nm);
+        if (em && em.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em.value.trim())) bad.push(em);
+        if (tx && !tx.value.trim()) bad.push(tx);
+        if (bad.length) {
+          e.preventDefault();
+          e.stopPropagation(); // easyComm (обработчик на document) не отправит
+          bad.forEach(function (inp) { rfErr(inp, true); });
+          bad[0].focus();
+          revForm.dispatchEvent(new CustomEvent('rd-lead-invalid', { detail: bad }));
+          return;
+        }
+        revForm.classList.add('is-sending');
+        var btn = revForm.querySelector('[type="submit"]');
+        if (btn) btn.disabled = true;
+      });
+
+      var $r = window.jQuery;
+      var rfDone = function () {
+        revForm.classList.remove('is-sending');
+        var btn = revForm.querySelector('[type="submit"]');
+        if (btn) btn.disabled = false;
+      };
+      if ($r) {
+        $r(document).on('ajaxComplete', function (ev, xhr, settings) {
+          if (!revForm.classList.contains('is-sending')) return;
+          if (!settings || !settings.url || settings.url.indexOf('easycomm') === -1) return;
+          rfDone();
+          var res = xhr && xhr.responseJSON;
+          if (!res) {
+            try { res = JSON.parse(xhr.responseText); } catch (er) { res = null; }
+          }
+          if (!res) { if (rfStatus) rfStatus.textContent = revForm.getAttribute('data-fail') || ''; return; }
+          if (res.success) {
+            revForm.dispatchEvent(new CustomEvent('rd-rev-sent'));
+            return;
+          }
+          // ошибки по полям — свои тексты
+          (res.data || []).forEach(function (er2) {
+            var inp = er2 && rfByName(er2.field);
+            if (inp && inp.classList.contains('rd-field__input')) rfErr(inp, true);
+          });
+        });
+        $r(document).on('ajaxError', function (ev, xhr, settings) {
+          if (!revForm.classList.contains('is-sending')) return;
+          if (settings && settings.url && settings.url.indexOf('easycomm') === -1) return;
+          rfDone();
+          if (rfStatus) rfStatus.textContent = revForm.getAttribute('data-fail') || '';
+        });
+      }
+      // easyComm показывает общие ошибки через alert() — пишем в строку статуса формы
+      var rfPatch = function () {
+        var ec = window.easyComm;
+        if (!ec || !ec.notice || ec.notice.rdPatched) return;
+        var orig = ec.notice.error;
+        ec.notice.error = function (text) {
+          if (rfStatus && document.body.contains(revForm) && revForm.offsetParent !== null) {
+            rfStatus.textContent = text === 'Submit error' ? (revForm.getAttribute('data-fail') || text) : text;
+          } else if (orig) {
+            orig(text);
+          }
+        };
+        ec.notice.rdPatched = true;
+      };
+      rfPatch();
+      window.addEventListener('load', rfPatch);
+    }
+  }
+
   /* ---------- Плавающие кнопки (весь сайт): звонок + «наверх» с прогрессом прокрутки по контуру ---------- */
   // .is-on — после половины первого экрана; прогресс — stroke-dashoffset кольца (длина пути = 1).
   var flt = document.querySelector('[data-rd-float]');
