@@ -607,6 +607,91 @@
     else if (wide.addListener) wide.addListener(ensure);
   });
 
+  /* ---------- Контакти: «Зараз працюємо» по графику и времени Киева, копирование e-mail ---------- */
+  // График — строки [data-rd-hours] («<span>Пн-Пт:</span> з 10.00 - 19.00», «Сб: …»): дни (диапазон или один) и часы.
+  // Сегодняшняя строка — .is-today; статус ([data-rd-status]) — .is-open и текст из data-open / data-closed;
+  // не разобралось ни одной строки — статус остаётся скрытым. Пересчёт раз в минуту.
+  var cntStatus = document.querySelector('[data-rd-status]');
+  var cntRows = document.querySelectorAll('[data-rd-hours]');
+  if (cntStatus && cntRows.length) {
+    var dayNum = { 'пн': 1, 'вт': 2, 'ср': 3, 'чт': 4, 'пт': 5, 'сб': 6, 'нд': 0, 'вс': 0 };
+    var week = {};
+    Array.prototype.forEach.call(cntRows, function (li) {
+      var txt = li.textContent.toLowerCase();
+      var dm = txt.match(/(пн|вт|ср|чт|пт|сб|нд|вс)(?:\s*[-\u2013\u2014]\s*(пн|вт|ср|чт|пт|сб|нд|вс))?/);
+      var tm = txt.match(/(\d{1,2})[.:](\d{2})\s*[-\u2013\u2014]\s*(\d{1,2})[.:](\d{2})/);
+      if (!dm || !tm) return;
+      var a = dayNum[dm[1]] || 7;
+      var b = dm[2] ? (dayNum[dm[2]] || 7) : a;
+      for (var d = a; d <= b; d++) {
+        week[d % 7] = { from: +tm[1] * 60 + +tm[2], to: +tm[3] * 60 + +tm[4], li: li };
+      }
+    });
+    var kyivNow = function () {
+      var fmt;
+      try {
+        fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Kyiv', weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' });
+      } catch (e) {
+        try {
+          fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Kiev', weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' });
+        } catch (e2) {
+          return null;
+        }
+      }
+      var p = {};
+      fmt.formatToParts(new Date()).forEach(function (x) { p[x.type] = x.value; });
+      var wd = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday);
+      return wd < 0 ? null : { day: wd, min: (+p.hour % 24) * 60 + +p.minute };
+    };
+    var cntText = cntStatus.querySelector('.rd-cnt__status-text');
+    var cntUpdate = function () {
+      var now = kyivNow();
+      if (!now || !Object.keys(week).length) return;
+      var today = week[now.day];
+      var open = !!today && now.min >= today.from && now.min < today.to;
+      Array.prototype.forEach.call(cntRows, function (li) { li.classList.toggle('is-today', !!today && today.li === li); });
+      cntStatus.classList.toggle('is-open', open);
+      if (cntText) cntText.textContent = cntStatus.getAttribute(open ? 'data-open' : 'data-closed');
+      cntStatus.hidden = false;
+    };
+    cntUpdate();
+    setInterval(cntUpdate, 60000);
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-rd-copy]'), function (btn) {
+    var label = btn.querySelector('span');
+    var initial = label ? label.textContent : '';
+    var timer;
+    var done = function () {
+      if (label) label.textContent = btn.getAttribute('data-done') || initial;
+      btn.classList.add('is-done');
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        btn.classList.remove('is-done');
+        if (label) label.textContent = initial;
+      }, 1800);
+    };
+    var fallback = function (v) {
+      var ta = document.createElement('textarea');
+      ta.value = v;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { if (document.execCommand('copy')) done(); } catch (e) { /* не вышло — ничего */ }
+      document.body.removeChild(ta);
+    };
+    btn.addEventListener('click', function () {
+      var v = btn.getAttribute('data-rd-copy');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(v).then(done, function () { fallback(v); });
+      } else {
+        fallback(v);
+      }
+    });
+  });
+
   // таблица с данными в SEO-тексте (есть ячейки без ссылок: «Веб-візитка | від 1000$») — строками, а не сеткой
   // «таблеток» (_seo.scss, table.is-data). В CSS так не определить: :has() нельзя вкладывать в :has()
   Array.prototype.forEach.call(document.querySelectorAll('.rd-seo__text table'), function (t) {

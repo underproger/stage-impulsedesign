@@ -585,7 +585,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl, .rd-studio, .rd-team';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl, .rd-studio, .rd-team, .rd-cnt';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var cwpSection = document.querySelector('[data-rd-cwp]');
@@ -2035,6 +2035,36 @@
       svclTargets.forEach(function (el) { svclIo.observe(el); });
     } else {
       svclTargets.forEach(svclShow);
+    }
+  }
+
+  /* ================= Контакти (contacts.tpl) ================= */
+  // Слова заголовка из размытия, статус всплывает; карточка раскрывается слева (строки по очереди, --k), карта — справа.
+  // Карточка и карта до появления обрезаны clip-path целиком — IntersectionObserver их не видит: следим за обёрткой.
+  var cnt = document.querySelector('.rd-cnt');
+  if (cnt) {
+    var cntTitle = cnt.querySelector('.rd-cnt__title');
+    if (cntTitle) splitWords(cntTitle);
+    var cntGrid = cnt.querySelector('.rd-cnt__grid');
+    var cntTargets = [cntTitle, cnt.querySelector('.rd-cnt__status'), cntGrid].filter(Boolean);
+    var cntShow = function (el) {
+      if (el === cntGrid) {
+        Array.prototype.forEach.call(el.querySelectorAll(':scope > .rd-cnt__card, :scope > .rd-cnt__map'), function (c) { c.classList.add('is-in'); });
+      } else {
+        el.classList.add('is-in');
+      }
+    };
+    if ('IntersectionObserver' in window) {
+      var cntIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          cntShow(en.target);
+          cntIo.unobserve(en.target);
+        });
+      }, { threshold: 0, rootMargin: '0px 0px -8% 0px' });
+      cntTargets.forEach(function (el) { cntIo.observe(el); });
+    } else {
+      cntTargets.forEach(cntShow);
     }
   }
 
