@@ -2,6 +2,13 @@
 (function () {
   'use strict';
 
+  /* ---------- Язык страницы — для «Спасибо» (thanks.tpl: одна страница на оба языка, текст — как у формы) ---------- */
+  if (!document.querySelector('[data-rd-ty]')) {
+    try {
+      sessionStorage.setItem('rd-lang', (document.documentElement.getAttribute('lang') || '').indexOf('ru') === 0 ? 'ru' : 'uk');
+    } catch (e) { /* без хранилища «Спасибо» определит язык по адресу прошлой страницы */ }
+  }
+
   /* ---------- Заголовок первого экрана: длинное слово не должно вылезать за край ---------- */
   var title = document.querySelector('.rd-hero__title');
   var fitTitle = function () {

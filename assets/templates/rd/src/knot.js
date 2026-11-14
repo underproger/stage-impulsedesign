@@ -1,7 +1,9 @@
 /*
  * Золотой 3D-объект первого экрана страницы услуги — WebGL, three.js r158 (металл и «студия» — как у икосаэдра
- * SEO-блока и спирали section 6). Два вида (значение data-rd-knot):
+ * SEO-блока и спирали section 6). Три вида (значение data-rd-knot):
  *   ""        — узел-трилистник (Landing и др.; описание ниже);
+ *   "ring"    — кольцо-тор, «0» в «404» (страница 404, e404.tpl): лицом к зрителю, вращается вокруг вертикали —
+ *               то круг, то узкий овал, как цифра; картинка-заглушка — ring.webp (снята с этого же рендера);
  *   "pyramid" — четырёхгранная пирамида со скруглёнными рёбрами (страница копирайтинга): сумма Минковского
  *               пирамиды и шарика — каждая точка густой сферы уходит в опорную вершину пирамиды по своей нормали,
  *               грани плоские, рёбра — цилиндры, вершины — шаровые «шапочки»; на скруглённом ребре — блик, как в макете.
@@ -35,6 +37,7 @@ import {
   MeshBasicMaterial,
   BoxGeometry,
   PlaneGeometry,
+  TorusGeometry,
   IcosahedronGeometry,
   Float32BufferAttribute,
   Color,
@@ -69,6 +72,9 @@ const PYRAMID = {
   center: [0.015, -0.03],
   spin: 0.3,
 };
+
+// кольцо «0» страницы 404: тор (радиус 1, трубка TUBE), видимый диаметр ≈ 2·(1 + tube)·scale·сторона блока
+const RING = { tube: 0.34, scale: 0.36, rot: [0.12, 0, 0], center: [0, 0], spin: 0.6 };
 
 // «студия» пирамиды: в позе макета левая грань отражает тёплый свет слева сверху (золото), правая — тёмную
 // коричневую стену справа (тёмная бронза), скруглённое переднее ребро — узкий яркий блик над зрителем
@@ -155,9 +161,10 @@ class GoldKnot {
     this.lastScroll = window.scrollY;
     this.shown = false;
     this.still = false;
-    this.kind = box.getAttribute('data-rd-knot') === 'pyramid' ? 'pyramid' : 'knot';
-    this.axis = this.kind === 'pyramid' ? Y_AXIS : Z_AXIS;
-    this.spin = this.kind === 'pyramid' ? PYRAMID.spin : SPIN;
+    const kindAttr = box.getAttribute('data-rd-knot');
+    this.kind = kindAttr === 'pyramid' || kindAttr === 'ring' ? kindAttr : 'knot';
+    this.axis = this.kind === 'knot' ? Z_AXIS : Y_AXIS;
+    this.spin = this.kind === 'pyramid' ? PYRAMID.spin : (this.kind === 'ring' ? RING.spin : SPIN);
     box.rdKnot = this;
 
     this.scene = new Scene();
@@ -181,12 +188,12 @@ class GoldKnot {
     this.setLight(this.kind === 'pyramid' ? LIGHT_PYRAMID : LIGHT);
     if (this.kind === 'pyramid') this.angle = PYRAMID.angle;
 
-    const rot = this.kind === 'pyramid' ? PYRAMID.rot : ROT;
+    const rot = this.kind === 'pyramid' ? PYRAMID.rot : (this.kind === 'ring' ? RING.rot : ROT);
     this.base = new Quaternion().setFromAxisAngle(new Vector3(...rot).normalize(), Math.hypot(...rot));
     this.spinQ = new Quaternion();
     this.mesh = new Mesh(undefined, this.material);
-    this.scaleK = this.kind === 'pyramid' ? PYRAMID.scale : SCALE;
-    this.center = this.kind === 'pyramid' ? PYRAMID.center : CENTER;
+    this.scaleK = this.kind === 'pyramid' ? PYRAMID.scale : (this.kind === 'ring' ? RING.scale : SCALE);
+    this.center = this.kind === 'pyramid' ? PYRAMID.center : (this.kind === 'ring' ? RING.center : CENTER);
     this.setShape({});
     this.tiltGroup = new Group();
     this.tiltGroup.add(this.mesh);
@@ -241,6 +248,11 @@ class GoldKnot {
     if (this.kind === 'pyramid') {
       this.shape = Object.assign({ h: PYRAMID.h, r: PYRAMID.r }, this.shape, shape);
       this.mesh.geometry = roundedPyramid(this.shape.h, this.shape.r);
+      return;
+    }
+    if (this.kind === 'ring') {
+      this.shape = Object.assign({ tube: RING.tube }, this.shape, shape);
+      this.mesh.geometry = new TorusGeometry(1, this.shape.tube, 72, 240);
       return;
     }
     this.shape = Object.assign({}, SHAPE, { mirror: false }, this.shape, shape);
@@ -357,5 +369,5 @@ class GoldKnot {
   }
 }
 
-// все блоки [data-rd-knot] (первый экран услуги; разделы «Послуги студії» — .rd-svcl__float)
+// все блоки [data-rd-knot] (первый экран услуги; разделы «Послуги студії» — .rd-svcl__float; «0» страницы 404)
 mountAll('[data-rd-knot]', (box) => new GoldKnot(box));

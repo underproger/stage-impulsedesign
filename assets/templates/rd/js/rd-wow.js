@@ -585,7 +585,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl, .rd-studio, .rd-team, .rd-cnt, .rd-blog, .rd-art, .rd-art__more, .rd-dsc, .rd-rev, .rd-vid';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl, .rd-studio, .rd-team, .rd-cnt, .rd-blog, .rd-art, .rd-art__more, .rd-dsc, .rd-rev, .rd-vid, .rd-e404, .rd-ty';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn, .rd-dsc__close, .rd-dsc__msg, .rd-vrev__play, .rd-vrev__watch-ic, .rd-vid__close';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var cwpSection = document.querySelector('[data-rd-cwp]');
@@ -2287,6 +2287,131 @@
         if (e.animationName === 'rd-lead-shake') e.target.classList.remove('is-shake');
       });
     }
+  }
+
+  /* ================= 404 (e404.tpl) ================= */
+  // Цифры встают из размытия («0» — золотое кольцо, раскрутка — в knot.js), слова заголовка, текст, кнопки и «таблетки»
+  // по очереди (--k); потом цифры тянутся за курсором (--mx / --my, .is-done), под курсором — золотая сетка (прожектор).
+  var e404 = document.querySelector('[data-rd-e404]');
+  if (e404) {
+    var e404Title = e404.querySelector('.rd-e404__title');
+    if (e404Title) splitWords(e404Title);
+    Array.prototype.forEach.call(e404.querySelectorAll('.rd-e404__text, .rd-e404__btns > *, .rd-e404__nav-title, .rd-e404__links li'), function (el, k) {
+      el.style.setProperty('--k', k);
+    });
+    var e404Go = function () {
+      e404.classList.add('is-in');
+      setTimeout(function () { e404.classList.add('is-done'); }, 1600);
+    };
+    setTimeout(e404Go, document.querySelector('.rd-pt.is-on') ? 450 : 120);
+    if (fine) {
+      var e404Spot = makeSpot(e404);
+      e404.insertBefore(e404Spot.el, e404.firstChild);
+      var e404M = { x: 0, y: 0, tx: 0, ty: 0, run: false };
+      var e404Tick = function () {
+        e404M.x = lerp(e404M.x, e404M.tx, 0.08);
+        e404M.y = lerp(e404M.y, e404M.ty, 0.08);
+        e404.style.setProperty('--mx', e404M.x.toFixed(3));
+        e404.style.setProperty('--my', e404M.y.toFixed(3));
+        if (Math.abs(e404M.x - e404M.tx) > 0.001 || Math.abs(e404M.y - e404M.ty) > 0.001) raf(e404Tick);
+        else e404M.run = false;
+      };
+      e404.addEventListener('pointermove', function (e) {
+        var r = e404.getBoundingClientRect();
+        e404Spot.move(e.clientX - r.left, e.clientY - r.top);
+        e404.classList.add('is-lit');
+        e404M.tx = clamp((e.clientX - r.left) / r.width * 2 - 1, -1, 1);
+        e404M.ty = clamp((e.clientY - r.top) / r.height * 2 - 1, -1, 1);
+        if (!e404M.run) { e404M.run = true; raf(e404Tick); }
+      });
+      e404.addEventListener('pointerleave', function () {
+        e404.classList.remove('is-lit');
+        e404M.tx = 0;
+        e404M.ty = 0;
+        if (!e404M.run) { e404M.run = true; raf(e404Tick); }
+      });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(e404Spot.size);
+    }
+  }
+
+  /* ================= «Спасибо» (thanks.tpl) ================= */
+  // Когда экран открылся (после круга-перехода со страницы формы): круг выпрыгивает, галочка рисуется, волны пошли,
+  // строки всплывают по очереди (--k); из круга разлетаются золотые искры (канвас, один раз, ~2.5 с).
+  var ty = document.querySelector('[data-rd-ty]');
+  if (ty) {
+    Array.prototype.forEach.call(ty.querySelectorAll('.rd-ty__eyebrow, .rd-ty__title, .rd-ty__text, .rd-ty__call, .rd-ty__btns > *'), function (el, k) {
+      el.style.setProperty('--k', k);
+    });
+    var tyFoot = ty.querySelector('.rd-ty__foot');
+    if (tyFoot) tyFoot.style.setProperty('--k', 8);
+    var tySparks = function () {
+      var mark = ty.querySelector('.rd-ty__circle');
+      if (!mark || !mark.offsetWidth) return;
+      var cv = document.createElement('canvas');
+      cv.className = 'rd-ty__sparks';
+      cv.setAttribute('aria-hidden', 'true');
+      ty.insertBefore(cv, ty.firstChild.nextSibling);
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var W = ty.offsetWidth;
+      var H = ty.offsetHeight;
+      cv.width = W * dpr;
+      cv.height = H * dpr;
+      var ctx = cv.getContext('2d');
+      ctx.scale(dpr, dpr);
+      var tr = ty.getBoundingClientRect();
+      var mr = mark.getBoundingClientRect();
+      var cx = mr.left - tr.left + mr.width / 2;
+      var cy = mr.top - tr.top + mr.height / 2;
+      var R = mr.width / 2;
+      var colors = ['#bfa660', '#d9c48a', '#efe0b0', '#fff6dc', '#a88e4c'];
+      var k = Math.max(0.7, Math.min(1.4, W / 1400));
+      var parts = [];
+      for (var i = 0; i < 110; i++) {
+        var a = Math.random() * Math.PI * 2;
+        var sp = (3 + Math.random() * 9) * k;
+        parts.push({
+          x: cx + Math.cos(a) * R * 0.8, y: cy + Math.sin(a) * R * 0.8,
+          vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 3 * k,
+          s: 2 + Math.random() * 4, rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3,
+          life: 0, max: 1.6 + Math.random() * 1.2, c: colors[i % colors.length], sq: Math.random() < 0.55
+        });
+      }
+      var t0 = null;
+      var last = 0;
+      var step = function (t) {
+        if (t0 === null) { t0 = t; last = t; }
+        var dt = Math.min(0.05, (t - last) / 1000);
+        last = t;
+        ctx.clearRect(0, 0, W, H);
+        var alive = 0;
+        parts.forEach(function (p) {
+          p.life += dt;
+          if (p.life >= p.max) return;
+          alive++;
+          p.vx *= Math.pow(0.4, dt);
+          p.vy = p.vy * Math.pow(0.4, dt) + 9 * k * dt; // торможение и тяжесть
+          p.x += p.vx * dt * 60;
+          p.y += p.vy * dt * 60;
+          p.rot += p.vr;
+          var o = 1 - p.life / p.max;
+          ctx.globalAlpha = Math.max(0, Math.min(1, o * 1.4));
+          ctx.fillStyle = p.c;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          if (p.sq) ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+          else { ctx.beginPath(); ctx.arc(0, 0, p.s / 2.2, 0, Math.PI * 2); ctx.fill(); }
+          ctx.restore();
+        });
+        if (alive) raf(step);
+        else if (cv.parentNode) cv.parentNode.removeChild(cv);
+      };
+      raf(step);
+    };
+    setTimeout(function () {
+      ty.classList.add('is-in');
+      setTimeout(tySparks, 650);
+    }, document.querySelector('.rd-pt.is-on') ? 500 : 150);
   }
 
   /* ================= «Про нас»: студия и команда (studio.tpl, team.tpl) ================= */
