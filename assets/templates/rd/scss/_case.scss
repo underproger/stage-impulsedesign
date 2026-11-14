@@ -300,6 +300,56 @@ $case-light: #f4f3ef;
     }
   }
 
+  // старый текст кейса (portfolio-content-text) — во всю ширину: заголовки как у блоков, картинки по ширине
+  &__legacy {
+    max-width: fd(1100px, 1240px);
+    font-size: fm(15px, 17px);
+    font-weight: 300;
+    line-height: 1.78;
+
+    @include desktop {
+      font-size: fd(16px, 18px);
+    }
+
+    h2,
+    h3 {
+      margin: 0 0 0.8em;
+      font-size: fm(24px, 30px);
+      font-weight: 700;
+      line-height: 1.2;
+      color: $black;
+
+      @include desktop {
+        font-size: fd(30px, 36px);
+      }
+    }
+
+    p + p,
+    p + h2,
+    p + h3 {
+      margin-top: 1.2em;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: fm(16px, 24px) 0;
+      border-radius: fm(12px, 20px);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: $gold;
+      text-underline-offset: 0.2em;
+    }
+
+    b {
+      font-weight: 700;
+    }
+  }
+
   &__head + &__media {
     margin-top: fm(32px, 48px);
 
@@ -329,7 +379,7 @@ $case-light: #f4f3ef;
   background: $case-light;
 
   @include desktop {
-    grid-template-columns: fd(410px, 471px) minmax(0, 1fr);
+    grid-template-columns: fd(410px, 480px) minmax(0, 1fr);
     margin-bottom: fw(130px);
     padding: fw(48px) fw(40px) fw(44px);
     border-radius: fw(20px);
@@ -359,13 +409,13 @@ $case-light: #f4f3ef;
     flex: none;
     width: fm(120px, 150px);
     height: auto;
-    aspect-ratio: 181 / 120;
+    aspect-ratio: 172 / 100;
     object-fit: cover;
     border-radius: 99px;
     filter: grayscale(1);
 
     @include desktop {
-      width: fw(181px);
+      width: fw(172px);
     }
   }
 
@@ -426,15 +476,15 @@ $case-light: #f4f3ef;
   &__text {
     margin: fm(16px, 20px) 0 0;
     font-size: fm(15px, 18px);
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.5;
     text-indent: fm(24px, 40px);
     color: #282727;
 
     @include desktop {
-      margin-top: fw(20px);
+      margin-top: fw(40px);
       font-size: fd(18px, 20px);
-      text-indent: fw(56px);
+      text-indent: fw(57px);
     }
   }
 }

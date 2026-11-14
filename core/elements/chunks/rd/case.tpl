@@ -6,12 +6,15 @@
   Поля (TV, категория «Кейс (редизайн)»):
     case_title  — заголовок (пусто — pagetitle);         case_sub — подзаголовок;
     case_meta   — MIGX rd_cards: title — подпись в «таблетке», text — значение;
-    case_cover  — обложка (пусто — старое поле portfolio-banner-img); кольцо ведёт на portfolio-banner-site_url;
+    case_cover  — обложка (пусто — без обложки и кольца; старое portfolio-banner-img не берём: у старых кейсов
+                  там одна заглушка); кольцо ведёт на старое поле portfolio-banner-site_url;
     case_color  — цвет проекта (полосы «Цвет проекта»; пусто — #16202e);
     case_blocks — MIGX rd_case_blocks: bg (white / light / accent), title (<br> — перенос), text (абзацы),
                   image (+ image2 — вторая колонка), flush (картинка до низа полосы, без отступа);
     case_review_text / _name / _role / _photo / _stars — отзыв (пусто — без отзыва).
   Блоки подряд с одним фоном идут одной полосой; два текстовых подряд — через тонкую линию.
+  Старый кейс (шаблон 22), переведённый на этот шаблон без заполненных блоков: выводится его старый текст
+  portfolio-content-text (с картинками) одной полосой во всю ширину; характеристики — из старых «Услуга» / «Срок».
 *}
 {set $r = $_modx->resource}
 {set $isRu = $_modx->context.key == 'web'}
@@ -29,7 +32,7 @@
   {if $r['portfolio-banner-service']}{set $meta[] = ['title' => $isRu ? 'Услуга' : 'Послуга', 'text' => $r['portfolio-banner-service']]}{/if}
   {if $r['portfolio-banner-term']}{set $meta[] = ['title' => $isRu ? 'Срок разработки' : 'Строк розробки', 'text' => $r['portfolio-banner-term']]}{/if}
 {/if}
-{set $cover = ($r['case_cover'] ?: $r['portfolio-banner-img']) | trim}
+{set $cover = $r['case_cover'] | trim}
 {if $cover && !($cover | preg_match : '#^(https?:)?/#')}{set $cover = '/' ~ $cover}{/if}
 {set $site = $r['portfolio-banner-site_url'] | trim}
 {set $color = $r['case_color'] | trim}
@@ -42,18 +45,26 @@
 {set $ringLen = $t.site | length}
 {set $ringFs = $ringLen > 14 ? (196 / $ringLen) : 14}
 
-{* --- соседние кейсы (тот же раздел, по порядку в дереве; по кругу) --- *}
-{set $sibs = $_modx->getResources(
-  ['parent' => $r.parent, 'published' => 1, 'deleted' => 0],
-  ['sortby' => 'menuindex', 'sortdir' => 'ASC', 'limit' => 0, 'select' => 'id']
-)}
+{* --- соседние кейсы: в порядке страницы «Портфоліо сайтів» (родитель, поле rd_portfolio_list), по кругу;
+     если кейса там нет — соседи в разделе по порядку в дереве (menuindex, затем id) --- *}
+{set $order = []}
+{foreach (($r.parent | resource : 'rd_portfolio_list') | json_decode : true) ?: [] as $it}
+  {if ($it.link | preg_match : '/^\d+$/') && !($it.link in $order)}{set $order[] = $it.link}{/if}
+{/foreach}
+{if !($r.id in $order)}
+  {set $order = []}
+  {foreach $_modx->getResources(
+    ['parent' => $r.parent, 'published' => 1, 'deleted' => 0],
+    ['sortby' => ['menuindex' => 'ASC', 'id' => 'ASC'], 'limit' => 0, 'select' => 'id']
+  ) as $s}{set $order[] = $s.id}{/foreach}
+{/if}
 {set $prevId = 0}
 {set $nextId = 0}
-{set $n = $sibs | length}
-{foreach $sibs as $k => $s}
-  {if $s.id == $r.id && $n > 1}
-    {set $prevId = $sibs[($k + $n - 1) % $n].id}
-    {set $nextId = $sibs[($k + 1) % $n].id}
+{set $n = $order | length}
+{foreach $order as $k => $oid}
+  {if $oid == $r.id && $n > 1}
+    {set $prevId = $order[($k + $n - 1) % $n]}
+    {set $nextId = $order[($k + 1) % $n]}
   {/if}
 {/foreach}
 
@@ -131,6 +142,11 @@
       {set $im2 = $b.image2 | trim}
       {if $im1 && !($im1 | preg_match : '#^(https?:)?/#')}{set $im1 = '/' ~ $im1}{/if}
       {if $im2 && !($im2 | preg_match : '#^(https?:)?/#')}{set $im2 = '/' ~ $im2}{/if}
+      {* размеры картинок — из файлов (ленивая загрузка без прыжков страницы) *}
+      {set $f1 = $im1 ? ($.const.MODX_BASE_PATH ~ $.php.ltrim($im1, '/')) : ''}
+      {set $f2 = $im2 ? ($.const.MODX_BASE_PATH ~ $.php.ltrim($im2, '/')) : ''}
+      {set $sz1 = ($f1 && $.php.is_file($f1)) ? $.php.getimagesize($f1) : []}
+      {set $sz2 = ($f2 && $.php.is_file($f2)) ? $.php.getimagesize($f2) : []}
       {set $hasText = $bTitle || $bText}
       {set $cls = 'rd-cblk rd-cblk--' ~ $bg}
       {if $bg == $prevBg}{set $cls = $cls ~ ' rd-cblk--cont'}{/if}
@@ -147,8 +163,8 @@
           {/if}
           {if $im1 || $im2}
             <div class="rd-cblk__media{if $im1 && $im2} rd-cblk__media--two{/if}">
-              {if $im1}<img src="{$im1}" alt="{$bTitle ? ($bTitle | strip_tags | escape) : ($r.pagetitle | escape)}" loading="lazy" decoding="async">{/if}
-              {if $im2}<img src="{$im2}" alt="{$bTitle ? ($bTitle | strip_tags | escape) : ($r.pagetitle | escape)}" loading="lazy" decoding="async">{/if}
+              {if $im1}<img src="{$im1}"{if $sz1} width="{$sz1[0]}" height="{$sz1[1]}"{/if} alt="{$bTitle ? ($bTitle | strip_tags | escape) : ($r.pagetitle | escape)}" loading="lazy" decoding="async">{/if}
+              {if $im2}<img src="{$im2}"{if $sz2} width="{$sz2[0]}" height="{$sz2[1]}"{/if} alt="{$bTitle ? ($bTitle | strip_tags | escape) : ($r.pagetitle | escape)}" loading="lazy" decoding="async">{/if}
             </div>
           {/if}
         </div>
@@ -156,6 +172,13 @@
       {set $prevBg = $bg}
       {set $prevText = $hasText && !$im1 && !$im2}
     {/foreach}
+  {/if}
+
+  {* старый кейс без новых блоков — его прежний текст с картинками *}
+  {if !$blocks && ($r['portfolio-content-text'] | trim)}
+    <section class="rd-cblk rd-cblk--white rd-cblk--legacy">
+      <div class="rd-container"><div class="rd-cblk__legacy">{$r['portfolio-content-text'] | replace : '<strong>' : '<b>' | replace : '</strong>' : '</b>'}</div></div>
+    </section>
   {/if}
 
   {* ----- отзыв и навигация ----- *}
@@ -170,7 +193,7 @@
           <h2 class="rd-crev__title">{$t.review}</h2>
           <div class="rd-crev__body">
             <figcaption class="rd-crev__who">
-              {if $rvPhoto}<img class="rd-crev__photo" src="{$rvPhoto}" alt="{$r['case_review_name'] | escape}" width="181" height="120" loading="lazy">{/if}
+              {if $rvPhoto}<img class="rd-crev__photo" src="{$rvPhoto}" alt="{$r['case_review_name'] | escape}" width="172" height="100" loading="lazy">{/if}
               <span class="rd-crev__person">
                 {if $r['case_review_name']}<span class="rd-crev__name">{$r['case_review_name'] | strip_tags}</span>{/if}
                 {if $r['case_review_role']}<span class="rd-crev__role">{$r['case_review_role'] | strip_tags}</span>{/if}
