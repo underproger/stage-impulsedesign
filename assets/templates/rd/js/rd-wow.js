@@ -947,9 +947,10 @@
       // после закрепления под карточками — обычный нижний отступ блока: добираем padding-bottom блока
       // (sticky держится в пределах содержимого, padding идёт уже после ленты)
       var pinB = pfPin.getBoundingClientRect().bottom;
+      // от низа ленты (координаты экрана: блок может быть и выше окна — после перезагрузки страница открывается ниже)
       var cardsB = Array.prototype.reduce.call(pfTrack.querySelectorAll('.rd-case'), function (m, el) {
         return Math.max(m, el.getBoundingClientRect().bottom);
-      }, 0);
+      }, pfTrack.getBoundingClientRect().bottom);
       var extra = Math.max(0, Math.round(padB - (pinB - cardsB)));
       pf.style.paddingBottom = extra + 'px';
       var bb = getComputedStyle(pf).boxSizing === 'border-box' ? extra : 0;
