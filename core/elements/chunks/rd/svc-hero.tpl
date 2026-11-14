@@ -12,6 +12,11 @@
     brief=1       — рядом с кнопкой «Завантажити бриф» (файл — системная настройка brief, как в баннере главной).
   и поля (TV): banner_price — строка с ценой под подзаголовком (золото — <b>: «Від <b>120 грн</b> за 1000 символів…»),
     banner_tags — метки через запятую («Українська мова, Російська мова»): первая — золотая, остальные — контуром.
+  Вариант страницы раздела услуг (шаблон 20 «Услуги - Категория», «Ціна на створення сайтів») — cat=1:
+    заголовок — services-category-title-inner (пусто — services-category-title), под ним — services-category-subtitle
+    (золотом) и services-category-text (жирный — золотом); объект — тот же, что у раздела на «Послуги студії»
+    (по порядку раздела среди видимых: узел, икосаэдр, пирамида, спираль — по кругу; WebGL — knot.js / ico.js / spiral.js).
+  obj='knot' | 'pyramid' | 'ico' | 'spiral' — объект явно (картинка-заглушка — {obj}.png или .webp).
 *}
 {set $isRu = $_modx->context.key == 'web'}
 {set $img = '/assets/templates/rd/img/'}
@@ -19,7 +24,11 @@
 {set $start = $_modx->config.site_start}
 
 {* --- Заголовок --- *}
-{set $title = $r['title-banner'] | strip_tags | preg_replace : '/\s+/u' : ' ' | trim}
+{if $cat?}
+  {set $title = ($r['services-category-title-inner'] ?: $r['services-category-title']) | strip_tags | preg_replace : '/\s+/u' : ' ' | trim}
+{else}
+  {set $title = $r['title-banner'] | strip_tags | preg_replace : '/\s+/u' : ' ' | trim}
+{/if}
 {if !$title}{set $title = $r.longtitle ?: $r.pagetitle}{/if}
 {if $title | preg_match : '/\s(під|под)\s+ключ$/iu'}
   {set $titleHead = $title | preg_replace : '/\s+(під|под)\s+ключ$/iu' : ''}
@@ -94,7 +103,10 @@
         <h1 class="rd-hero__title" style="--rd-longest: {$longest ?: 10}">
           {if $nopill?}{$title}{else}{if $titleHead}{$titleHead} {/if}<span class="rd-hero__last"><span class="rd-hero__pill" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M14.5 9.5h-1c-1.9 0-3 1.1-3 3v4.2c0 1.7-.8 2.8-2.5 3.3 1.7.5 2.5 1.6 2.5 3.3v4.2c0 1.9 1.1 3 3 3h1"/><path d="M25.5 9.5h1c1.9 0 3 1.1 3 3v4.2c0 1.7.8 2.8 2.5 3.3-1.7.5-2.5 1.6-2.5 3.3v4.2c0 1.9-1.1 3-3 3h-1"/><path class="rd-hero__check" d="m15.6 20.4 3.1 3.1 5.9-6.2" pathLength="1"/></svg></span>{$tailFirst}</span>{if $tailRest} {$tailRest}{/if}{/if}
         </h1>
-        {if $r['sub-title-banner']}
+        {if $cat?}
+          {if $r['services-category-subtitle']}<p class="rd-hero__text rd-hero__lead">{$r['services-category-subtitle'] | strip_tags}</p>{/if}
+          {if $r['services-category-text']}<p class="rd-hero__text rd-hero__more">{$r['services-category-text'] | strip_tags : '<b><strong><br>'}</p>{/if}
+        {elseif $r['sub-title-banner']}
           <p class="rd-hero__text">{$r['sub-title-banner'] | strip_tags : '<b><strong><span><br><a>'}</p>
         {/if}
         {if $price}<p class="rd-hero__text rd-hero__price">{$price}</p>{/if}
@@ -121,11 +133,22 @@
     </div>
 
     <div class="rd-hero__visual">
-      {set $objName = ($obj? && $obj == 'pyramid') ? 'pyramid' : 'knot'}
-      <div class="rd-hero__glob rd-hero__glob--{$objName}" data-rd-knot="{$objName == 'pyramid' ? 'pyramid' : ''}" data-src="/assets/templates/rd/js/rd-blob.js?v={$.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/js/rd-blob.js')}">
+      {* объект: явно (obj=…) или у раздела услуг — по его порядку среди видимых разделов (как на «Послуги студії») *}
+      {set $objList = ['knot', 'ico', 'pyramid', 'spiral']}
+      {set $objName = ($obj? && $obj in $objList) ? $obj : 'knot'}
+      {if $cat? && !$obj?}
+        {set $sibs = $_modx->getResources(['parent' => $r.parent, 'published' => 1, 'deleted' => 0, 'hidemenu' => 0],
+          ['sortby' => ['menuindex' => 'ASC', 'id' => 'ASC'], 'limit' => 0, 'select' => 'id'])}
+        {foreach $sibs as $si => $sb}
+          {if $sb.id == $r.id}{set $objName = $objList[$si % 4]}{/if}
+        {/foreach}
+      {/if}
+      {set $blob = '/assets/templates/rd/js/rd-blob.js?v=' ~ $.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/js/rd-blob.js')}
+      {* узел и пирамида — knot.js; икосаэдр — ico.js, спираль — spiral.js (канвас — тот же класс, что у узла) *}
+      <div class="rd-hero__glob rd-hero__glob--{$objName}"{if $objName == 'ico'} data-rd-ico data-rd-canvas="rd-hero__canvas"{elseif $objName == 'spiral'} data-rd-3d data-rd-canvas="rd-hero__canvas"{else} data-rd-knot="{$objName == 'pyramid' ? 'pyramid' : ''}"{/if} data-src="{$blob}">
         <picture>
           <source srcset="{$img}{$objName}.webp" type="image/webp">
-          <img class="rd-hero__blob" src="{$img}{$objName}.png" width="600" height="600" alt="" fetchpriority="high" loading="eager">
+          <img class="rd-hero__blob" src="{$img}{$objName}.{($objName == 'knot' || $objName == 'pyramid') ? 'png' : 'webp'}" width="600" height="600" alt="" fetchpriority="high" loading="eager">
         </picture>
       </div>
 

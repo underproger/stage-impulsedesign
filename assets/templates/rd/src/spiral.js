@@ -9,6 +9,7 @@
  *
  * Разметка: .rd-about__obj[data-rd-3d] > .rd-about__float > img.rd-about__spiral;
  * разделы «Послуги студії»: .rd-svcl__obj[data-rd-3d] > .rd-svcl__float > img (svc-list.tpl). Блоков может быть несколько.
+ * Первый экран страницы раздела: .rd-hero__glob[data-rd-3d][data-rd-canvas="rd-hero__canvas"] (svc-hero.tpl) — канвас прямо в glob.
  * Канвас вставляется в .rd-about__float; когда нарисован первый кадр, на .rd-about__obj ставится .is-webgl
  * (картинка гаснет). Без WebGL / при reduced motion остаётся картинка.
  *
@@ -177,7 +178,7 @@ class GoldSpiral {
     this.scene.add(this.root);
 
     this.canvas = this.renderer.domElement;
-    this.canvas.className = 'rd-about__canvas';
+    this.canvas.className = obj.getAttribute('data-rd-canvas') || 'rd-about__canvas'; // в первом экране — rd-hero__canvas
     this.canvas.setAttribute('aria-hidden', 'true');
     box.appendChild(this.canvas);
 
@@ -331,8 +332,9 @@ class GoldSpiral {
   }
 }
 
-// все блоки [data-rd-3d] (section 6 — .rd-about__float; разделы «Послуги студії» — .rd-svcl__float)
+// все блоки [data-rd-3d] (section 6 — .rd-about__float; разделы «Послуги студії» — .rd-svcl__float;
+// первый экран страницы раздела — сам .rd-hero__glob)
 mountAll('[data-rd-3d]', (obj) => {
-  const box = obj.querySelector('.rd-about__float, .rd-svcl__float');
-  if (box) new GoldSpiral(obj, box);
+  const box = obj.querySelector('.rd-about__float, .rd-svcl__float') || obj;
+  new GoldSpiral(obj, box);
 });

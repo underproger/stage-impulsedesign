@@ -607,6 +607,18 @@
     else if (wide.addListener) wide.addListener(ensure);
   });
 
+  // таблица с данными в SEO-тексте (есть ячейки без ссылок: «Веб-візитка | від 1000$») — строками, а не сеткой
+  // «таблеток» (_seo.scss, table.is-data). В CSS так не определить: :has() нельзя вкладывать в :has()
+  Array.prototype.forEach.call(document.querySelectorAll('.rd-seo__text table'), function (t) {
+    var cells = t.querySelectorAll('td, th');
+    for (var i = 0; i < cells.length; i++) {
+      if (!cells[i].querySelector('a')) {
+        t.classList.add('is-data');
+        break;
+      }
+    }
+  });
+
   /* ---------- SEO-текст (section 9): «Розгорнути» / «Згорнути» ---------- */
   // Раскрывается остальной текст (на всю ширину, икосаэдр убирается); кнопка уезжает в конец текста. При сворачивании, если блок ушёл вверх
   // за край экрана, — плавно возвращаемся к нему. Событие rd-seo на секции (detail — открыт ли).

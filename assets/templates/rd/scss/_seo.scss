@@ -252,6 +252,48 @@ $ease-in-q: cubic-bezier(0.55, 0, 0.75, 0.2); // разгон — «улетае
       }
     }
 
+    // таблица с данными (есть ячейки без ссылок: «Веб-візитка | від 1000$» на странице раздела услуг; класс
+    // ставит rd.js) — строками с линиями, ссылки — текстом с золотым подчёркиванием, последняя колонка справа и жирным.
+    // Таблица, где все ячейки — ссылки, остаётся сеткой «таблеток» (выше).
+    table.is-data {
+      tbody {
+        gap: 0;
+        border-top: 1px solid rgba($black, 0.12);
+      }
+
+      tr {
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        gap: 24px;
+        padding: 14px 0;
+        border-bottom: 1px solid rgba($black, 0.12);
+      }
+
+      td {
+        text-align: left !important;
+      }
+
+      td:last-child:not(:first-child) {
+        font-weight: 700;
+        text-align: right !important;
+      }
+
+      td a {
+        display: inline;
+        height: auto;
+        padding: 0;
+        border-radius: 0;
+        background: none;
+        box-shadow: inset 0 -1px rgba($gold, 0.7);
+
+        @include hover {
+          background: none;
+          color: $gold;
+        }
+      }
+    }
+
     img {
       display: block;
       float: none !important;

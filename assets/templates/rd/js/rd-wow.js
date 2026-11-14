@@ -525,8 +525,9 @@
     hero.insertBefore(heroSpot.el, hero.firstChild);
   }
 
-  // объект: если WebGL так и не запустился — показываем PNG
-  var glob = document.querySelector('[data-rd-glob], [data-rd-knot]');
+  // объект первого экрана (главная — жидкое золото, услуга — узел/пирамида, раздел — и икосаэдр/спираль):
+  // если WebGL так и не запустился — показываем картинку. Только .rd-hero__glob — 3D в карточках «Послуги студії» не трогаем
+  var glob = document.querySelector('.rd-hero__glob');
   if (glob) {
     setTimeout(function () {
       if (!glob.classList.contains('is-webgl')) glob.classList.add('is-fallback');
@@ -580,7 +581,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var cwpSection = document.querySelector('[data-rd-cwp]');
@@ -2030,6 +2031,47 @@
       svclTargets.forEach(function (el) { svclIo.observe(el); });
     } else {
       svclTargets.forEach(svclShow);
+    }
+  }
+
+  /* ================= Прайс-лист раздела услуг (svc-prices.tpl) ================= */
+  // Слова заголовка из размытия; счётчик и пояснение всплывают; линии строк прорисовываются слева, содержимое строки
+  // всплывает, сумма «досчитывается» (countNums). Строки, появившиеся вместе, идут по очереди (--d, мс).
+  // Наведение — CSS (заливка, сдвиг названия, стрелка) + золотой свет за курсором (addLight).
+  var prl = document.querySelector('.rd-prl');
+  if (prl) {
+    var prlTitle = prl.querySelector('.rd-prl__title');
+    if (prlTitle) splitWords(prlTitle);
+    var prlList = prl.querySelector('.rd-prl__list');
+    var prlRows = Array.prototype.slice.call(prl.querySelectorAll('.rd-prl__row'));
+    var prlTargets = [prlTitle, prl.querySelector('.rd-prl__count'), prl.querySelector('.rd-prl__note'), prlList]
+      .filter(Boolean).concat(prlRows);
+    var prlShow = function (el, k) {
+      if (el.classList.contains('rd-prl__row')) {
+        el.style.setProperty('--d', k * 90);
+        var sum = el.querySelector('.rd-prl__sum');
+        if (sum) countNums(sum, k * 90 + 250);
+      }
+      el.classList.add('is-in');
+    };
+    if ('IntersectionObserver' in window) {
+      var prlIo = new IntersectionObserver(function (entries) {
+        var k = 0;
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          prlShow(en.target, en.target.classList.contains('rd-prl__row') ? k++ : 0);
+          prlIo.unobserve(en.target);
+        });
+      }, { threshold: 0, rootMargin: '0px 0px -8% 0px' });
+      prlTargets.forEach(function (el) { prlIo.observe(el); });
+    } else {
+      prlTargets.forEach(function (el) { el.classList.add('is-in'); });
+    }
+    if (fine) {
+      prlRows.forEach(function (row) {
+        var link = row.querySelector('.rd-prl__link');
+        if (link) addLight(link, 'rd-light--prl');
+      });
     }
   }
 

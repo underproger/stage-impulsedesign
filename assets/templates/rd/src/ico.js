@@ -9,6 +9,8 @@
  *
  * Разметка: .rd-seo__obj[data-rd-ico] > .rd-seo__float > img.rd-seo__img;
  * разделы «Послуги студії»: .rd-svcl__obj[data-rd-ico] > .rd-svcl__float > img (svc-list.tpl). Блоков может быть несколько.
+ * Первый экран страницы раздела: .rd-hero__glob[data-rd-ico][data-rd-canvas="rd-hero__canvas"] > picture (svc-hero.tpl cat=1) —
+ * канвас прямо в glob, класс канваса — из data-rd-canvas.
  * Канвас вставляется в .rd-seo__float; после первого кадра на .rd-seo__obj ставится .is-webgl (картинка гаснет).
  * Без WebGL / при reduced motion остаётся картинка.
  *
@@ -243,7 +245,7 @@ class GoldIco {
     this.scene.add(this.root);
 
     this.canvas = this.renderer.domElement;
-    this.canvas.className = 'rd-seo__canvas';
+    this.canvas.className = obj.getAttribute('data-rd-canvas') || 'rd-seo__canvas'; // в первом экране — rd-hero__canvas
     this.canvas.setAttribute('aria-hidden', 'true');
     box.appendChild(this.canvas);
 
@@ -405,8 +407,9 @@ class GoldIco {
   }
 }
 
-// все блоки [data-rd-ico] (SEO-блок — .rd-seo__float; разделы «Послуги студії» — .rd-svcl__float)
+// все блоки [data-rd-ico] (SEO-блок — .rd-seo__float; разделы «Послуги студії» — .rd-svcl__float;
+// первый экран страницы раздела — сам .rd-hero__glob)
 mountAll('[data-rd-ico]', (obj) => {
-  const box = obj.querySelector('.rd-seo__float, .rd-svcl__float');
-  if (box) new GoldIco(obj, box);
+  const box = obj.querySelector('.rd-seo__float, .rd-svcl__float') || obj;
+  new GoldIco(obj, box);
 });
