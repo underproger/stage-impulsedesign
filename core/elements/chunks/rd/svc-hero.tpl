@@ -17,6 +17,10 @@
     (золотом) и services-category-text (жирный — золотом); объект — тот же, что у раздела на «Послуги студії»
     (по порядку раздела среди видимых: узел, икосаэдр, пирамида, спираль — по кругу; WebGL — knot.js / ico.js / spiral.js).
   obj='knot' | 'pyramid' | 'ico' | 'spiral' — объект явно (картинка-заглушка — {obj}.png или .webp).
+  Вариант страницы «Про нас» (шаблон 17) — about=1: без таблетки, золотая 3D-спираль (как в блоке «Digital агентство»
+    главной), заголовок — title-banner-about (золото — <span>), под ним — sub_title-banner-about и цифры
+    adv_list-banner-about (MIGX: title — «150+», «<span>топ</span> 20», «5 <span>років</span>»: подпись в <span> — мелко
+    золотом, числа «досчитываются» в «вау»; text — пояснение). Крошки: «Головна / Про нас».
 *}
 {set $isRu = $_modx->context.key == 'web'}
 {set $img = '/assets/templates/rd/img/'}
@@ -24,7 +28,10 @@
 {set $start = $_modx->config.site_start}
 
 {* --- Заголовок --- *}
-{if $cat?}
+{if $about?}
+  {set $nopill = 1}
+  {set $title = $r['title-banner-about'] | strip_tags : '<span>' | preg_replace : '/\s+/u' : ' ' | trim}
+{elseif $cat?}
   {set $title = ($r['services-category-title-inner'] ?: $r['services-category-title']) | strip_tags | preg_replace : '/\s+/u' : ' ' | trim}
 {else}
   {set $title = $r['title-banner'] | strip_tags | preg_replace : '/\s+/u' : ' ' | trim}
@@ -42,7 +49,7 @@
 {set $tailRest = $titleTail | preg_replace : '/^\S+\s{0,9}/u' : ''}
 {set $longest = 0}
 {* дефис — тоже место переноса («SEO-копірайтинг»): считаем куски по отдельности *}
-{set $words = $title | preg_split : '/[\s\-‐]+|&shy;|\x{00AD}/u'}
+{set $words = $title | strip_tags | preg_split : '/[\s\-‐]+|&shy;|\x{00AD}/u'}
 {foreach $words as $w}
   {set $len = $w | length}
   {if $len > $longest}{set $longest = $len}{/if}
@@ -75,9 +82,11 @@
 {set $p2 = $p1 ? ($p1 | resource : 'parent') : 0}
 {set $p3 = $p2 ? ($p2 | resource : 'parent') : 0}
 {set $chain = [$p3, $p2, $p1]}
+{* страница верхнего уровня («Про нас») — крошки от главной, иначе осталась бы одна текущая *}
+{if !$p1 && $r.id != $start}{set $chain = [0, 0, $start]}{/if}
 {set $pos = 0}
 
-<section class="rd-hero rd-hero--svc{if $nopill?} rd-hero--copy{/if}">
+<section class="rd-hero rd-hero--svc{if $about?} rd-hero--about{elseif $nopill?} rd-hero--copy{/if}">
   <div class="rd-container rd-hero__inner">
     <div class="rd-hero__content">
       <div class="rd-hero__heading">
@@ -101,9 +110,24 @@
         </nav>
 
         <h1 class="rd-hero__title" style="--rd-longest: {$longest ?: 10}">
-          {if $nopill?}{$title}{else}{if $titleHead}{$titleHead} {/if}<span class="rd-hero__last"><span class="rd-hero__pill" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M14.5 9.5h-1c-1.9 0-3 1.1-3 3v4.2c0 1.7-.8 2.8-2.5 3.3 1.7.5 2.5 1.6 2.5 3.3v4.2c0 1.9 1.1 3 3 3h1"/><path d="M25.5 9.5h1c1.9 0 3 1.1 3 3v4.2c0 1.7.8 2.8 2.5 3.3-1.7.5-2.5 1.6-2.5 3.3v4.2c0 1.9-1.1 3-3 3h-1"/><path class="rd-hero__check" d="m15.6 20.4 3.1 3.1 5.9-6.2" pathLength="1"/></svg></span>{$tailFirst}</span>{if $tailRest} {$tailRest}{/if}{/if}
+          {if $about?}{$title | replace : '<span>' : '<span class="rd-hero__gold">'}{elseif $nopill?}{$title}{else}{if $titleHead}{$titleHead} {/if}<span class="rd-hero__last"><span class="rd-hero__pill" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M14.5 9.5h-1c-1.9 0-3 1.1-3 3v4.2c0 1.7-.8 2.8-2.5 3.3 1.7.5 2.5 1.6 2.5 3.3v4.2c0 1.9 1.1 3 3 3h1"/><path d="M25.5 9.5h1c1.9 0 3 1.1 3 3v4.2c0 1.7.8 2.8 2.5 3.3-1.7.5-2.5 1.6-2.5 3.3v4.2c0 1.9-1.1 3-3 3h-1"/><path class="rd-hero__check" d="m15.6 20.4 3.1 3.1 5.9-6.2" pathLength="1"/></svg></span>{$tailFirst}</span>{if $tailRest} {$tailRest}{/if}{/if}
         </h1>
-        {if $cat?}
+        {if $about?}
+          {if $r['sub_title-banner-about']}<p class="rd-hero__text">{$r['sub_title-banner-about'] | strip_tags : '<b><strong><br>'}</p>{/if}
+          {set $stats = ($r['adv_list-banner-about'] ?: '[]') | json_decode : true}
+          {if $stats}
+            <ul class="rd-hero__stats">
+              {foreach $stats as $si => $st}
+                {* «<span>топ</span> <br> 20» → подпись золотом + число; числа — в <b> (их «досчитывает» rd-wow.js) *}
+                {set $sv = $st.title | strip_tags : '<span>' | preg_replace : '~\s+~u' : ' ' | trim | preg_replace : '~(\d+)~u' : '<b class="rd-hero__stat-n">$1</b>' | replace : '<span>' : '<span class="rd-hero__stat-u">'}
+                <li class="rd-hero__stat" style="--s: {$si}">
+                  <span class="rd-hero__stat-v">{$sv}</span>
+                  {if $st.text}<span class="rd-hero__stat-t">{$st.text | strip_tags}</span>{/if}
+                </li>
+              {/foreach}
+            </ul>
+          {/if}
+        {elseif $cat?}
           {if $r['services-category-subtitle']}<p class="rd-hero__text rd-hero__lead">{$r['services-category-subtitle'] | strip_tags}</p>{/if}
           {if $r['services-category-text']}<p class="rd-hero__text rd-hero__more">{$r['services-category-text'] | strip_tags : '<b><strong><br>'}</p>{/if}
         {elseif $r['sub-title-banner']}
@@ -135,7 +159,9 @@
     <div class="rd-hero__visual">
       {* объект: явно (obj=…) или у раздела услуг — по его порядку среди видимых разделов (как на «Послуги студії») *}
       {set $objList = ['knot', 'ico', 'pyramid', 'spiral']}
-      {set $objName = ($obj? && $obj in $objList) ? $obj : 'knot'}
+      {set $objName = 'knot'}
+      {if $about?}{set $objName = 'spiral'}{/if}
+      {if $obj? && $obj in $objList}{set $objName = $obj}{/if}
       {if $cat? && !$obj?}
         {set $sibs = $_modx->getResources(['parent' => $r.parent, 'published' => 1, 'deleted' => 0, 'hidemenu' => 0],
           ['sortby' => ['menuindex' => 'ASC', 'id' => 'ASC'], 'limit' => 0, 'select' => 'id'])}

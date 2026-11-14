@@ -194,6 +194,113 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
+// ----- вариант страницы «Про нас»: .rd-hero--about (svc-hero.tpl about=1, шаблон 17) -----
+// Заголовок без таблетки (золото — <span>), подзаголовок, цифры в ряд (150+ / топ 20 / 5 років: число крупно,
+// подпись из <span> — мелко золотом, пояснение — серым), кнопка; справа — 3D-спираль (spiral.js, место — как у узла).
+.rd-hero--about {
+  // с цифрами текст выше, чем у страницы услуги, — снизу свой отступ (у услуги кнопка стоит на высоте карточки)
+  .rd-hero__inner {
+    @include desktop {
+      padding-bottom: fd(72px, 90px);
+    }
+  }
+
+  .rd-hero__content {
+    @include desktop {
+      gap: fd(44px, 48px);
+    }
+  }
+
+  .rd-hero__gold {
+    color: $gold;
+  }
+
+  .rd-hero__stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: fm(14px, 24px);
+    margin: fm(28px, 36px) 0 0;
+    padding: 0;
+    list-style: none;
+
+    @include desktop {
+      gap: fd(28px, 36px);
+      margin-top: fd(40px, 44px);
+    }
+  }
+
+  .rd-hero__stat {
+    display: flex;
+    flex-direction: column;
+    gap: fm(8px, 10px);
+    min-width: 0;
+    padding-top: fm(14px, 18px);
+    border-top: 1px solid rgba(#fff, 0.14);
+
+    @include desktop {
+      gap: fw(10px);
+      padding-top: fw(20px);
+    }
+  }
+
+  .rd-hero__stat-v {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    column-gap: 0.18em;
+    font-size: fm(30px, 44px);
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    white-space: nowrap;
+
+    @include desktop {
+      font-size: fd(48px, 56px);
+    }
+  }
+
+  .rd-hero__stat-n {
+    font-weight: inherit;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // «топ», «років» — мелко золотом
+  .rd-hero__stat-u {
+    font-size: 0.4em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $gold;
+  }
+
+  .rd-hero__stat-t {
+    font-size: fm(12px, 14px);
+    font-weight: 300;
+    line-height: 1.45;
+    color: rgba(#fff, 0.64);
+
+    @include desktop {
+      font-size: fd(14px, 15px);
+    }
+  }
+
+  // телефон: цифры строками (число слева, пояснение справа) — в три узкие колонки пояснения тянулись на 7 строк
+  @include phone {
+    .rd-hero__stats {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .rd-hero__stat {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      align-items: center;
+      column-gap: 16px;
+      padding-block: 14px;
+    }
+  }
+}
+
 // ----- вариант страницы копирайтинга: .rd-hero--copy (svc-hero.tpl nopill=1 obj='pyramid' brief=1) -----
 // Без таблетки в заголовке; под подзаголовком строка с ценой (banner_price) и метки (banner_tags: первая золотая,
 // остальные контуром, вплотную); кнопка и «Завантажити бриф» в ряд; пирамида вместо узла (место и размер — те же).
@@ -331,6 +438,29 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
         animation: rd-tag-shine 5s $ease 2.2s infinite;
       }
     }
+  }
+
+  // «Про нас»: золотые буквы заголовка — от золота (а не от белого); цифры поднимаются по очереди, линия над ними
+  // прорисовывается слева, числа досчитываются (rd-wow.js, start)
+  .rd-hero__title .rd-hero__gold .rd-ch {
+    color: $gold;
+  }
+
+  .rd-hero--about {
+    .rd-hero__stat {
+      opacity: 0;
+      translate: 0 32px;
+      border-top-color: transparent;
+      background: linear-gradient(rgba(#fff, 0.14), rgba(#fff, 0.14)) top left / 0 1px no-repeat;
+      transition: opacity 1s $ease-expo, translate 1.2s $ease-expo, background-size 1.2s $ease-expo;
+      transition-delay: calc(var(--s, 0) * 120ms + 1s);
+    }
+  }
+
+  &.rd-wow-in .rd-hero--about .rd-hero__stat {
+    opacity: 1;
+    translate: 0 0;
+    background-size: 100% 1px;
   }
 
   &.rd-wow-in .rd-hero--copy {

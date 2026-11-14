@@ -541,6 +541,10 @@
     started = true;
     raf(function () { raf(function () { root.classList.add('rd-wow-in'); }); });
     setTimeout(cacheChars, 2200);
+    // цифры первого экрана «Про нас» (150+, топ 20, 5 років) досчитываются, когда поднимаются
+    if (hero) {
+      Array.prototype.forEach.call(hero.querySelectorAll('.rd-hero__stat-n'), function (n, k) { countNums(n, 1100 + k * 120); });
+    }
   };
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(start);
   setTimeout(start, 800);
@@ -581,7 +585,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl, .rd-studio, .rd-team';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var cwpSection = document.querySelector('[data-rd-cwp]');
@@ -2031,6 +2035,67 @@
       svclTargets.forEach(function (el) { svclIo.observe(el); });
     } else {
       svclTargets.forEach(svclShow);
+    }
+  }
+
+  /* ================= «Про нас»: студия и команда (studio.tpl, team.tpl) ================= */
+  // Заголовки — слова из размытия; абзацы студии всплывают по очереди (--k); капсула фото раскрывается слева,
+  // фото «отъезжает», при прокрутке чуть едет (параллакс, --py), таблетка выкатывается, число досчитывается.
+  // Карточки команды: фото раскрывается снизу по очереди (--i в шаблоне), подписи всплывают; .is-done — наведение без задержек.
+  var studio = document.querySelector('.rd-studio');
+  var team = document.querySelector('.rd-team');
+  if (studio || team) {
+    var abTargets = [];
+    [studio && studio.querySelector('.rd-studio__title'), team && team.querySelector('.rd-team__title')].forEach(function (t) {
+      if (t) { splitWords(t); abTargets.push(t); }
+    });
+    var stText = studio && studio.querySelector('.rd-studio__text');
+    if (stText) {
+      Array.prototype.forEach.call(stText.children, function (c, k) { c.style.setProperty('--k', k); });
+      abTargets.push(stText);
+    }
+    var stMedia = studio && studio.querySelector('.rd-studio__media');
+    if (stMedia) abTargets.push(stMedia);
+    var teamCards = team ? Array.prototype.slice.call(team.querySelectorAll('.rd-team__card')) : [];
+    abTargets = abTargets.concat(teamCards);
+    var abShow = function (el) {
+      el.classList.add('is-in');
+      if (el === stMedia) {
+        var badgeN = el.querySelector('.rd-studio__badge b');
+        if (badgeN) countNums(badgeN, 800);
+      }
+      if (el.classList.contains('rd-team__card')) {
+        var ci = parseInt(el.style.getPropertyValue('--i'), 10) || 0;
+        setTimeout(function () { el.classList.add('is-done'); }, 1800 + ci * 110);
+      }
+    };
+    if ('IntersectionObserver' in window) {
+      var abIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          abShow(en.target);
+          abIo.unobserve(en.target);
+        });
+      }, { threshold: 0, rootMargin: '0px 0px -10% 0px' });
+      abTargets.forEach(function (el) { abIo.observe(el); });
+    } else {
+      abTargets.forEach(abShow);
+    }
+    // параллакс фото студии: центр капсулы ниже середины экрана — фото выше, и наоборот (±6% высоты фото)
+    var stImg = stMedia && stMedia.querySelector('.rd-studio__img');
+    if (stImg) {
+      var stQueued = false;
+      var stPar = function () {
+        stQueued = false;
+        var b = stMedia.getBoundingClientRect();
+        if (b.bottom < -100 || b.top > window.innerHeight + 100) return;
+        var pr = (b.top + b.height / 2 - window.innerHeight / 2) / window.innerHeight;
+        stImg.style.setProperty('--py', clamp(pr * 8, -6, 6).toFixed(2));
+      };
+      window.addEventListener('scroll', function () {
+        if (!stQueued) { stQueued = true; raf(stPar); }
+      }, { passive: true });
+      stPar();
     }
   }
 
