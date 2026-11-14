@@ -1021,6 +1021,128 @@
     });
   });
 
+  /* ---------- Модалка «Обговорити проект» (chunks/rd/discuss.tpl, весь сайт) ---------- */
+  // Открывают ссылки data-rd-discuss, если ведут на «Контакти» (data-contacts), пустые или «#discuss», и любые
+  // ссылки на «#discuss» (в тексте страницы). Ctrl/⌘/Shift/средняя кнопка — обычный переход по ссылке.
+  // Фон раскрывается кругом из точки нажатия (--x/--y), строки появляются по очереди (--i). Esc, крестик,
+  // клик по фону — закрыть; Tab ходит по кругу внутри, после закрытия фокус — на кнопке. Адрес с #discuss
+  // открывает модалку сразу. Заявка принята — переход на «Спасибо» (data-thanks); событие для «вау» — rd-lead-sent.
+  var dsc = document.querySelector('[data-rd-dsc]');
+  if (dsc) {
+    var dscHtml = document.documentElement;
+    var dscForm = dsc.querySelector('form');
+    var dscScroll = dsc.querySelector('.rd-dsc__scroll');
+    var dscClose = dsc.querySelector('.rd-dsc__close');
+    var dscReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var dscPath = function (href) {
+      try {
+        return new URL(href, document.baseURI).pathname.replace(/\/+$/, '');
+      } catch (er) {
+        return null;
+      }
+    };
+    var dscContacts = dscPath(dsc.getAttribute('data-contacts') || '');
+    var dscOpener = null;
+    var dscTimer = 0;
+    Array.prototype.forEach.call(dsc.querySelectorAll('.rd-dsc__title, .rd-dsc__text, .rd-dsc__form .rd-field, .rd-dsc__form .rd-lead__send, .rd-dsc__form .rd-lead__agree, .rd-dsc__contact'), function (el, i) {
+      el.setAttribute('data-rd-dsc-i', '');
+      el.style.setProperty('--i', i);
+    });
+    var dscFocusables = function () {
+      return Array.prototype.filter.call(dsc.querySelectorAll('a[href], button:not([disabled]), input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), [tabindex]'), function (el) {
+        return el.tabIndex >= 0 && el.getClientRects().length > 0;
+      });
+    };
+    var dscUnlock = function () {
+      dsc.hidden = true;
+      dsc.classList.remove('is-open', 'is-closing');
+      dscHtml.classList.remove('rd-lock', 'rd-dsc-open');
+      document.body.classList.remove('rd-lock');
+    };
+    var dscShow = function (x, y, opener) {
+      if (!dsc.hidden && !dsc.classList.contains('is-closing')) return;
+      clearTimeout(dscTimer);
+      dscOpener = opener || null;
+      dscHtml.style.setProperty('--rd-sbw', Math.max(0, window.innerWidth - dscHtml.clientWidth) + 'px');
+      dsc.style.setProperty('--x', Math.round(x) + 'px');
+      dsc.style.setProperty('--y', Math.round(y) + 'px');
+      dsc.classList.remove('is-open', 'is-closing');
+      dsc.hidden = false;
+      dscScroll.scrollTop = 0;
+      dscHtml.classList.add('rd-lock', 'rd-dsc-open');
+      document.body.classList.add('rd-lock');
+      void dsc.offsetWidth; // старт анимации с закрытого состояния
+      requestAnimationFrame(function () { dsc.classList.add('is-open'); });
+      // фокус: на сенсорных экранах — сама плашка (без клавиатуры поверх формы), иначе — первое поле
+      var first = window.matchMedia('(pointer: coarse)').matches ? dsc.querySelector('.rd-dsc__panel') : (dsc.querySelector('.rd-field__input') || dscClose);
+      setTimeout(function () { if (!dsc.hidden) first.focus({ preventScroll: true }); }, dscReduce.matches ? 0 : 320);
+      dsc.dispatchEvent(new CustomEvent('rd-dsc-open'));
+    };
+    var dscHide = function () {
+      if (dsc.hidden || dsc.classList.contains('is-closing')) return;
+      dsc.classList.remove('is-open');
+      dsc.classList.add('is-closing');
+      dscTimer = setTimeout(function () {
+        dscUnlock();
+        if (dscOpener && document.contains(dscOpener)) dscOpener.focus({ preventScroll: true });
+        dscOpener = null;
+      }, dscReduce.matches ? 0 : 450);
+    };
+    window.rdDiscuss = { open: dscShow, close: dscHide };
+
+    document.addEventListener('click', function (e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest && e.target.closest('a[data-rd-discuss], a[href$="#discuss"]');
+      if (!a || dsc.contains(a)) return;
+      var href = (a.getAttribute('href') || '').trim();
+      if (!/#discuss$/.test(href) && href && href !== '#' && dscPath(href) !== dscContacts) return; // ссылку поменяли на другую страницу
+      e.preventDefault();
+      var r = a.getBoundingClientRect();
+      var kb = !e.detail || (!e.clientX && !e.clientY); // с клавиатуры — из центра кнопки
+      dscShow(kb ? r.left + r.width / 2 : e.clientX, kb ? r.top + r.height / 2 : e.clientY, a);
+    });
+    Array.prototype.forEach.call(dsc.querySelectorAll('[data-rd-dsc-close]'), function (el) {
+      el.addEventListener('click', dscHide);
+    });
+    // клик по фону вокруг плашки (слой прокрутки лежит поверх фона); выделение текста, отпущенное за плашкой, — не закрывает
+    var dscDownOut = false;
+    dscScroll.addEventListener('pointerdown', function (e) { dscDownOut = e.target === dscScroll; });
+    dscScroll.addEventListener('click', function (e) {
+      if (e.target === dscScroll && dscDownOut) dscHide();
+      dscDownOut = false;
+    });
+    document.addEventListener('keydown', function (e) {
+      if (dsc.hidden || dsc.classList.contains('is-closing')) return;
+      if (e.key === 'Escape') {
+        // открыт список стран у телефона — Esc закрывает сначала его
+        if (dsc.querySelector('.iti__country-list:not(.iti__hide)')) return;
+        e.preventDefault();
+        dscHide();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      var f = dscFocusables();
+      if (!f.length) return;
+      var i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && (i === -1 || i === f.length - 1)) { e.preventDefault(); f[0].focus(); }
+    });
+    // вернулись кнопкой «назад» со «Спасибо» — модалка закрыта
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted && !dsc.hidden) { clearTimeout(dscTimer); dscUnlock(); }
+    });
+    if (/^#discuss$/.test(location.hash)) {
+      setTimeout(function () { dscShow(window.innerWidth / 2, window.innerHeight / 2, null); }, 400);
+    }
+    if (window.jQuery && dscForm) {
+      window.jQuery(document).on('af_complete', function (ev, res) {
+        if (!res || !res.success || !res.form || res.form[0] !== dscForm) return;
+        var thanks = dsc.getAttribute('data-thanks');
+        if (thanks) window.location.href = thanks;
+      });
+    }
+  }
+
   /* ---------- Плавающие кнопки (весь сайт): звонок + «наверх» с прогрессом прокрутки по контуру ---------- */
   // .is-on — после половины первого экрана; прогресс — stroke-dashoffset кольца (длина пути = 1).
   var flt = document.querySelector('[data-rd-float]');

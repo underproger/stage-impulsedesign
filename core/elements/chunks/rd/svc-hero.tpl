@@ -151,7 +151,7 @@
       </div>
       {if $briefUrl}<div class="rd-hero__actions">{/if}
       {if $btnUrl}
-        <a class="rd-btn rd-hero__btn" href="{$btnUrl}">
+        <a class="rd-btn rd-hero__btn" href="{$btnUrl}" data-rd-discuss>
           {$btnText}
           <span class="rd-arrow" aria-hidden="true"><img class="rd-arrow__a" src="{$img}arrow-up-right.svg" width="24" height="24" alt="" loading="eager"><img class="rd-arrow__b" src="{$img}arrow-up-right.svg" width="24" height="24" alt="" loading="eager"></span>
         </a>

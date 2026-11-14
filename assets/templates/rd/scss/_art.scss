@@ -236,12 +236,116 @@ $art-line: rgba($black, 0.1);
   }
 }
 
-// колонка в DOM — перед текстом («Зміст» на телефоне — над статьёй), на десктопе — справа
+// колонка в DOM — перед текстом («Зміст» на телефоне — над статьёй), на десктопе — справа:
+// «Зміст», «Популярні» и «Останні публікації», ниже — липкая карточка «Обговорити проект»
 .rd-art__aside {
+  display: flex;
+  flex-direction: column;
+  gap: fw(20px);
+
   @include desktop {
     grid-column: 2;
     grid-row: 1;
     align-self: stretch;
+    gap: fw(24px);
+  }
+}
+
+// «Популярні / Останні публікації» — на мобайле после статьи не нужны (там «Читайте також»)
+.rd-art__side {
+  @include mobile {
+    display: none;
+  }
+}
+
+.rd-art__side-title {
+  margin: 0 0 fw(14px);
+  padding-bottom: fw(12px);
+  border-bottom: 1px solid $art-line;
+  font-size: fw(13px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $gold;
+}
+
+.rd-art__side-list {
+  display: flex;
+  flex-direction: column;
+  gap: fw(14px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rd-art__side-link {
+  display: grid;
+  grid-template-columns: fd(96px, 112px) minmax(0, 1fr);
+  align-items: center;
+  gap: fw(14px);
+  color: $black;
+
+  @include hover {
+    .rd-art__side-img img {
+      scale: 1.08;
+    }
+
+    .rd-art__side-name {
+      color: $gold;
+    }
+  }
+}
+
+.rd-art__side-img {
+  overflow: hidden;
+  aspect-ratio: 400 / 222;
+  border-radius: fw(10px);
+  background: $art-light;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: scale 0.9s $ease-expo;
+  }
+}
+
+.rd-art__side-text {
+  display: flex;
+  flex-direction: column;
+  gap: fw(6px);
+  min-width: 0;
+}
+
+.rd-art__side-name {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: fd(14px, 15px);
+  font-weight: 700;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  transition: color 0.4s $ease;
+}
+
+.rd-art__side-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: fw(12px);
+  font-weight: 700;
+  color: $gray;
+  font-variant-numeric: tabular-nums;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 }
 
@@ -263,6 +367,12 @@ $art-line: rgba($black, 0.1);
   @include desktop {
     position: sticky;
     top: fw(120px);
+  }
+
+  @include mobile {
+    &:not(:has(> *)) {
+      display: none;
+    }
   }
 }
 

@@ -127,7 +127,7 @@
           <p class="rd-about__card-text">{$r['about_card_text'] | strip_tags : '<span><b><strong><br>'}</p>
         {/if}
         {if $ctaUrl}
-          <a class="rd-works rd-works--inline rd-about__cta" href="{$ctaUrl}" aria-label="{$ctaText}" data-rd-magnet>
+          <a class="rd-works rd-works--inline rd-about__cta" href="{$ctaUrl}" aria-label="{$ctaText}" data-rd-magnet data-rd-discuss>
             <span class="rd-works__disc"></span>
             <span class="rd-works__fill"></span>
             <svg class="rd-works__ring" viewBox="0 0 160 160" aria-hidden="true">

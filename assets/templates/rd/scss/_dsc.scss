@@ -1,0 +1,574 @@
+@use "base" as *;
+
+// ===== Модалка «Обговорити проект» (chunks/rd/discuss.tpl, весь сайт) =====
+// Тёмный фон с размытием раскрывается кругом из нажатой кнопки (--x/--y пишет rd.js), плашка поднимается,
+// строки — по очереди, линии под полями прорисовываются слева. Плашка — как блок заявки: сетка, золотое свечение.
+// Десктоп: слева заголовок, текст и контакты, справа форма (имя и телефон в ряд). Планшет — одна колонка
+// (контакты — под формой), телефон — на весь экран, крестик прилипает к верху при прокрутке.
+// Поля, кнопка и согласие — классы формы заявки (_lead.scss): .rd-field, .rd-lead__send, .rd-lead__agree.
+
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-io: cubic-bezier(0.77, 0, 0.18, 1);
+$dsc-line: rgba(255, 255, 255, 0.08);
+
+.rd-dsc {
+  --x: 50%;
+  --y: 50%;
+  position: fixed;
+  inset: 0;
+  z-index: 1000; // над шапкой (900) и плавающими кнопками (800), под своим курсором
+  color: #fff;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 13, 0.86); // без backdrop-filter: размытие во весь экран заметно тормозит слабые ноутбуки
+    opacity: 0;
+    clip-path: circle(0 at var(--x) var(--y));
+    transition: opacity 0.45s $ease, clip-path 0.9s $ease-io;
+  }
+
+  &__scroll {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 30px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba($gold, 0.4) transparent;
+
+    @include phone {
+      padding: 0;
+    }
+
+    @include desktop {
+      padding: fw(40px);
+    }
+  }
+
+  // ----- плашка -----
+  &__panel {
+    --rd-cell: 100px;
+    --rd-r: 24px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(720px, 100%);
+    margin: auto;
+    padding: fm(72px, 56px) fm(20px, 48px) fm(32px, 48px);
+    border-radius: var(--rd-r);
+    box-shadow: 0 0 0 1px $dsc-line, 0 40px 120px rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    translate: 0 50px;
+    scale: 0.97;
+    transition: opacity 0.5s $ease, translate 0.9s $ease-expo, scale 0.9s $ease-expo;
+
+    @include phone {
+      width: 100%;
+      min-height: 100%;
+      --rd-r: 0px;
+      box-shadow: none;
+    }
+
+    @include desktop {
+      --rd-cell: #{fw(100px)};
+      --rd-r: #{fw(24px)};
+      display: grid;
+      grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+      column-gap: fd(60px, 88px);
+      width: min(#{fd(1120px, 1320px)}, 100%);
+      padding: fd(56px, 72px) fd(56px, 72px) fd(48px, 60px);
+    }
+  }
+
+  // фокус при открытии на сенсорных экранах — сама плашка (без рамки фокуса и без клавиатуры поверх формы)
+  &__panel:focus {
+    outline: none;
+  }
+
+  // фон плашки: сетка едет, золотое свечение снизу слева; обёртка обрезает по скруглению
+  // (сама плашка не обрезает — список стран у телефона)
+  &__glow {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: inherit;
+    pointer-events: none;
+    @include grid-bg-move(-1);
+
+    &::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      left: -18%;
+      bottom: -42%;
+      width: min(90%, 760px);
+      aspect-ratio: 1432 / 1369;
+      background: url("../img/lead-glow.webp") center / 100% 100% no-repeat;
+      opacity: 0.55;
+
+      @include desktop {
+        left: -14%;
+        bottom: -66%;
+        width: 54%;
+      }
+    }
+  }
+
+  // содержимое — над фоном плашки (на планшете и телефоне .rd-dsc__info «растворяется» — поднимаем и её детей)
+  &__info,
+  &__title,
+  &__text,
+  &__contacts,
+  &__form {
+    position: relative;
+    z-index: 1;
+  }
+
+  // свет за курсором (.rd-light, добавляет rd-wow.js): обёртка обрезает по скруглению
+  &__light {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  &__panel.is-lit .rd-light--lead {
+    opacity: 1;
+  }
+
+  // ----- крестик: на наведении слева затекает золото, крестик поворачивается и темнеет -----
+  &__close {
+    position: absolute;
+    top: fm(16px, 20px);
+    right: fm(16px, 20px);
+    z-index: 3 !important;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+    color: #fff;
+    cursor: pointer;
+    isolation: isolate;
+    transition: color 0.4s $ease, box-shadow 0.4s $ease;
+    -webkit-tap-highlight-color: transparent;
+
+    @include desktop {
+      top: fw(24px);
+      right: fw(24px);
+      width: fw(52px);
+      height: fw(52px);
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: $gold-grad;
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 0.6s $ease-fly;
+    }
+
+    svg {
+      width: 22px;
+      height: 22px;
+      transition: rotate 0.6s $ease-expo;
+
+      @include desktop {
+        width: fw(22px);
+        height: fw(22px);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid $gold;
+      outline-offset: 3px;
+    }
+
+    @include hover {
+      color: $black;
+      box-shadow: inset 0 0 0 1px transparent;
+
+      &::before {
+        transform: scaleX(1);
+        transform-origin: left center;
+      }
+
+      svg {
+        rotate: 90deg;
+      }
+    }
+
+    // телефон: крестик прилипает к верху, пока листаем форму
+    @include phone {
+      position: sticky;
+      top: 16px;
+      right: auto;
+      order: -1;
+      align-self: flex-end;
+      margin: -56px -4px 8px 0;
+      background: rgba(20, 20, 26, 0.72);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+  }
+
+  // ----- слева: заголовок, текст, контакты -----
+  &__info {
+    display: flex;
+    flex-direction: column;
+
+    // планшет и телефон: колонка распадается — контакты уходят под форму
+    @include mobile {
+      display: contents;
+    }
+  }
+
+  &__title {
+    order: 1;
+    padding-right: 56px;
+    font-size: fm(32px, 44px);
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: #fff;
+
+    @include desktop {
+      padding-right: 0;
+      font-size: fd(48px, 60px);
+    }
+
+    span {
+      @include gold-text;
+    }
+  }
+
+  &__text {
+    order: 2;
+    max-width: 30em;
+    margin-top: fm(16px, 20px);
+    font-size: fm(16px, 18px);
+    font-weight: 300;
+    line-height: 1.6;
+    color: $gray;
+
+    @include desktop {
+      margin: fw(24px) 0 fw(40px);
+      font-size: fd(17px, 18px);
+    }
+  }
+
+  &__contacts {
+    order: 4;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px fm(24px, 40px);
+    margin-top: 32px;
+    padding-top: 28px;
+    border-top: 1px solid $dsc-line;
+
+    @include desktop {
+      display: flex;
+      flex-direction: column;
+      gap: fw(22px);
+      margin-top: auto;
+      padding-top: fw(32px);
+    }
+  }
+
+  &__contact {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    @include desktop {
+      gap: fw(6px);
+    }
+  }
+
+  &__label {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: $gray;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+
+    @include desktop {
+      font-size: fw(13px);
+    }
+  }
+
+  // телефон и e-mail: на наведении снизу затекает золотая линия, текст золотится
+  &__value {
+    position: relative;
+    align-self: flex-start;
+    font-size: fm(18px, 20px);
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: nowrap;
+    color: #fff;
+    transition: color 0.4s $ease;
+
+    @include desktop {
+      font-size: fd(18px, 20px);
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -3px;
+      height: 1px;
+      background: $gold-grad;
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 0.6s $ease-fly;
+    }
+
+    @include hover {
+      color: $gold;
+
+      &::after {
+        transform: scaleX(1);
+        transform-origin: left center;
+      }
+    }
+  }
+
+  // мессенджеры: круглые кнопки, на наведении заливаются золотом слева, значок темнеет
+  &__msgs {
+    display: flex;
+    gap: 10px;
+
+    @include desktop {
+      gap: fw(10px);
+    }
+  }
+
+  &__msg {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    overflow: hidden;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+    isolation: isolate;
+    transition: box-shadow 0.4s $ease;
+
+    @include desktop {
+      width: fw(44px);
+      height: fw(44px);
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: $gold-grad;
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 0.6s $ease-fly;
+    }
+
+    span {
+      display: block;
+      width: 20px;
+      height: 20px;
+      background-color: #fff;
+      -webkit-mask: var(--rd-icon) center / contain no-repeat;
+      mask: var(--rd-icon) center / contain no-repeat;
+      transition: background-color 0.4s $ease;
+
+      @include desktop {
+        width: fw(20px);
+        height: fw(20px);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid $gold;
+      outline-offset: 3px;
+    }
+
+    @include hover {
+      box-shadow: inset 0 0 0 1px transparent;
+
+      &::before {
+        transform: scaleX(1);
+        transform-origin: left center;
+      }
+
+      span {
+        background-color: $black;
+      }
+    }
+  }
+
+  // ----- справа: форма -----
+  &__form {
+    order: 3;
+    margin-top: fm(20px, 28px);
+
+    @include desktop {
+      margin-top: fw(10px); // первая строка полей — ниже крестика
+    }
+
+    .rd-lead__send {
+      margin-top: fm(28px, 36px);
+
+      @include desktop {
+        margin-top: fw(36px);
+      }
+    }
+  }
+
+  &__fields {
+    display: grid;
+    column-gap: fd(24px, 32px);
+
+    @include tablet-up {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 24px;
+    }
+
+    @include desktop {
+      column-gap: fd(24px, 32px);
+    }
+  }
+
+  &__wide {
+    grid-column: 1 / -1;
+  }
+
+  // звёздочка обязательного поля
+  .rd-field__label i {
+    margin-left: 0.1em;
+    font-style: normal;
+    color: $gold;
+  }
+}
+
+// «Розкажіть про свою ідею»: многострочное поле с той же линией снизу
+.rd-field--area {
+  .rd-field__input {
+    height: auto;
+    min-height: 124px;
+    max-height: 40vh;
+    resize: none;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba($gold, 0.4) transparent;
+
+    @include desktop {
+      min-height: fw(132px);
+    }
+  }
+}
+
+// открыто: фон раскрывается кругом, плашка поднимается
+.rd-dsc.is-open {
+  .rd-dsc__backdrop {
+    opacity: 1;
+    clip-path: circle(150vmax at var(--x) var(--y));
+  }
+
+  .rd-dsc__panel {
+    opacity: 1;
+    translate: none;
+    scale: none;
+    transition-delay: 0.12s;
+  }
+}
+
+// закрывается: быстро и без круга
+.rd-dsc.is-closing {
+  .rd-dsc__backdrop {
+    opacity: 0;
+    clip-path: circle(150vmax at var(--x) var(--y));
+    transition: opacity 0.4s $ease 0.1s;
+  }
+
+  .rd-dsc__panel {
+    opacity: 0;
+    translate: 0 30px;
+    scale: 0.98;
+    transition: opacity 0.3s $ease, translate 0.4s $ease, scale 0.4s $ease;
+  }
+}
+
+// строки появляются по очереди (--i ставит rd.js), линии под полями прорисовываются слева.
+// Те же классы в форме заявки прячет слой «вау» (_lead.scss) — здесь свои правила посильнее.
+@media (prefers-reduced-motion: no-preference) {
+  .rd-dsc [data-rd-dsc-i] {
+    opacity: 0;
+    translate: 0 24px;
+    transition: opacity 0.8s $ease-expo, translate 1s $ease-expo;
+  }
+
+  .rd-dsc .rd-field__line::before {
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 1.1s $ease-io, background-color 0.3s $ease;
+  }
+
+  .rd-dsc.is-open {
+    [data-rd-dsc-i] {
+      opacity: 1;
+      translate: 0 0;
+      transition-delay: calc(var(--i, 0) * 70ms + 250ms);
+    }
+
+    .rd-field__line::before {
+      transform: scaleX(1);
+      transition-delay: calc(var(--i, 0) * 70ms + 400ms), 0s;
+    }
+
+    // по кнопке один раз пробегает блик
+    .rd-lead__send-fill::after {
+      animation: rd-lead-sweep 1.3s $ease-io 1s both;
+    }
+  }
+
+  .rd-dsc.is-closing [data-rd-dsc-i] {
+    transition-delay: 0s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rd-dsc__backdrop,
+  .rd-dsc__panel {
+    clip-path: none !important;
+    translate: none !important;
+    scale: none !important;
+    transition-duration: 0.01s !important;
+  }
+}
+
+// пока модалка открыта — страница не прокручивается, ширину полосы прокрутки возмещаем
+html.rd-dsc-open {
+  padding-right: var(--rd-sbw, 0px);
+}

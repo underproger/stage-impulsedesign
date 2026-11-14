@@ -4,8 +4,9 @@
   мета: автор (как раньше — Ігор Кобилянський), дата, время чтения (по числу слов), просмотры ([[!HitsPage]] —
   счётчик, как раньше), отзывы ([[!ecMessagesCount]] — ссылка на форму); справа превью статьи (blog-item-image) —
   в своём размере (превью 400×222, растягивать нельзя).
-  Текст: колонка для чтения + справа липкая колонка: «Зміст» (rd.js собирает из <h2> текста; меньше трёх — нет)
-  и карточка «Обговорити проект». Сверху — золотая полоска прочитанного (rd.js).
+  Текст: колонка для чтения + справа колонка: «Зміст» (rd.js собирает из <h2> текста; меньше трёх — нет),
+  «Популярні публікації» (5 статей блога по просмотрам) и «Останні публікації» (3 по дате, как в старом сайдбаре —
+  из всех разделов блога), ниже — липкая карточка «Обговорити проект». Сверху — золотая полоска прочитанного (rd.js).
   После текста: автор, «Попередня / Наступна» (в том же разделе по дате публикации), отзывы easyComm (ecForm +
   ecMessages — те же вызовы и шаблоны, что раньше), FAQ (faq.tpl, если есть migx_questions), «Читайте також» —
   3 статьи раздела по просмотрам (карточки списка блога).
@@ -22,11 +23,11 @@
   ? ['home' => 'Главная', 'crumbs' => 'Навигация по разделам', 'author' => 'Игорь Кобылянский', 'pos' => 'Основатель студии', 'min' => 'мин чтения',
      'views' => 'Просмотры', 'reviews' => 'Отзывы', 'toc' => 'Содержание', 'cta' => 'Нужна помощь <span>с сайтом</span>?', 'ctaText' => 'Расскажите о задаче — обсудим решение и сроки',
      'ctaBtn' => 'Обсудить проект', 'prev' => 'Предыдущая статья', 'next' => 'Следующая статья', 'rev' => 'Отзывы <span>о статье</span>',
-     'more' => 'Читайте <span>также</span>', 'read' => 'Читать', 'aboutAuthor' => 'Автор статьи', 'authorText' => 'Основатель digital-агентства Impulse Design. Пишет о создании, продвижении и развитии сайтов.']
+     'more' => 'Читайте <span>также</span>', 'read' => 'Читать', 'popular' => 'Популярные публикации', 'latest' => 'Последние публикации', 'aboutAuthor' => 'Автор статьи', 'authorText' => 'Основатель digital-агентства Impulse Design. Пишет о создании, продвижении и развитии сайтов.']
   : ['home' => 'Головна', 'crumbs' => 'Навігація по розділах', 'author' => 'Ігор Кобилянський', 'pos' => 'Засновник студії', 'min' => 'хв читання',
      'views' => 'Перегляди', 'reviews' => 'Відгуки', 'toc' => 'Зміст', 'cta' => 'Потрібна допомога <span>з сайтом</span>?', 'ctaText' => 'Розкажіть про задачу — обговоримо рішення та терміни',
      'ctaBtn' => 'Обговорити проект', 'prev' => 'Попередня стаття', 'next' => 'Наступна стаття', 'rev' => 'Відгуки <span>про статтю</span>',
-     'more' => 'Читайте <span>також</span>', 'read' => 'Читати', 'aboutAuthor' => 'Автор статті', 'authorText' => 'Засновник digital-агентства Impulse Design. Пише про створення, просування та розвиток сайтів.']}
+     'more' => 'Читайте <span>також</span>', 'read' => 'Читати', 'popular' => 'Популярні публікації', 'latest' => 'Останні публікації', 'aboutAuthor' => 'Автор статті', 'authorText' => 'Засновник digital-агентства Impulse Design. Пише про створення, просування та розвиток сайтів.']}
 
 {* превью: значение — от папки источника «Blog» (images/blog/), бывает с «/» в начале *}
 {set $pic = $r['blog-item-image'] | trim}
@@ -54,6 +55,20 @@
   ['sortby' => ['publishedon' => 'DESC', 'id' => 'DESC'], 'limit' => 1, 'select' => 'id,pagetitle'])}
 {set $next = $_modx->getResources(['parent' => $cat, 'published' => 1, 'deleted' => 0, 'hidemenu' => 0, 'publishedon:>' => $pub, 'id:!=' => $r.id],
   ['sortby' => ['publishedon' => 'ASC', 'id' => 'ASC'], 'limit' => 1, 'select' => 'id,pagetitle'])}
+{* сайдбар: популярные (по просмотрам) и последние (по дате) — из всех разделов блога (TV blog-category-list корня) *}
+{set $blogCats = []}
+{set $bcl = $root ? (($root | resource : 'blog-category-list') | trim) : ''}
+{if $bcl}
+  {set $bclParts = $bcl | preg_split : '~\s{0,9},\s{0,9}~'}
+  {foreach $bclParts as $bc}{if $bc | preg_match : '~^\d+$~'}{set $blogCats = $.php.array_merge($blogCats, [$bc + 0])}{/if}{/foreach}
+{/if}
+{if !$blogCats}{set $blogCats = [$cat]}{/if}
+{set $sideWhere = ['parent:IN' => $blogCats, 'published' => 1, 'deleted' => 0, 'hidemenu' => 0, 'id:!=' => $r.id]}
+{set $popular = $_modx->getResources($sideWhere, ['sortby' => ['publishedon' => 'DESC'], 'sortbyTV' => 'HitsPage', 'sortbyTVType' => 'integer', 'sortdirTV' => 'DESC',
+  'limit' => 5, 'select' => 'id,pagetitle,publishedon', 'includeTVs' => 'blog-item-image,HitsPage', 'tvPrefix' => '', 'prepareTVs' => 0])}
+{set $latest = $_modx->getResources($sideWhere, ['sortby' => ['publishedon' => 'DESC', 'id' => 'DESC'],
+  'limit' => 3, 'select' => 'id,pagetitle,publishedon', 'includeTVs' => 'blog-item-image,HitsPage', 'tvPrefix' => '', 'prepareTVs' => 0])}
+
 {* «Читайте також»: 3 статьи раздела по просмотрам *}
 {set $more = $_modx->getResources(['parent' => $cat, 'published' => 1, 'deleted' => 0, 'hidemenu' => 0, 'id:!=' => $r.id], [
   'sortby' => ['publishedon' => 'DESC'], 'sortbyTV' => 'HitsPage', 'sortbyTVType' => 'integer', 'sortdirTV' => 'DESC', 'limit' => 3,
@@ -141,16 +156,51 @@
   <section class="rd-art__main">
     <div class="rd-container rd-art__wrap">
       <aside class="rd-art__aside">
+        <details class="rd-art__toc" data-rd-toc hidden>
+          <summary class="rd-art__toc-title">{$t.toc}</summary>
+          <ol class="rd-art__toc-list"></ol>
+        </details>
+        {set $sides = [['list' => $popular, 'title' => $t.popular, 'mod' => 'popular'], ['list' => $latest, 'title' => $t.latest, 'mod' => 'latest']]}
+        {foreach $sides as $side}
+          {if $side.list}
+            <div class="rd-art__side rd-art__side--{$side.mod}">
+              <p class="rd-art__side-title">{$side.title}</p>
+              <ul class="rd-art__side-list">
+                {foreach $side.list as $sp}
+                  {set $spi = $sp['blog-item-image'] | trim}
+                  {if $spi && !($spi | preg_match : '~^(https?:)?//~')}
+                    {set $spi = $spi | preg_replace : '~^/+~' : ''}
+                    {if !($spi | preg_match : '~^(images|assets|img)/~')}{set $spi = 'images/blog/' ~ $spi}{/if}
+                    {set $spi = '/' ~ ($spi | preg_replace : '~/{2,}~' : '/')}
+                  {/if}
+                  {set $spub = $sp.publishedon}
+                  {if !($spub | preg_match : '~^\d+$~')}{set $spub = $.php.strtotime($spub)}{/if}
+                  <li>
+                    <a class="rd-art__side-link" href="{$sp.id | url}">
+                      <span class="rd-art__side-img">{if $spi}<img src="{$spi}" width="400" height="222" alt="" loading="lazy" decoding="async">{/if}</span>
+                      <span class="rd-art__side-text">
+                        <span class="rd-art__side-name">{$sp.pagetitle}</span>
+                        <span class="rd-art__side-meta">
+                          {if $side.mod == 'popular'}
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>{(($sp['HitsPage'] ?: 0) + 0) | number : 0 : ',' : ' '}
+                          {else}
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>{$spub | date : 'd.m.Y'}
+                          {/if}
+                        </span>
+                      </span>
+                    </a>
+                  </li>
+                {/foreach}
+              </ul>
+            </div>
+          {/if}
+        {/foreach}
         <div class="rd-art__sticky">
-          <details class="rd-art__toc" data-rd-toc hidden>
-            <summary class="rd-art__toc-title">{$t.toc}</summary>
-            <ol class="rd-art__toc-list"></ol>
-          </details>
           {if $ctaUrl}
             <div class="rd-art__cta">
               <p class="rd-art__cta-title">{$t.cta}</p>
               <p class="rd-art__cta-text">{$t.ctaText}</p>
-              <a class="rd-btn rd-art__cta-btn" href="{$ctaUrl}">
+              <a class="rd-btn rd-art__cta-btn" href="{$ctaUrl}" data-rd-discuss>
                 {$t.ctaBtn}
                 <span class="rd-arrow" aria-hidden="true"><img class="rd-arrow__a" src="{$img}arrow-up-right.svg" width="24" height="24" alt="" loading="lazy"><img class="rd-arrow__b" src="{$img}arrow-up-right.svg" width="24" height="24" alt="" loading="lazy"></span>
               </a>
