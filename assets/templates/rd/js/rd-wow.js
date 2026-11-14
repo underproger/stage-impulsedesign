@@ -585,7 +585,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl, .rd-studio, .rd-team, .rd-cnt';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl, .rd-prl, .rd-studio, .rd-team, .rd-cnt, .rd-blog';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var cwpSection = document.querySelector('[data-rd-cwp]');
@@ -2035,6 +2035,38 @@
       svclTargets.forEach(function (el) { svclIo.observe(el); });
     } else {
       svclTargets.forEach(svclShow);
+    }
+  }
+
+  /* ================= Блог: список статей (blog-list.tpl) ================= */
+  // Слова заголовка из размытия; подводка, «таблетки» разделов и строка сортировки всплывают; карточки — превью
+  // раскрывается снизу и «отъезжает», текст всплывает; очередь — карточки, появившиеся вместе (--d, мс).
+  // Карточки, открытые «Показати ще» (были display: none), IntersectionObserver замечает сам, когда они появятся.
+  var blog = document.querySelector('.rd-blog');
+  if (blog) {
+    var blogTitle = blog.querySelector('.rd-blog__title');
+    if (blogTitle) splitWords(blogTitle);
+    var blogTargets = [blog.querySelector('.rd-blog__eyebrow'), blogTitle, blog.querySelector('.rd-blog__sub'), blog.querySelector('.rd-blog__bar')]
+      .filter(Boolean)
+      .concat(Array.prototype.slice.call(blog.querySelectorAll('.rd-blog__tab, .rd-post')));
+    if ('IntersectionObserver' in window) {
+      var blogIo = new IntersectionObserver(function (entries) {
+        var k = 0;
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          var el = en.target;
+          if (el.classList.contains('rd-post')) {
+            var d = Math.min(k++, 5) * 110;
+            el.style.setProperty('--d', d);
+            setTimeout(function () { el.classList.add('is-done'); }, 1600 + d);
+          }
+          el.classList.add('is-in');
+          blogIo.unobserve(el);
+        });
+      }, { threshold: 0, rootMargin: '0px 0px -6% 0px' });
+      blogTargets.forEach(function (el) { blogIo.observe(el); });
+    } else {
+      blogTargets.forEach(function (el) { el.classList.add('is-in'); });
     }
   }
 

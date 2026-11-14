@@ -607,6 +607,70 @@
     else if (wide.addListener) wide.addListener(ensure);
   });
 
+  /* ---------- Блог: «Популярні / Нові» и «Показати ще» ---------- */
+  // Все карточки уже в HTML (по просмотрам); видны первые step + 1 (первая — крупная), кнопка открывает ещё step.
+  // Сортировка переставляет карточки по data-hits / data-date (по убыванию). Без JS — видны все, без сортировки.
+  // текущий раздел в ленте «таблеток» на телефоне — в поле зрения (лента прокручивается, страница — нет)
+  var blogTabs = document.querySelector('.rd-blog__tabs');
+  var blogActive = blogTabs && blogTabs.querySelector('.rd-blog__tab.is-active');
+  if (blogActive && blogTabs.scrollWidth > blogTabs.clientWidth) {
+    blogTabs.scrollLeft = blogActive.offsetLeft - (blogTabs.clientWidth - blogActive.offsetWidth) / 2;
+  }
+  var blogGrid = document.querySelector('[data-rd-blog]');
+  if (blogGrid) {
+    var bItems = Array.prototype.slice.call(blogGrid.children);
+    var bStep = parseInt(blogGrid.getAttribute('data-step'), 10) || 12;
+    var bShown = bStep + 1;
+    var bMore = document.querySelector('[data-rd-blog-more]');
+    var bMoreN = bMore && bMore.querySelector('.rd-blog__more-n');
+    // сколько видно — до конца ряда: первая карточка крупная (на десктопе 2 колонки из 3, на планшете — весь ряд),
+    // дальше ряды по числу колонок сетки
+    var bFill = function (n) {
+      var cols = getComputedStyle(blogGrid).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+      if (cols < 2) return n;
+      var first = cols === 2 ? 1 : cols - 1;
+      return n <= first ? first : first + Math.ceil((n - first) / cols) * cols;
+    };
+    var bApply = function () {
+      var vis = bFill(bShown);
+      if (bItems.length - vis <= 3) vis = bItems.length; // кнопка ради 1–3 карточек не нужна — показываем все
+      bItems.forEach(function (li, k) { li.classList.toggle('is-off', k >= vis); });
+      var rest = bItems.length - vis;
+      if (bMore) {
+        bMore.hidden = rest <= 0;
+        if (bMoreN) bMoreN.textContent = '(' + rest + ')';
+      }
+    };
+    if (bMore) {
+      bMore.addEventListener('click', function () {
+        bShown = bFill(bShown) + bStep;
+        bApply();
+      });
+    }
+    var bResize;
+    window.addEventListener('resize', function () {
+      clearTimeout(bResize);
+      bResize = setTimeout(bApply, 150);
+    });
+    var bSort = document.querySelector('[data-rd-blog-sort]');
+    if (bSort && bItems.length > 1) {
+      bSort.hidden = false;
+      bSort.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-rd-sort]');
+        if (!btn || btn.classList.contains('is-active')) return;
+        var key = 'data-' + btn.getAttribute('data-rd-sort');
+        Array.prototype.forEach.call(bSort.querySelectorAll('[data-rd-sort]'), function (x) {
+          x.classList.toggle('is-active', x === btn);
+          x.setAttribute('aria-pressed', x === btn ? 'true' : 'false');
+        });
+        bItems.sort(function (a, b) { return (+b.getAttribute(key) || 0) - (+a.getAttribute(key) || 0); });
+        bItems.forEach(function (li) { blogGrid.appendChild(li); });
+        bApply();
+      });
+    }
+    bApply();
+  }
+
   /* ---------- Контакти: «Зараз працюємо» по графику и времени Киева, копирование e-mail ---------- */
   // График — строки [data-rd-hours] («<span>Пн-Пт:</span> з 10.00 - 19.00», «Сб: …»): дни (диапазон или один) и часы.
   // Сегодняшняя строка — .is-today; статус ([data-rd-status]) — .is-open и текст из data-open / data-closed;
