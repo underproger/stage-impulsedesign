@@ -1,0 +1,669 @@
+@use "base" as *;
+
+// ===== Страница «Послуги студії» (шаблон 19, chunks/rd/svc-list.tpl). Макета нет — язык сайта:
+// шапка как у «Портфоліо сайтів» (крошки, заголовок 72, подводка справа) + «таблетки»-якоря разделов;
+// раздел — тёмная карточка с сеткой (в такт с остальными) и золотым объектом, через одну объект слева;
+// под карточкой плитки услуг #f4f3ef: название, коротко, цена «від …», стрелка; наведение — тёмная заливка слева.
+
+$ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$svcl-light: #f4f3ef;
+
+.rd-svcl {
+  padding-bottom: fm(80px, 120px);
+  background: #fff;
+  color: $black;
+
+  @include desktop {
+    padding-bottom: fd(150px, 180px);
+  }
+}
+
+// ----- шапка -----
+.rd-svcl__top {
+  padding-top: fm(24px, 32px);
+
+  @include desktop {
+    padding-top: fw(44px);
+  }
+}
+
+.rd-svcl__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: fm(16px, 24px);
+
+  @include desktop {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    column-gap: fw(40px);
+    row-gap: 0;
+  }
+}
+
+.rd-svcl__crumbs {
+  margin: 0;
+
+  @include desktop {
+    grid-column: 1 / -1;
+    margin-bottom: fw(34px);
+  }
+}
+
+// h1 глобально стилизован старым CSS — перебиваем явно
+.rd-svcl__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: fm(36px, 48px);
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  color: $black;
+
+  @include desktop {
+    font-size: fd(60px, 72px);
+  }
+
+  span {
+    @include gold-text;
+  }
+}
+
+.rd-svcl__quote {
+  margin: 0;
+  font-size: fm(18px, 24px);
+  font-weight: 700;
+  line-height: 1.5;
+
+  @include desktop {
+    max-width: fd(470px, 560px);
+    font-size: fd(24px, 30px);
+    text-align: right;
+  }
+
+  span,
+  b {
+    @include gold-text;
+  }
+}
+
+// «таблетки»-якоря разделов; наведение — золотая заливка слева
+.rd-svcl__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: fm(8px, 12px);
+  margin-top: fm(28px, 40px);
+
+  @include desktop {
+    gap: fw(12px);
+    margin-top: fd(48px, 56px);
+  }
+}
+
+.rd-svcl__tab {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: fw(6px);
+  padding: fm(11px, 13px) fm(18px, 24px);
+  border: 1px solid rgba($black, 0.12);
+  border-radius: 99px;
+  font-size: fm(14px, 16px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: $black;
+  transition: color 0.45s $ease, border-color 0.45s $ease;
+
+  @include desktop {
+    padding: fw(14px) fw(26px);
+    font-size: fw(16px);
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: $gold-grad;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.6s $ease-fly;
+  }
+
+  @include hover {
+    border-color: transparent;
+    color: #fff;
+
+    &::before {
+      transform: scaleX(1);
+    }
+
+    .rd-svcl__tab-n {
+      color: #fff;
+    }
+  }
+}
+
+.rd-svcl__tab-n {
+  font-size: 0.7em;
+  font-weight: 700;
+  line-height: 1;
+  color: $gold;
+  transition: color 0.45s $ease;
+}
+
+// ----- раздел -----
+.rd-svcl__cat {
+  margin-top: fm(56px, 80px);
+  scroll-margin-top: fm(80px, 100px); // якорь — под шапкой
+
+  @include desktop {
+    margin-top: fd(100px, 120px);
+    scroll-margin-top: fw(120px);
+  }
+
+  &:first-of-type {
+    margin-top: fm(32px, 48px);
+
+    @include desktop {
+      margin-top: fd(56px, 64px);
+    }
+  }
+}
+
+.rd-svcl__card {
+  --rd-cell: #{fm(50px, 80px)};
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border-radius: fm(20px, 24px);
+  color: #fff;
+  @include grid-bg-move;
+
+  @include tablet-up {
+    grid-template-columns: minmax(0, 1fr) fm(220px, 280px);
+    align-items: center;
+  }
+
+  @include desktop {
+    --rd-cell: #{fw(100px)};
+    grid-template-columns: minmax(0, 1fr) fd(400px, 480px);
+    min-height: fd(440px, 500px);
+    border-radius: fw(24px);
+  }
+
+  // тёплое свечение под объектом
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    right: -10%;
+    bottom: -40%;
+    width: 70%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba($gold, 0.28), rgba($gold, 0.08) 55%, rgba($gold, 0) 100%);
+    pointer-events: none;
+  }
+}
+
+.rd-svcl__cat--flip .rd-svcl__card {
+  @include tablet-up {
+    grid-template-columns: fm(220px, 280px) minmax(0, 1fr);
+  }
+
+  @include desktop {
+    grid-template-columns: fd(400px, 480px) minmax(0, 1fr);
+  }
+
+  .rd-svcl__obj {
+    @include tablet-up {
+      order: -1;
+    }
+  }
+
+  &::after {
+    right: auto;
+    left: -10%;
+  }
+}
+
+.rd-svcl__info {
+  padding: fm(28px, 40px) fm(20px, 40px) fm(32px, 44px);
+
+  @include desktop {
+    padding: fd(56px, 64px) fd(56px, 72px);
+  }
+}
+
+.rd-svcl__meta {
+  display: flex;
+  align-items: center;
+  gap: fw(16px);
+  margin: 0;
+  font-size: fm(12px, 14px);
+  font-weight: 700;
+  line-height: 1.2;
+
+  @include desktop {
+    font-size: fw(14px);
+  }
+}
+
+.rd-svcl__num {
+  color: $gold;
+}
+
+.rd-svcl__count {
+  padding: fw(5px) fw(12px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 99px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.rd-svcl__name {
+  margin: fm(14px, 18px) 0 0;
+  font-size: fm(30px, 40px);
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: #fff;
+
+  @include desktop {
+    margin-top: fw(20px);
+    font-size: fd(48px, 60px);
+  }
+}
+
+.rd-svcl__sub {
+  margin: fm(14px, 18px) 0 0;
+  font-size: fm(16px, 18px);
+  font-weight: 700;
+  line-height: 1.4;
+  @include gold-text;
+
+  @include desktop {
+    margin-top: fw(20px);
+    font-size: fd(18px, 20px);
+  }
+}
+
+.rd-svcl__text {
+  max-width: fd(620px, 700px);
+  margin: fm(10px, 14px) 0 0;
+  font-size: fm(15px, 17px);
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.86);
+
+  @include desktop {
+    margin-top: fw(14px);
+    font-size: fd(16px, 18px);
+  }
+
+  b,
+  strong {
+    font-weight: 700;
+    color: $gold;
+  }
+}
+
+.rd-svcl__btn {
+  margin-top: fm(24px, 32px);
+
+  // телефон: кнопка во всю ширину карточки (у .rd-btn размеры десктопные)
+  @include phone {
+    width: 100%;
+    padding: 16px 20px;
+    font-size: 16px;
+  }
+
+  @include desktop {
+    margin-top: fd(36px, 44px);
+  }
+}
+
+// объект: парит, на десктопе чуть наклоняется за курсором (rd-wow.js: --mx / --my от -1 до 1)
+.rd-svcl__obj {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 0 fm(20px, 40px) fm(20px, 32px);
+
+  @include tablet-up {
+    padding: fm(20px, 24px);
+  }
+
+  @include desktop {
+    padding: fd(24px, 32px);
+  }
+
+  img {
+    display: block;
+    width: min(100%, #{fm(190px, 280px)});
+    height: auto;
+    animation: rd-svcl-float 6s ease-in-out infinite;
+    animation-delay: calc(var(--d, 0) * -2s);
+    transform: perspective(800px) rotateY(calc(var(--mx, 0) * 14deg)) rotateX(calc(var(--my, 0) * -10deg));
+    transition: transform 0.9s $ease-expo;
+
+    @include tablet-up {
+      width: 100%;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+}
+
+.rd-svcl__cat:nth-of-type(2) .rd-svcl__obj img {
+  --d: 1;
+}
+
+.rd-svcl__cat:nth-of-type(3) .rd-svcl__obj img {
+  --d: 2;
+}
+
+@keyframes rd-svcl-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -4%;
+  }
+}
+
+// ----- плитки услуг -----
+.rd-svcl__list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: fm(12px, 16px);
+  margin: fm(12px, 16px) 0 0;
+  padding: 0;
+  list-style: none;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include desktop {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: fw(20px);
+    margin-top: fw(20px);
+  }
+}
+
+.rd-svct {
+  display: flex;
+}
+
+.rd-svct__link {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: fm(200px, 230px);
+  padding: fm(22px, 28px) fm(20px, 28px) fm(24px, 28px);
+  border-radius: fm(16px, 20px);
+  background: $svcl-light;
+  color: $black;
+
+  @include desktop {
+    min-height: fd(240px, 270px);
+    padding: fd(28px, 34px) fd(28px, 36px) fd(28px, 32px);
+    border-radius: fw(20px);
+  }
+
+  // наведение: тёмная заливка слева направо, золотое свечение в углу
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background:
+      radial-gradient(60% 90% at 105% 110%, rgba($gold, 0.55) 0%, rgba($gold, 0) 70%),
+      $black;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 0.7s $ease-fly;
+  }
+
+  @include hover {
+    color: #fff;
+
+    &::before {
+      clip-path: inset(0 0 0 0);
+    }
+
+    .rd-svct__name {
+      color: #fff;
+    }
+
+    .rd-svct__text {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .rd-svct__arrow {
+      border-color: $gold;
+      background: $gold;
+    }
+
+    @include arrow-fly;
+  }
+}
+
+.rd-svct__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: fw(16px);
+}
+
+.rd-svct__name {
+  font-size: fm(20px, 22px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: $black;
+  transition: color 0.45s $ease;
+
+  @include desktop {
+    font-size: fd(22px, 26px);
+  }
+}
+
+.rd-svct__arrow {
+  box-sizing: border-box;
+  width: fm(40px, 48px);
+  height: fm(40px, 48px);
+  padding: fm(9px, 11px);
+  border: 1px solid rgba($black, 0.16);
+  border-radius: 50%;
+  transition: border-color 0.45s $ease, background-color 0.45s $ease;
+
+  @include desktop {
+    width: fw(48px);
+    height: fw(48px);
+    padding: fw(11px);
+  }
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 50%;
+    height: 50%;
+    margin: auto;
+  }
+}
+
+.rd-svct__text {
+  margin-top: fm(10px, 14px);
+  font-size: fm(14px, 16px);
+  font-weight: 300;
+  line-height: 1.6;
+  color: rgba($black, 0.72);
+  transition: color 0.45s $ease;
+
+  @include desktop {
+    margin-top: fw(14px);
+    font-size: fd(15px, 16px);
+  }
+}
+
+.rd-svct__price {
+  margin-top: auto;
+  padding-top: fm(18px, 24px);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+
+  @include desktop {
+    padding-top: fw(24px);
+  }
+}
+
+.rd-svct__from {
+  font-size: fm(13px, 14px);
+  color: $gray;
+
+  @include desktop {
+    font-size: fw(14px);
+  }
+}
+
+.rd-svct__val {
+  font-size: fm(22px, 26px);
+  @include gold-text;
+
+  @include desktop {
+    font-size: fd(24px, 28px);
+  }
+
+  // единицы («грн», «грн/1000 символів») — мельче
+  span {
+    margin-left: 0.2em;
+    font-size: 0.55em;
+  }
+}
+
+// ================= «Вау» (html.rd-wow-js; модуль «Послуги» в rd-wow.js ставит .is-in) =================
+.rd-wow-js {
+  .rd-svcl__title .rd-wd {
+    display: inline-block;
+    opacity: 0;
+    translate: 0 0.6em;
+    filter: blur(10px);
+    transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo, filter 0.9s $ease-expo;
+    transition-delay: calc(var(--i, 0) * 80ms);
+  }
+
+  .rd-svcl__title .rd-wd:not(.rd-wd--el) {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: $black;
+  }
+
+  .rd-svcl__title .rd-wd--el {
+    background: linear-gradient(110deg, $gold 0%, $gold 38%, #f7e8b6 50%, $gold 62%, $gold-2 100%);
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rd-wow-shimmer 4.5s $ease infinite;
+  }
+
+  .rd-svcl__title.is-in .rd-wd {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+  }
+
+  .rd-svcl__quote,
+  .rd-svcl__tab,
+  .rd-svct {
+    opacity: 0;
+    translate: 0 32px;
+    transition: opacity 1s $ease-expo, translate 1.2s $ease-expo;
+
+    &.is-in {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  .rd-svcl__quote {
+    transition-delay: 0.3s;
+  }
+
+  .rd-svcl__tab {
+    transition-delay: calc(var(--i, 0) * 90ms + 0.4s);
+  }
+
+  .rd-svct {
+    transition-delay: calc(var(--c, 0) * 110ms);
+  }
+
+  // карточка раскрывается слева, текст всплывает, объект «прилетает» из глубины
+  .rd-svcl__card {
+    clip-path: inset(0 100% 0 0 round #{fw(24px)});
+    transition: clip-path 1.3s $ease-expo;
+
+    .rd-svcl__info > * {
+      opacity: 0;
+      translate: 0 28px;
+      transition: opacity 0.9s $ease-expo, translate 1.1s $ease-expo;
+    }
+
+    .rd-svcl__info > :nth-child(2) {
+      transition-delay: 0.08s;
+    }
+
+    .rd-svcl__info > :nth-child(3) {
+      transition-delay: 0.16s;
+    }
+
+    .rd-svcl__info > :nth-child(4) {
+      transition-delay: 0.24s;
+    }
+
+    .rd-svcl__info > :nth-child(5) {
+      transition-delay: 0.32s;
+    }
+
+    .rd-svcl__obj {
+      opacity: 0;
+      scale: 0.7;
+      filter: blur(12px);
+      transition: opacity 1s $ease 0.25s, scale 1.4s $ease-expo 0.25s, filter 1s $ease 0.25s;
+    }
+
+    &.is-in {
+      clip-path: inset(0 0 0 0 round #{fw(24px)});
+
+      .rd-svcl__info > * {
+        opacity: 1;
+        translate: 0 0;
+      }
+
+      .rd-svcl__obj {
+        opacity: 1;
+        scale: 1;
+        filter: blur(0);
+      }
+    }
+  }
+
+  .rd-svcl__cat--flip .rd-svcl__card {
+    clip-path: inset(0 0 0 100% round #{fw(24px)});
+
+    &.is-in {
+      clip-path: inset(0 0 0 0 round #{fw(24px)});
+    }
+  }
+}

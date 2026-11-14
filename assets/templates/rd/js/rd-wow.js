@@ -580,7 +580,7 @@
     document.body.appendChild(ring);
     document.body.appendChild(cursor);
 
-    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page';
+    var scopes = '.rd-header, .rd-hero, .rd-services, .rd-portfolio, .rd-mind, .rd-gar, .rd-prices, .rd-about, .rd-faq, .rd-lead, .rd-seo, .rd-footer, .rd-float, .rd-what, .rd-cause, .rd-stages, .rd-cases, .rd-feat, .rd-cws, .rd-cwp, .rd-why, .rd-case-page, .rd-svcl';
     var cursorBtns = '.rd-btn, .rd-service__arrow, .rd-works, .rd-lead__send, .rd-float__btn';
     var pfSection = document.querySelector('[data-rd-portfolio]');
     var cwpSection = document.querySelector('[data-rd-cwp]');
@@ -1988,6 +1988,62 @@
       caseTargets.forEach(function (el) { caseIo.observe(el); });
     } else {
       caseTargets.forEach(function (el) { el.classList.add('is-in'); });
+    }
+  }
+
+  /* ================= Страница «Послуги студії» ================= */
+  // Слова заголовка из размытия; подводка, якоря и плитки всплывают (плитки — по ряду слева направо, --c);
+  // карточка раздела раскрывается сбоку, объект «прилетает» и чуть наклоняется за курсором (--mx / --my).
+  var svcl = document.querySelector('.rd-svcl');
+  if (svcl) {
+    var svclTitle = svcl.querySelector('.rd-svcl__title');
+    if (svclTitle) splitWords(svclTitle);
+    var svclTiles = Array.prototype.slice.call(svcl.querySelectorAll('.rd-svct'));
+    var svclCols = function () {
+      var row = {};
+      svclTiles.forEach(function (it) {
+        var t = it.offsetTop;
+        row[t] = row[t] || 0;
+        it.style.setProperty('--c', row[t]++);
+      });
+    };
+    svclCols();
+    var svclT = 0;
+    window.addEventListener('resize', function () {
+      clearTimeout(svclT);
+      svclT = setTimeout(svclCols, 150);
+    });
+    // карточка до появления обрезана clip-path целиком — IntersectionObserver такую «не видит»;
+    // следим за её обёрткой (.rd-svcl__card-in нет — берём сам раздел), класс ставим карточке
+    var svclTargets = Array.prototype.slice.call(svcl.querySelectorAll('.rd-svcl__title, .rd-svcl__quote, .rd-svcl__tab, .rd-svcl__cat > .rd-container')).concat(svclTiles);
+    var svclShow = function (el) {
+      var card = el.querySelector && el.querySelector(':scope > .rd-svcl__card');
+      (card || el).classList.add('is-in');
+    };
+    if ('IntersectionObserver' in window) {
+      var svclIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { svclShow(en.target); svclIo.unobserve(en.target); }
+        });
+      }, { threshold: 0, rootMargin: '0px 0px -12% 0px' });
+      svclTargets.forEach(function (el) { svclIo.observe(el); });
+    } else {
+      svclTargets.forEach(svclShow);
+    }
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      Array.prototype.forEach.call(svcl.querySelectorAll('[data-rd-svcl-card]'), function (card) {
+        var obj = card.querySelector('.rd-svcl__obj');
+        if (!obj) return;
+        card.addEventListener('pointermove', function (e) {
+          var b = card.getBoundingClientRect();
+          obj.style.setProperty('--mx', clamp((e.clientX - b.left) / b.width * 2 - 1, -1, 1).toFixed(3));
+          obj.style.setProperty('--my', clamp((e.clientY - b.top) / b.height * 2 - 1, -1, 1).toFixed(3));
+        });
+        card.addEventListener('pointerleave', function () {
+          obj.style.setProperty('--mx', 0);
+          obj.style.setProperty('--my', 0);
+        });
+      });
     }
   }
 
