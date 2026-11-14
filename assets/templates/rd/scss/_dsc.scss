@@ -1,8 +1,7 @@
 @use "base" as *;
 
 // ===== Модалка «Обговорити проект» (chunks/rd/discuss.tpl, весь сайт) =====
-// Тёмный фон с размытием раскрывается кругом из нажатой кнопки (--x/--y пишет rd.js), плашка поднимается,
-// строки — по очереди, линии под полями прорисовываются слева. Плашка — как блок заявки: сетка, золотое свечение.
+// Тёмный фон проявляется, плашка поднимается, строки — по очереди, линии под полями прорисовываются слева. Плашка — как блок заявки: сетка, золотое свечение.
 // Десктоп: слева заголовок, текст и контакты, справа форма (имя и телефон в ряд). Планшет — одна колонка
 // (контакты — под формой), телефон — на весь экран, крестик прилипает к верху при прокрутке.
 // Поля, кнопка и согласие — классы формы заявки (_lead.scss): .rd-field, .rd-lead__send, .rd-lead__agree.
@@ -12,8 +11,6 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
 $dsc-line: rgba(255, 255, 255, 0.08);
 
 .rd-dsc {
-  --x: 50%;
-  --y: 50%;
   position: fixed;
   inset: 0;
   z-index: 1000; // над шапкой (900) и плавающими кнопками (800), под своим курсором
@@ -28,8 +25,7 @@ $dsc-line: rgba(255, 255, 255, 0.08);
     inset: 0;
     background: rgba(10, 10, 13, 0.86); // без backdrop-filter: размытие во весь экран заметно тормозит слабые ноутбуки
     opacity: 0;
-    clip-path: circle(0 at var(--x) var(--y));
-    transition: opacity 0.45s $ease, clip-path 0.9s $ease-io;
+    transition: opacity 0.45s $ease;
   }
 
   &__scroll {
@@ -489,26 +485,24 @@ $dsc-line: rgba(255, 255, 255, 0.08);
   }
 }
 
-// открыто: фон раскрывается кругом, плашка поднимается
+// открыто: фон проявляется, плашка поднимается
 .rd-dsc.is-open {
   .rd-dsc__backdrop {
     opacity: 1;
-    clip-path: circle(150vmax at var(--x) var(--y));
   }
 
   .rd-dsc__panel {
     opacity: 1;
     translate: none;
     scale: none;
-    transition-delay: 0.12s;
+    transition-delay: 0.06s;
   }
 }
 
-// закрывается: быстро и без круга
+// закрывается: быстрее
 .rd-dsc.is-closing {
   .rd-dsc__backdrop {
     opacity: 0;
-    clip-path: circle(150vmax at var(--x) var(--y));
     transition: opacity 0.4s $ease 0.1s;
   }
 
@@ -561,7 +555,6 @@ $dsc-line: rgba(255, 255, 255, 0.08);
 @media (prefers-reduced-motion: reduce) {
   .rd-dsc__backdrop,
   .rd-dsc__panel {
-    clip-path: none !important;
     translate: none !important;
     scale: none !important;
     transition-duration: 0.01s !important;

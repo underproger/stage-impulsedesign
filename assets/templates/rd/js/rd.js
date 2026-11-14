@@ -1024,7 +1024,7 @@
   /* ---------- Модалка «Обговорити проект» (chunks/rd/discuss.tpl, весь сайт) ---------- */
   // Открывают ссылки data-rd-discuss, если ведут на «Контакти» (data-contacts), пустые или «#discuss», и любые
   // ссылки на «#discuss» (в тексте страницы). Ctrl/⌘/Shift/средняя кнопка — обычный переход по ссылке.
-  // Фон раскрывается кругом из точки нажатия (--x/--y), строки появляются по очереди (--i). Esc, крестик,
+  // Фон проявляется, плашка поднимается, строки появляются по очереди (--i). Esc, крестик,
   // клик по фону — закрыть; Tab ходит по кругу внутри, после закрытия фокус — на кнопке. Адрес с #discuss
   // открывает модалку сразу. Заявка принята — переход на «Спасибо» (data-thanks); событие для «вау» — rd-lead-sent.
   var dsc = document.querySelector('[data-rd-dsc]');
@@ -1059,13 +1059,11 @@
       dscHtml.classList.remove('rd-lock', 'rd-dsc-open');
       document.body.classList.remove('rd-lock');
     };
-    var dscShow = function (x, y, opener) {
+    var dscShow = function (opener) {
       if (!dsc.hidden && !dsc.classList.contains('is-closing')) return;
       clearTimeout(dscTimer);
-      dscOpener = opener || null;
+      dscOpener = opener && opener.nodeType === 1 ? opener : null;
       dscHtml.style.setProperty('--rd-sbw', Math.max(0, window.innerWidth - dscHtml.clientWidth) + 'px');
-      dsc.style.setProperty('--x', Math.round(x) + 'px');
-      dsc.style.setProperty('--y', Math.round(y) + 'px');
       dsc.classList.remove('is-open', 'is-closing');
       dsc.hidden = false;
       dscScroll.scrollTop = 0;
@@ -1097,9 +1095,7 @@
       var href = (a.getAttribute('href') || '').trim();
       if (!/#discuss$/.test(href) && href && href !== '#' && dscPath(href) !== dscContacts) return; // ссылку поменяли на другую страницу
       e.preventDefault();
-      var r = a.getBoundingClientRect();
-      var kb = !e.detail || (!e.clientX && !e.clientY); // с клавиатуры — из центра кнопки
-      dscShow(kb ? r.left + r.width / 2 : e.clientX, kb ? r.top + r.height / 2 : e.clientY, a);
+      dscShow(a);
     });
     Array.prototype.forEach.call(dsc.querySelectorAll('[data-rd-dsc-close]'), function (el) {
       el.addEventListener('click', dscHide);
@@ -1132,7 +1128,7 @@
       if (e.persisted && !dsc.hidden) { clearTimeout(dscTimer); dscUnlock(); }
     });
     if (/^#discuss$/.test(location.hash)) {
-      setTimeout(function () { dscShow(window.innerWidth / 2, window.innerHeight / 2, null); }, 400);
+      setTimeout(function () { dscShow(null); }, 400);
     }
     if (window.jQuery && dscForm) {
       window.jQuery(document).on('af_complete', function (ev, res) {

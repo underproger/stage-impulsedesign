@@ -872,6 +872,7 @@
         pfPin.style.height = '';
       }
       pf.style.height = '';
+      pf.style.paddingBottom = '';
       pf.style.removeProperty('--rd-pf-k');
       pfTrack.style.transform = '';
       pin.on = false;
@@ -879,6 +880,9 @@
       if (!pfDesktop.matches || !pfPin || !pfVp || !pfTrack || !pfHead) return;
       var media = pfTrack.querySelector('.rd-case__media');
       if (!media) return;
+      // обычные отступы блока сверху/снизу (в закреплённой раскладке их нет — возвращаем вручную, см. ниже)
+      var padB = parseFloat(getComputedStyle(pf).paddingBottom) || 0;
+      var padT = parseFloat(getComputedStyle(pf).paddingTop) || 0;
 
       pf.classList.add('is-pinned'); // меряем уже в закреплённой раскладке
       var probe = document.querySelector('.rd-header__probe');
@@ -902,6 +906,7 @@
         // весь блок не помещается: закрепляем ленту — блок высотой по содержимому, липкий top < 0
         // (заголовок уходит вверх), лента — по центру свободной под шапкой части экрана
         pfPin.style.height = 'auto';
+        pfPin.style.paddingTop = Math.max(headH, padT) + 'px'; // над заголовком — обычный отступ блока
         var gap = Math.max(32, vh * 0.05);
         var availVp = vh - headH - 2 * gap;
         k = 1;
@@ -928,6 +933,7 @@
       var dist = pfTrack.scrollWidth - pfVp.clientWidth;
       if (dist < 40) {
         pf.classList.remove('is-pinned');
+        pf.style.paddingBottom = '';
         pfPin.style.paddingTop = '';
         pfPin.style.top = '';
         pfPin.style.height = '';
@@ -938,7 +944,16 @@
       pin.dist = dist;
       pin.on = true;
       pfVp.scrollLeft = 0;
-      pf.style.height = Math.round(pinH + dist * PF_K) + 'px';
+      // после закрепления под карточками — обычный нижний отступ блока: добираем padding-bottom блока
+      // (sticky держится в пределах содержимого, padding идёт уже после ленты)
+      var pinB = pfPin.getBoundingClientRect().bottom;
+      var cardsB = Array.prototype.reduce.call(pfTrack.querySelectorAll('.rd-case'), function (m, el) {
+        return Math.max(m, el.getBoundingClientRect().bottom);
+      }, 0);
+      var extra = Math.max(0, Math.round(padB - (pinB - cardsB)));
+      pf.style.paddingBottom = extra + 'px';
+      var bb = getComputedStyle(pf).boxSizing === 'border-box' ? extra : 0;
+      pf.style.height = Math.round(pinH + dist * PF_K + bb) + 'px';
       pin.x = Math.min(pin.x, dist);
     };
     pfMeasure();
