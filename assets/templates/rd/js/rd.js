@@ -1095,15 +1095,18 @@
     };
     window.rdDiscuss = { open: dscShow, close: dscHide };
 
+    // перехват — на погружении (capture): старый custom.js вешает на все a[href^="#"] свою прокрутку к якорю
+    // (preventDefault и ошибка, если якоря нет) — до него событие не доходит; переход между страницами — тоже
     document.addEventListener('click', function (e) {
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       var a = e.target.closest && e.target.closest('a[data-rd-discuss], a[href$="#discuss"]');
       if (!a || dsc.contains(a)) return;
       var href = (a.getAttribute('href') || '').trim();
       if (!/#discuss$/.test(href) && href && href !== '#' && dscPath(href) !== dscContacts) return; // ссылку поменяли на другую страницу
       e.preventDefault();
+      e.stopPropagation();
       dscShow(a);
-    });
+    }, true);
     Array.prototype.forEach.call(dsc.querySelectorAll('[data-rd-dsc-close]'), function (el) {
       el.addEventListener('click', dscHide);
     });
