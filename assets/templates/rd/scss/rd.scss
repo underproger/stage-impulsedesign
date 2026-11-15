@@ -1,5 +1,8 @@
 // Редизайн Impulse Design — точка входа.
 // Сборка: npx sass assets/templates/rd/scss/rd.scss assets/templates/rd/css/rd.css --style=compressed --no-source-map
+// legacy — нужные редизайну правила старых CSS (reset, Gotham Pro и др.): сами старые файлы на страницах редизайна
+// больше не подключаются (chunks/rd/head-old.tpl). Первым — как раньше старые файлы стояли перед rd.css.
+@use "legacy";
 @use "fonts";
 @use "layout";
 @use "header";

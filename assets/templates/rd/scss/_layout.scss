@@ -285,3 +285,82 @@
   white-space: nowrap !important;
   border: 0 !important;
 }
+
+// Видео YouTube в текстах (SEO-текст, статьи): вместо <iframe> — превью (seo.tpl / blog-article.tpl меняют вставку
+// на кнопку). Плеер открывается поверх страницы по клику (rd.js, [data-rd-video]) — до клика YouTube не грузится
+// (без этого ~850 КБ скриптов YouTube и его cookie на каждой странице с видео — PageSpeed).
+.rd-yt {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  max-width: fm(560px, 640px);
+  margin: 1.4em auto;
+  padding: 0;
+  border: 0;
+  border-radius: fm(14px, 18px);
+  aspect-ratio: 16 / 9;
+  background: $black;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  @include desktop {
+    max-width: fw(720px);
+    border-radius: fw(20px);
+  }
+
+  &__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    object-fit: cover;
+    transition: scale 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  &__play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: fm(64px, 76px);
+    height: fm(64px, 76px);
+    border-radius: 50%;
+    background: $gold-grad;
+    color: $black;
+    box-shadow: 0 0 0 10px rgba($gold, 0.25);
+    translate: -50% -50%;
+    transition: scale 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s $ease;
+
+    @include desktop {
+      width: fw(84px);
+      height: fw(84px);
+    }
+
+    svg {
+      width: 40%;
+      height: 40%;
+      margin-left: 6%;
+      fill: currentColor;
+    }
+  }
+
+  @include hover {
+    .rd-yt__img {
+      scale: 1.04;
+    }
+
+    .rd-yt__play {
+      scale: 1.08;
+      box-shadow: 0 0 0 16px rgba($gold, 0.2);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid $gold;
+    outline-offset: 4px;
+  }
+}

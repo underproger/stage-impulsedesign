@@ -210,7 +210,13 @@
       </aside>
 
       <div class="rd-art__body">
-        <div class="rd-art__content" itemprop="articleBody" data-rd-art>{$r.content}</div>
+        {* видео YouTube, вставленное в текст (<iframe …/embed/ID>), — превью-кнопкой, как в SEO-тексте (seo.tpl) *}
+        {set $artHtml = $r.content}
+        {if $artHtml | preg_match : '~<iframe~i'}
+          {set $ytBtn = '<button class="rd-yt" type="button" data-rd-video="$1" aria-label="' ~ ($isRu ? 'Смотреть видео' : 'Дивитися відео') ~ '"><img class="rd-yt__img" src="https://i.ytimg.com/vi/$1/hqdefault.jpg" width="480" height="360" alt="" loading="lazy" decoding="async"><span class="rd-yt__play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span></button>'}
+          {set $artHtml = $artHtml | preg_replace : '~<iframe[^>]*?\ssrc=["\x27](?:https?:)?//(?:www\.)?youtube(?:-nocookie)?\.com/embed/(?!videoseries)([A-Za-z0-9_-]{11})[^>]*>\s*</iframe>~iu' : $ytBtn}
+        {/if}
+        <div class="rd-art__content" itemprop="articleBody" data-rd-art>{$artHtml}</div>
 
         {* автор *}
         <div class="rd-art__bio">

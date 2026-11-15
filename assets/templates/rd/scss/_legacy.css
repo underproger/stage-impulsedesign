@@ -1,0 +1,170 @@
+/* Старые стили сайта (assets/templates/css: reset, fonts, animate, style), которые действуют на страницах редизайна.
+   Раньше эти файлы целиком (~110 КБ + Swiper с unpkg) подключались в <head> и задерживали первую отрисовку.
+   Здесь — только правила, которые находят элементы на опубликованных страницах (обход всех страниц, 15.11.2026),
+   и состояния, которые старый JS включает позже (.animated — WOW.js, input.error — AjaxForm, звёзды easyComm, canvas 3D, disabled-кнопки);
+   @font-face Gotham Pro — запасной шрифт в стеках rd. Подключается первым в rd.scss — порядок каскада прежний.
+   Сборка — tools/make_legacy_css.py (handoff). Править вручную не нужно: со временем правила можно переносить в rd. */
+
+html, body, div, span, iframe, h1, h2, h3, h4, p, blockquote, a, em, img, strong, sup, b, i, dl, dt, dd, ol, ul, li, form, label, table, tbody, tr, td, article, aside, canvas, details, figure, figcaption, footer, header, nav, section, summary, time, audio, video { margin: 0; padding: 0; border: 0; font-size: 100%; font: inherit; vertical-align: baseline; }
+:focus { outline: 0; }
+article, aside, details, figcaption, figure, footer, header, nav, section { display: block; }
+body { line-height: 1; }
+ol, ul { list-style: none; }
+blockquote { quotes: none; }
+blockquote:before, blockquote:after { content: ""; content: none; }
+table { border-collapse: collapse; border-spacing: 0; }
+textarea { overflow: auto; vertical-align: top; resize: vertical; }
+audio, canvas, video { display: inline-block; max-width: 100%; }
+[hidden] { display: none; }
+html { font-size: 100%; -webkit-text-size-adjust: 100%; }
+a:focus { outline: thin dotted; }
+a:active, a:hover { outline: 0; }
+img { border: 0; }
+figure { margin: 0; }
+form { margin: 0; }
+button, input, textarea { font-size: 100%; margin: 0; vertical-align: baseline; }
+button, input { line-height: normal; }
+button { text-transform: none; }
+button, input[type="submit"] { -webkit-appearance: button; cursor: pointer; }
+button[disabled], html input[disabled] { cursor: default; }
+button::-moz-focus-inner, input::-moz-focus-inner { border: 0; padding: 0; }
+textarea { overflow: auto; vertical-align: top; }
+table { border-collapse: collapse; border-spacing: 0; }
+html, button, input, textarea { color: #222; }
+::-moz-selection { background: #b3d4fc; text-shadow: none; }
+::selection { background: #b3d4fc; text-shadow: none; }
+img { vertical-align: middle; }
+textarea { resize: vertical; }
+@font-face { font-family: "Gotham Pro Italic"; src: url("/assets/templates/fonts/GothamPro-Italic.eot"); src: url("/assets/templates/fonts/GothamPro-Italic.eot?#iefix") format("embedded-opentype"), url("/assets/templates/fonts/GothamPro-Italic.woff") format("woff"), url("/assets/templates/fonts/GothamPro-Italic.ttf") format("truetype"); font-weight: normal; font-style: italic; font-display: swap; }
+@font-face { font-family: "Gotham Pro Medium"; src: url("/assets/templates/fonts/GothamPro-Medium.eot"); src: url("/assets/templates/fonts/GothamPro-Medium.eot?#iefix") format("embedded-opentype"), url("/assets/templates/fonts/GothamPro-Medium.woff") format("woff"), url("/assets/templates/fonts/GothamPro-Medium.ttf") format("truetype"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Gotham Pro Bold"; src: url("/assets/templates/fonts/GothamPro-Bold.eot"); src: url("/assets/templates/fonts/GothamPro-Bold.eot?#iefix") format("embedded-opentype"), url("/assets/templates/fonts/GothamPro-Bold.woff") format("woff"), url("/assets/templates/fonts/GothamPro-Bold.ttf") format("truetype"); font-weight: bold; font-style: normal; font-display: swap; }
+@font-face { font-family: "Gotham Pro Narrow"; src: url("/assets/templates/fonts/GothamProNarrow-Bold.eot"); src: url("/assets/templates/fonts/GothamProNarrow-Bold.eot?#iefix") format("embedded-opentype"), url("/assets/templates/fonts/GothamProNarrow-Bold.woff") format("woff"), url("/assets/templates/fonts/GothamProNarrow-Bold.ttf") format("truetype"); font-weight: bold; font-style: normal; font-display: swap; }
+@font-face { font-family: "Gotham Pro Narrow Medium"; src: url("/assets/templates/fonts/GothamProNarrow-Medium.eot"); src: url("/assets/templates/fonts/GothamProNarrow-Medium.eot?#iefix") format("embedded-opentype"), url("/assets/templates/fonts/GothamProNarrow-Medium.woff") format("woff"), url("/assets/templates/fonts/GothamProNarrow-Medium.ttf") format("truetype"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Gotham Pro Light"; src: url("/assets/templates/fonts/GothamPro-Light.eot"); src: url("/assets/templates/fonts/GothamPro-Light.eot?#iefix") format("embedded-opentype"), url("/assets/templates/fonts/GothamPro-Light.woff") format("woff"), url("/assets/templates/fonts/GothamPro-Light.ttf") format("truetype"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Gotham Pro ExtraBold"; src: url("/assets/templates/fonts/GothamPro-Black.eot"); src: url("/assets/templates/fonts/GothamPro-Black.eot?#iefix") format("embedded-opentype"), url("/assets/templates/fonts/GothamPro-Black.woff") format("woff"), url("/assets/templates/fonts/GothamPro-Black.ttf") format("truetype"); font-weight: 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Gotham Pro"; src: url("/assets/templates/fonts/GothamPro.eot"); src: url("/assets/templates/fonts/GothamPro.eot?#iefix") format("embedded-opentype"), url("/assets/templates/fonts/GothamPro.woff") format("woff"), url("/assets/templates/fonts/GothamPro.ttf") format("truetype"); font-weight: normal; font-style: normal; font-display: swap; }
+.animated { -webkit-animation-duration: 1s; animation-duration: 1s; -webkit-animation-fill-mode: both; animation-fill-mode: both; }
+@-webkit-keyframes fadeInLeftBig { 0% { opacity: 0; -webkit-transform: translateX(-2000px); transform: translateX(-2000px); } 100% { opacity: 1; -webkit-transform: translateX(0); transform: translateX(0); } }
+@keyframes fadeInLeftBig { 0% { opacity: 0; -webkit-transform: translateX(-2000px); -ms-transform: translateX(-2000px); transform: translateX(-2000px); } 100% { opacity: 1; -webkit-transform: translateX(0); -ms-transform: translateX(0); transform: translateX(0); } }
+.fadeInLeftBig { -webkit-animation-name: fadeInLeftBig; animation-name: fadeInLeftBig; }
+@-webkit-keyframes fadeInRightBig { 0% { opacity: 0; -webkit-transform: translateX(2000px); transform: translateX(2000px); } 100% { opacity: 1; -webkit-transform: translateX(0); transform: translateX(0); } }
+@keyframes fadeInRightBig { 0% { opacity: 0; -webkit-transform: translateX(2000px); -ms-transform: translateX(2000px); transform: translateX(2000px); } 100% { opacity: 1; -webkit-transform: translateX(0); -ms-transform: translateX(0); transform: translateX(0); } }
+.fadeInRightBig { -webkit-animation-name: fadeInRightBig; animation-name: fadeInRightBig; }
+@-webkit-keyframes fadeInUpBig { 0% { opacity: 0; -webkit-transform: translateY(2000px); transform: translateY(2000px); } 100% { opacity: 1; -webkit-transform: translateY(0); transform: translateY(0); } }
+@keyframes fadeInUpBig { 0% { opacity: 0; -webkit-transform: translateY(2000px); -ms-transform: translateY(2000px); transform: translateY(2000px); } 100% { opacity: 1; -webkit-transform: translateY(0); -ms-transform: translateY(0); transform: translateY(0); } }
+.fadeInUpBig { -webkit-animation-name: fadeInUpBig; animation-name: fadeInUpBig; }
+* { box-sizing: border-box; }
+html, body { overflow: visible !important; }
+h2 { font-family: "Gotham Pro Bold"; font-size: 52px; line-height: 56px; }
+@media screen and (max-width: 1440px) {
+h2 { font-size: 40px; line-height: 44px; }
+}
+@media screen and (max-width: 960px) {
+h2 { font-size: 36px; line-height: 40px; }
+}
+@media screen and (max-width: 520px) {
+h2 { font-size: 28px; line-height: 32px; }
+}
+h3 { font-family: "Gotham Pro Bold"; font-size: 16px; line-height: 20px; color: #171717; margin-bottom: 6px; }
+body { font-family: "Gotham Pro", sans-serif; height: unset !important; }
+a { text-decoration: none; outline: none; }
+.form { position: relative; padding: 66px 71px; background: rgba(189, 157, 116, 0.5); box-shadow: 40px 40px 80px rgba(0, 0, 0, 0.05); }
+@media screen and (max-width: 1300px) {
+.form { padding: 40px 50px; margin-right: 30px; }
+}
+@media screen and (max-width: 960px) {
+.form { margin-right: 0px; }
+}
+@media screen and (max-width: 520px) {
+.form { padding: 30px; }
+}
+input.error { border: 1px solid #e94b35; }
+.clearfix { clear: both; }
+.article__form { background: rgba(189, 157, 116, 0.5); box-shadow: 60px 60px 200px rgba(0, 0, 0, 0.1); color: #171717; padding: 60px 60px 10px; }
+@media screen and (max-width: 1360px) {
+.article__form { padding: 40px 40px 0; }
+}
+@media screen and (max-width: 1100px) {
+.article__form { padding: 30px 30px 0; }
+}
+@media screen and (max-width: 520px) {
+.article__form { padding: 25px 25px 0; }
+}
+.article__inp { display: flex; justify-content: space-between; width: 100%; }
+@media screen and (max-width: 768px) {
+.article__inp { flex-direction: column; }
+}
+.article__inp .form__item_wrapp { width: 48%; display: flex; flex-direction: column; margin-bottom: 40px; }
+.article__inp .form__item_wrapp input, .article__inp .form__item_wrapp textarea { width: 100%; }
+@media screen and (max-width: 768px) {
+.article__inp .form__item_wrapp { width: 100%; margin-bottom: 25px; }
+}
+@media screen and (max-width: 460px) {
+.article__inp .form__item_wrapp { margin-bottom: 20px; }
+}
+.article__inp .form__item_wrapp input, .article__inp .form__item_wrapp textarea { font-family: "Gotham Pro Light"; background: #FFFFFF; border: 1px solid #E3E3E3; padding: 15px 20px; }
+@media screen and (max-width: 460px) {
+.article__inp input, .article__inp textarea { padding: 12px 20px; }
+}
+.article__inp input::placeholder, .article__inp textarea::placeholder { color: #171717; }
+.article__inp input::-moz-placeholder, .article__inp textarea::-moz-placeholder { color: #171717; }
+.article__inp textarea { font-family: "Gotham Pro Light"; background: #FFFFFF; border: 1px solid #E3E3E3; padding: 15px 20px; }
+.article__inp textarea::placeholder { color: #171717; }
+.article__inp textarea::-moz-placeholder { color: #171717; }
+.article__inp textarea { width: 48%; resize: none; }
+@media screen and (max-width: 768px) {
+.article__inp textarea { width: 100%; min-height: 150px; }
+}
+.article__send { width: 48%; }
+@media screen and (max-width: 768px) {
+.article__send { width: 100%; }
+}
+.article__inp .form__item_wrapp .article__send input { font-family: "Gotham Pro Medium"; background: #222222; box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.25); font-size: 14px; line-height: 160%; text-align: center; letter-spacing: 0.1em; text-transform: uppercase; color: #FFFFFF; cursor: pointer; width: 100%; max-width: 210px; border: none; margin-top: 20px; }
+@media screen and (max-width: 580px) {
+.article__inp .form__item_wrapp .article__send input { font-size: 12px; }
+}
+.article__inp .form__item_wrapp .article__send input:hover { background: #747474; transition: all 0.2s; }
+.article__inp .form__item_wrapp .ec-error { margin-top: 5px; }
+.ec-antispam { display: none; }
+.ec-rating-stars { display: inline-block; vertical-align: middle; }
+.ec-rating-stars span { width: 20px; height: 16px; float: left; display: block; margin: 0; cursor: pointer; background: url(/images/design/ec-stars-hover.png) 0 0 no-repeat; }
+.ec-rating-stars span.active, .ec-rating-stars span.active2 { background: url(/images/design/ec-stars.png) 0 0 repeat-x !important; }
+.youtube-player > div { position: relative; }
+.youtube-player > div::before { content:""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: pointer; width: 80px; height: 80px; background: url(/img/article/photo_2021-11-23_17-33-50.jpg) no-repeat; background-size: contain; border-radius: 50%; }
+.bg-gray { width: 100%; background-color: #d1d1d1; padding: 20px 10px; }
+.bg-gray-container { max-width: 90%; margin: 0 auto; }
+.portfolio__imgs_5 { display: flex; position: relative; width: 100%; height: 685px; margin-bottom: -50px; overflow: hidden; }
+.portfolio__imgs_5 img { position: absolute; }
+.portfolio__img_parallax { position: relative; z-index: 1; padding: 40px 0px 80px; }
+@media screen and (max-width: 1024px) {
+.portfolio__imgs_5 { height:475px; }
+}
+@media screen and (max-width: 768px) {
+.portfolio__imgs_5 { height:400px; margin-bottom: -30px; }
+}
+@media screen and (max-width: 640px) {
+.portfolio__imgs_5 { height:320px; }
+}
+@media screen and (max-width: 540px) {
+.portfolio__imgs_5 { height:280px; }
+}
+@media screen and (max-width: 460px) {
+.portfolio__imgs_5 { height:220px; margin-bottom: -10px; }
+}
+@media screen and (max-width: 374px) {
+.portfolio__imgs_5 { height:180px; }
+}
+.portfolio__cols_2 { position: relative; display: flex; align-items: center; height: 550px; }
+.portfolio__cols_2 .portfolio__col_1, .portfolio__cols_2 .portfolio__col_2 { position: relative; z-index: 1; display: flex; justify-content: center; align-items: center; }
+.portfolio__cols_bg { position: absolute; top: 0px; left: 0px; height: 100%; width: 100%; }
+.portfolio__href { position: relative; }
+@media screen and (max-width: 960px) {
+.portfolio__cols_2 { height: 390px; }
+}
+@media screen and (max-width: 640px) {
+.portfolio__cols_2 { flex-direction: column-reverse; align-items: center; justify-content: center; }
+.portfolio__cols_2 { height: 550px; }
+}
+.seo_audit-popup p { font-family: "Gotham Pro Bold"; color: #C6A57A; }
+.seo_audit-popup p:hover { color: #e3c399; cursor: pointer; transition: all 0.2s; }
+input[name="af_action"] { display: none; }

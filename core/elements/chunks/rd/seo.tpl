@@ -36,6 +36,12 @@
   {/if}
   {set $c = ($c ~ ($r['text_2-bl9'] ?: '')) | trim}
 {/if}
+{* видео YouTube (<iframe …/embed/ID>) — превью-кнопкой: плеер YouTube грузится только по клику и открывается поверх
+   страницы (rd.js, [data-rd-video]); стили — .rd-yt в _layout.scss *}
+{if $c | preg_match : '~<iframe~i'}
+  {set $ytBtn = '<button class="rd-yt" type="button" data-rd-video="$1" aria-label="' ~ ($isRu ? 'Смотреть видео' : 'Дивитися відео') ~ '"><img class="rd-yt__img" src="https://i.ytimg.com/vi/$1/hqdefault.jpg" width="480" height="360" alt="" loading="lazy" decoding="async"><span class="rd-yt__play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span></button>'}
+  {set $c = $c | preg_replace : '~<iframe[^>]*?\ssrc=["\x27](?:https?:)?//(?:www\.)?youtube(?:-nocookie)?\.com/embed/(?!videoseries)([A-Za-z0-9_-]{11})[^>]*>\s*</iframe>~iu' : $ytBtn}
+{/if}
 {set $title = $r['title-bl9'] | trim}
 {set $head = ''}
 {if $c | preg_match : '~^\s*<h[1-6][^>]*>.*?</h[1-6]>~isu'}

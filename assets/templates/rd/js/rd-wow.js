@@ -520,22 +520,60 @@
   var title = hero && hero.querySelector('.rd-hero__title');
   var titleChars = [];
 
-  if (title) {
-    title.setAttribute('aria-label', title.textContent.replace(/­/g, '').replace(/\s+/g, ' ').trim());
-    var pill = title.querySelector('.rd-hero__pill');
-    if (pill) pill.setAttribute('data-wow-skip', '');
-    titleChars = splitChars(title);
-    titleChars.forEach(function (c) { c.setAttribute('aria-hidden', 'true'); });
-    // таблетка раскрывается вместе с буквой, перед которой стоит (на главной — последнее слово, у услуги — «під ключ»)
-    if (pill) {
-      var pillAt = titleChars.length - 7;
-      for (var pi = 0; pi < titleChars.length; pi++) {
-        if (pill.compareDocumentPosition(titleChars[pi]) & Node.DOCUMENT_POSITION_FOLLOWING) { pillAt = Math.max(0, pi - 1); break; }
+  // Первый кадр — с целым заголовком (это LCP в PageSpeed). Если rd-wow.js выполнился раньше первой отрисовки
+  // (CSS или шрифт пришли позже скриптов), разбивка на буквы и старт хореографии ждут первой отрисовки с контентом
+  // (иначе до старта на экране ничего нет — FCP/LCP ждут скрипты). Страховка — 1 с.
+  var hasFcp = function (list) {
+    return list.some(function (e) { return e.name === 'first-contentful-paint'; });
+  };
+  var afterFirstPaint = function (fn) {
+    var done = false;
+    var go = function () {
+      if (done) return;
+      done = true;
+      fn();
+    };
+    try {
+      if ((PerformanceObserver.supportedEntryTypes || []).indexOf('paint') < 0 || hasFcp(performance.getEntriesByType('paint'))) {
+        go();
+        return;
       }
-      pill.style.setProperty('--i', pillAt);
+      var po = new PerformanceObserver(function (list) {
+        if (hasFcp(list.getEntries())) {
+          po.disconnect();
+          raf(go);
+        }
+      });
+      po.observe({ type: 'paint', buffered: true });
+    } catch (er) {
+      go();
+      return;
     }
-    window.dispatchEvent(new Event('resize')); // перепроверка ширины заголовка (rd.js)
-  }
+    setTimeout(go, 1000);
+  };
+
+  var splitTitle = function () {
+    if (title) {
+      title.setAttribute('aria-label', title.textContent.replace(/­/g, '').replace(/\s+/g, ' ').trim());
+      var pill = title.querySelector('.rd-hero__pill');
+      if (pill) pill.setAttribute('data-wow-skip', '');
+      // уже нарисован целым — буквы «перерождаются» волной, а не исчезают разом (.is-painted в _wow.scss)
+      try {
+        if (hasFcp(performance.getEntriesByType('paint'))) title.classList.add('is-painted');
+      } catch (er) { /* без Paint Timing — обычное появление */ }
+      titleChars = splitChars(title);
+      titleChars.forEach(function (c) { c.setAttribute('aria-hidden', 'true'); });
+      // таблетка раскрывается вместе с буквой, перед которой стоит (на главной — последнее слово, у услуги — «під ключ»)
+      if (pill) {
+        var pillAt = titleChars.length - 7;
+        for (var pi = 0; pi < titleChars.length; pi++) {
+          if (pill.compareDocumentPosition(titleChars[pi]) & Node.DOCUMENT_POSITION_FOLLOWING) { pillAt = Math.max(0, pi - 1); break; }
+        }
+        pill.style.setProperty('--i', pillAt);
+      }
+      window.dispatchEvent(new Event('resize')); // перепроверка ширины заголовка (rd.js)
+    }
+  };
 
   // шапка: пункты появляются каскадом
   Array.prototype.forEach.call(document.querySelectorAll('.rd-header__bar > *, .rd-nav__item, .rd-lang'), function (el, i) {
@@ -574,8 +612,11 @@
       Array.prototype.forEach.call(hero.querySelectorAll('.rd-hero__stat-n'), function (n, k) { countNums(n, 1100 + k * 120); });
     }
   };
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(start);
-  setTimeout(start, 800);
+  afterFirstPaint(function () {
+    splitTitle();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(start);
+    setTimeout(start, 800);
+  });
 
   /* ---------- Буквы заголовка тянутся к курсору ---------- */
   var charPos = [];
