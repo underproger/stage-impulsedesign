@@ -29,16 +29,18 @@
 
 {set $title = ($r['case_title'] | strip_tags : '<br>' | trim) ?: $r.pagetitle}
 {set $sub = $r['case_sub'] | strip_tags : '<b><strong><br>' | trim}
+{set $site = $r['portfolio-banner-site_url'] | trim}
+{* в старых кейсах адрес бывает без протокола (alex.poryadinskiy.com) — без него ссылка ведёт на наш сайт (404) *}
+{if $site && !($site | preg_match : '#^(https?:)?//#i')}{set $site = 'https://' ~ $site}{/if}
 {set $meta = $r['case_meta'] | json_decode : true}
 {if !$meta}
   {set $meta = []}
   {if $r['portfolio-banner-service']}{set $meta[] = ['title' => $isRu ? 'Услуга' : 'Послуга', 'text' => $r['portfolio-banner-service']]}{/if}
   {if $r['portfolio-banner-term']}{set $meta[] = ['title' => $isRu ? 'Срок разработки' : 'Строк розробки', 'text' => $r['portfolio-banner-term']]}{/if}
-  {if ($r['portfolio-banner-site'] | trim) && ($r['portfolio-banner-site_url'] | trim)}{set $meta[] = ['title' => 'Сайт', 'text' => $r['portfolio-banner-site'], 'url' => ($r['portfolio-banner-site_url'] | trim)]}{/if}
+  {if ($r['portfolio-banner-site'] | trim) && $site}{set $meta[] = ['title' => 'Сайт', 'text' => $r['portfolio-banner-site'], 'url' => $site]}{/if}
 {/if}
 {set $cover = $r['case_cover'] | trim}
 {if $cover && !($cover | preg_match : '#^(https?:)?/#')}{set $cover = '/' ~ $cover}{/if}
-{set $site = $r['portfolio-banner-site_url'] | trim}
 {set $color = $r['case_color'] | trim}
 {if !($color | preg_match : '/^#[0-9a-f]{3,8}$/i')}{set $color = '#16202e'}{/if}
 {* тёмный цвет проекта — текст на его полосах белый (по яркости цвета) *}

@@ -91,7 +91,7 @@
   {if $about?}
     {* фото вместо 3D: поле about_hero_img (пусто — портрет из макета), без фона (PNG/WebP с прозрачностью) *}
     {set $aboutPhoto = $r['about_hero_img'] | trim}
-    {if !$aboutPhoto}{set $aboutPhoto = $img ~ 'about-hero.webp'}{elseif !($aboutPhoto | preg_match : '~^(https?:)?/~')}{set $aboutPhoto = '/' ~ $aboutPhoto}{/if}
+    {if !$aboutPhoto}{set $aboutPhoto = $img ~ 'about-hero.webp?v=' ~ $.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/img/about-hero.webp')}{elseif !($aboutPhoto | preg_match : '~^(https?:)?/~')}{set $aboutPhoto = '/' ~ $aboutPhoto}{/if}
     <div class="rd-hero__photo" aria-hidden="true">
       <img src="{$aboutPhoto}" width="1448" height="1086" alt="" fetchpriority="high" loading="eager">
     </div>

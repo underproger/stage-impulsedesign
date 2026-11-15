@@ -36,7 +36,9 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --rd-tmax: #{fm(36px, 48px)};
     --rd-tbox: calc(100vw - 2 * #{fm(20px, 30px)});
     font-family: "Roboto Flex Wide", "Gotham Pro", Arial, sans-serif;
-    font-size: min(var(--rd-tmax), calc(var(--rd-tbox) / (var(--rd-longest, 8) * 0.8)));
+    // длинное слово («КОРПОРАТИВНЫЙ», «ОДНОСТРАНИЧНЫЙ») — кегль по ширине колонки: буква широкого шрифта заглавными ≈ 0.92em;
+    // точно подгоняет rd.js ([data-rd-fit])
+    font-size: min(var(--rd-tmax), calc(var(--rd-tbox) / (var(--rd-longest, 8) * 0.95)));
     font-weight: 700;
     line-height: 1.1;
     text-transform: uppercase;

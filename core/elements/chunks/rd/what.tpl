@@ -44,7 +44,7 @@
 <section class="rd-what" id="what" data-rd-what>
   <div class="rd-container rd-what__grid">
     <div class="rd-what__main">
-      {if $title}<h2 class="rd-what__title" style="--rd-longest: {$longest ?: 8}">{$title}</h2>{/if}
+      {if $title}<h2 class="rd-what__title" style="--rd-longest: {$longest ?: 8}" data-rd-fit>{$title}</h2>{/if}
       {if $sub}<p class="rd-what__sub">{$sub}</p>{/if}
 
       {if $card}

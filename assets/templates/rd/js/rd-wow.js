@@ -593,16 +593,11 @@
       read: (cwpSection && cwpSection.getAttribute('data-rd-read')) || (isRu ? 'читать' : 'читати') };
     var labelNow = 'click';
 
-    window.addEventListener('pointermove', function (e) {
-      if (e.pointerType !== 'mouse') return;
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-      mouse.t = e.target;
-      cur.x = e.clientX;
-      cur.y = e.clientY;
-
+    // состояние курсора — по элементу под ним; если мышь стоит, а под ней едет лента портфолио или прокручивается
+    // страница, главный цикл (frame) пересчитывает его по точке, где курсор стоит
+    var cursorState = function (e) {
       var t = e.target;
-      if (!t.closest) return;
+      if (!t || !t.closest) return;
       var inScope = t.closest(scopes);
       var overDoc = !!t.closest('a.rd-cwp__doc'); // документ «Наше портфоліо» со ссылкой — «читати»
       // без ссылки лист открывает картинку на всю ширину — «дивитись»
@@ -615,12 +610,6 @@
       var overBtn = !!t.closest(cursorBtns);
       root.classList.toggle('rd-cursor-btn', overBtn);
       ring.classList.toggle('is-link', !!t.closest('a, button') && !overBtn && !overCase);
-      var want = overDoc ? 'read' : (overCase ? 'view' : 'click');
-      if (want !== labelNow) {
-        labelNow = want;
-        ringLabel.textContent = labels[want];
-      }
-
       var overBlob = false;
       if (glob && !t.closest('a, button')) {
         var g = glob.getBoundingClientRect();
@@ -629,6 +618,13 @@
         overBlob = gx * gx + gy * gy < Math.pow(g.width * 0.36, 2);
       }
       ring.classList.toggle('is-blob', overBlob);
+      // надпись меняем, только когда она видна (над кейсом / документом / 3D-объектом); курсор ушёл — слово гаснет
+      // тем же («дивитись» не подменяется на «клік» на время затухания, и при возврате не мелькает «клік»)
+      var want = overDoc ? 'read' : (overCase ? 'view' : (overBlob ? 'click' : ''));
+      if (want && want !== labelNow) {
+        labelNow = want;
+        ringLabel.textContent = labels[want];
+      }
       // в круге надпись («клік» / «дивитись») — точку прячем, чтобы не резала текст
       root.classList.toggle('rd-cursor-label', overBlob || overCase);
 
@@ -642,6 +638,15 @@
         }
         hero.classList.toggle('is-lit', mouse.inHero);
       }
+    };
+    window.addEventListener('pointermove', function (e) {
+      if (e.pointerType !== 'mouse') return;
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.t = e.target;
+      cur.x = e.clientX;
+      cur.y = e.clientY;
+      cursorState(e);
     }, { passive: true });
 
     document.addEventListener('mouseleave', function () {
@@ -669,9 +674,18 @@
   }
 
   /* ---------- Главный цикл ---------- */
+  var cursorTick = 0;
   function frame() {
     // курсор
     if (cursor) {
+      // мышь стоит, а под ней едет лента портфолио / прокручивается страница — состояние кольца по точке (раз в 6 кадров)
+      if (++cursorTick % 6 === 0 && mouse.x >= 0 && root.classList.contains('rd-cursor-on')) {
+        var underEl = document.elementFromPoint(mouse.x, mouse.y);
+        if (underEl && underEl !== mouse.t) {
+          mouse.t = underEl;
+          cursorState({ target: underEl, clientX: mouse.x, clientY: mouse.y });
+        }
+      }
       cur.rx = lerp(cur.rx, cur.x, 0.2);
       cur.ry = lerp(cur.ry, cur.y, 0.2);
       cursor.style.transform = 'translate3d(' + cur.x + 'px,' + cur.y + 'px,0)';
@@ -2606,23 +2620,6 @@
     } else {
       stTargets.forEach(function (el) { el.classList.add('is-in'); });
     }
-  }
-  /* ================= «Прокрутка» номеров на наведении («незамінний, якщо», «4 гарантії» услуги) ================= */
-  // Номер уходит вверх и приходит снизу. Класс держится до конца анимации: курсор ушёл раньше — номер доезжает,
-  // а не прыгает на место; пока номер крутится, повторное наведение его не перезапускает.
-  if (fine) {
-    Array.prototype.forEach.call(document.querySelectorAll('.rd-cause__item, .rd-gar--num .rd-gar-card'), function (item) {
-      var num = item.querySelector('.rd-cause__num-in, .rd-gar-card__num-in');
-      if (!num) return;
-      var shown = function () { return item.classList.contains('is-in') || !!item.closest('.rd-gar__panel.is-in'); };
-      item.addEventListener('pointerenter', function (e) {
-        if (e.pointerType !== 'mouse' || !shown() || num.classList.contains('is-roll')) return;
-        num.classList.add('is-roll');
-      });
-      num.addEventListener('animationend', function (e) {
-        if (e.animationName === 'rd-cause-roll') num.classList.remove('is-roll');
-      });
-    });
   }
   /* ================= Страница портфолио ================= */
   // Заголовок — слова из размытия, цитата и крошки всплывают; кейсы — шторкой (как в блоке «Портфоліо»), по мере въезда
