@@ -65,6 +65,8 @@
   ['url' => ('facebook_messenger' | option), 'icon' => 'soc-messenger.svg', 'label' => 'Messenger']
 ]}
 
+{* закрывает <main>, открытый header.tpl / hero.tpl *}
+{if $_modx->getPlaceholder('rd.main')}</main>{/if}
 <footer class="rd-footer" data-rd-footer>
   {if $email}
     <a class="rd-ticker" href="mailto:{$email}" aria-label="{$t.write}: {$email}" data-rd-ticker>

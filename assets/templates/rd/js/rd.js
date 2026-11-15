@@ -67,6 +67,25 @@
     });
   }
 
+  /* ---------- Видео в тексте статей (.youtube-player — превью и запуск из старого main.js) ---------- */
+  // Превью без alt и «кнопка» на div — делаем кнопкой: роль, фокус, подпись, Enter / пробел (картинка — декоративная)
+  var ytFix = function () {
+    var ytRu = (document.documentElement.lang || '').indexOf('ru') === 0;
+    Array.prototype.forEach.call(document.querySelectorAll('.youtube-player > div[data-id]'), function (b) {
+      if (b.hasAttribute('role')) return;
+      b.setAttribute('role', 'button');
+      b.setAttribute('tabindex', '0');
+      b.setAttribute('aria-label', ytRu ? 'Смотреть видео' : 'Дивитися відео');
+      Array.prototype.forEach.call(b.querySelectorAll('img:not([alt])'), function (im) { im.alt = ''; });
+      b.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); }
+      });
+    });
+  };
+  // rd.js (defer) выполняется до DOMContentLoaded, а превью main.js строит по нему — ждём его (и на всякий случай load)
+  document.addEventListener('DOMContentLoaded', ytFix);
+  window.addEventListener('load', ytFix);
+
   /* ---------- 3D-объекты (первый экран главной, узел услуги, спираль section 6, икосаэдр section 9): один WebGL-модуль, грузится после загрузки страницы ---------- */
   // 3D запускается только там, где его тянет видеокарта. Без неё (программная отрисовка: SwiftShader, llvmpipe —
   // так рисуют Lighthouse / PageSpeed Insights и компьютеры без драйвера) каждый кадр считает процессор: страница

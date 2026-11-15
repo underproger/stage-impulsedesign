@@ -272,3 +272,16 @@
 .rd-nowrap {
   white-space: nowrap;
 }
+
+// текст только для экранного диктора (видимая часть анимирована и скрыта от него aria-hidden)
+.rd-sr {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

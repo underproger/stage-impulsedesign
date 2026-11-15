@@ -118,12 +118,28 @@
     return items;
   }
 
+  // Анимированный текст (счётчики): видимая часть — aria-hidden, рядом тот же текст скрыто (.rd-sr) — его читает
+  // экранный диктор. aria-label у span / b / p / div по ARIA не разрешён (Lighthouse: «permitted ARIA attributes»).
+  function srLive(el, text) {
+    var was = el.querySelector(':scope > .rd-sr + [aria-hidden]');
+    if (was) return was; // уже обёрнут (повторный запуск)
+    var live = document.createElement('span');
+    live.setAttribute('aria-hidden', 'true');
+    while (el.firstChild) live.appendChild(el.firstChild);
+    var sr = document.createElement('span');
+    sr.className = 'rd-sr';
+    sr.textContent = text;
+    el.appendChild(sr);
+    el.appendChild(live);
+    return live;
+  }
+
   // Числа в тексте «досчитываются» от нуля: «100%», «до 3,5%», «150 ₴» (с запятой — с тем же числом знаков).
-  function countNums(b, delay) {
-    var final = b.textContent;
+  function countNums(b0, delay) {
+    var final = b0.textContent;
     var parts = final.split(/(\d+(?:[.,]\d+)?)/);
     if (parts.length < 2) return;
-    b.setAttribute('aria-label', final);
+    var b = srLive(b0, final);
     var nums = [];
     for (var k = 1; k < parts.length; k += 2) {
       var sep = parts[k].indexOf(',') >= 0 ? ',' : '.';
@@ -177,6 +193,18 @@
     };
     walk(el, false);
     words.forEach(function (w, i) { w.style.setProperty('--i', i); });
+    // слова гаснут (до «проявления») только когда текст в полуэкране от окна: до этого — обычный текст. Иначе страница
+    // при загрузке — с бледными словами далеко внизу: проверки доступности (Lighthouse) считают их нечитаемыми
+    if ('IntersectionObserver' in window) {
+      var qIo = new IntersectionObserver(function (en) {
+        if (!en[0].isIntersecting) return;
+        el.classList.add('rd-qw-on');
+        qIo.disconnect();
+      }, { rootMargin: '0px 0px 50% 0px' });
+      qIo.observe(el);
+    } else {
+      el.classList.add('rd-qw-on');
+    }
     return words;
   }
 
@@ -1247,17 +1275,17 @@
       var to = parseInt(m[2].replace(/\s/g, ''), 10);
       if (!to) return;
       var final = el.textContent;
-      el.setAttribute('aria-label', final);
+      var live = srLive(el, final);
       var t0 = null;
       var dur = 1400;
       var step = function (t) {
         if (t0 === null) t0 = t;
         var p = clamp((t - t0) / dur, 0, 1);
         var e = 1 - Math.pow(1 - p, 4);
-        el.textContent = m[1] + Math.round(to * e) + m[3];
-        if (p < 1) raf(step); else el.textContent = final;
+        live.textContent = m[1] + Math.round(to * e) + m[3];
+        if (p < 1) raf(step); else live.textContent = final;
       };
-      el.textContent = m[1] + '0' + m[3];
+      live.textContent = m[1] + '0' + m[3];
       setTimeout(function () { raf(step); }, delay);
     };
 
@@ -1349,12 +1377,22 @@
     var odometer = function (el) {
       var text = (el.textContent || '').trim();
       if (!/\d/.test(text)) return;
-      el.setAttribute('aria-label', text);
+      el.setAttribute('data-n', text);
       el.textContent = '';
+      var sr = document.createElement('span'); // число для экранного диктора (ленты цифр — aria-hidden)
+      sr.className = 'rd-sr';
+      sr.textContent = text;
+      el.appendChild(sr);
       var digits = text.replace(/\D/g, '').length;
       var di = 0;
       Array.prototype.forEach.call(text, function (ch) {
-        if (!/\d/.test(ch)) { el.appendChild(document.createTextNode(ch)); return; }
+        if (!/\d/.test(ch)) {
+          var other = document.createElement('span');
+          other.setAttribute('aria-hidden', 'true');
+          other.textContent = ch;
+          el.appendChild(other);
+          return;
+        }
         var d = +ch;
         var box = document.createElement('span');
         box.className = 'rd-odo';
@@ -1392,7 +1430,7 @@
       var val = st.querySelector('.rd-stat__val.is-odo');
       var sign = st.querySelector('.rd-stat__suf--sign');
       if (!val || !sign || sign.textContent.trim() !== '+') return;
-      var text = val.getAttribute('aria-label') || '';
+      var text = val.getAttribute('data-n') || '';
       if (!/^\d+$/.test(text)) return;
       abCount.push({ el: val, n: +text, cols: null });
     });
@@ -1453,7 +1491,9 @@
           var s = String(c.n);
           while (c.cols.length < s.length) odoAddCol(c);
           c.cols.forEach(function (col, k) { odoRoll(col, +s.charAt(k)); });
-          c.el.setAttribute('aria-label', s);
+          c.el.setAttribute('data-n', s);
+          var srN = c.el.querySelector('.rd-sr');
+          if (srN) srN.textContent = s;
           c.el.classList.toggle('rd-stat__val--one', s.charAt(0) === '1');
         });
       }
@@ -1739,15 +1779,15 @@
       var m = final.match(/^(.*?)(\d+)(.*)$/);
       if (!m) return;
       var to = parseInt(m[2], 10);
-      lBadge.setAttribute('aria-label', final);
+      var bLive = srLive(lBadge, final);
       var t0 = null;
       var step = function (t) {
         if (t0 === null) t0 = t;
         var p = clamp((t - t0) / 1100, 0, 1);
-        lBadge.textContent = m[1] + Math.round(to * (1 - Math.pow(1 - p, 3))) + m[3];
-        if (p < 1) raf(step); else lBadge.textContent = final;
+        bLive.textContent = m[1] + Math.round(to * (1 - Math.pow(1 - p, 3))) + m[3];
+        if (p < 1) raf(step); else bLive.textContent = final;
       };
-      lBadge.textContent = m[1] + '0' + m[3];
+      bLive.textContent = m[1] + '0' + m[3];
       setTimeout(function () { raf(step); }, 350);
     };
     var lReveal = function (el) {

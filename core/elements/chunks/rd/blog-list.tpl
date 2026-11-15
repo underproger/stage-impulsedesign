@@ -138,8 +138,8 @@
               <span class="rd-post__img">{if $pic}<img src="{$pic}" width="400" height="222" alt="{$s.pagetitle | escape}" loading="{$i < 6 ? 'eager' : 'lazy'}" decoding="async">{/if}</span>
               <span class="rd-post__body">
                 <span class="rd-post__meta">
-                  {if $s.parent in $catIds}<span class="rd-post__cat">{$catName[$s.parent]}</span>{/if}
-                  <span class="rd-post__views" aria-label="{$hits} {$t.views}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>{$hits | number : 0 : ',' : ' '}</span>
+                  {if $s.parent in list $catIds}<span class="rd-post__cat">{$catName[$s.parent]}</span>{/if}
+                  <span class="rd-post__views"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>{$hits | number : 0 : ',' : ' '}<span class="rd-sr"> {$t.views}</span></span>
                 </span>
                 <span class="rd-post__title">{$s.pagetitle}</span>
                 {if $desc}<span class="rd-post__text">{$desc}</span>{/if}

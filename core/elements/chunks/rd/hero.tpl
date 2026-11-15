@@ -50,6 +50,8 @@
   ['url' => ('facebook_messenger' | option), 'icon' => 'soc-messenger.svg', 'label' => 'Messenger']
 ]}
 
+{* <main> главной открывается до первого экрана (шапка — внутри него), закрывает footer.tpl *}
+<main class="rd-main" id="rd-main">{$_modx->setPlaceholder('rd.main', 1)}
 <section class="rd-hero rd-hero--main">
   <div class="rd-hero__frame" aria-hidden="true">
     <div class="rd-hero__frame-box">
@@ -62,7 +64,7 @@
       <span class="rd-hero__cross rd-hero__cross--b"></span>
     </div>
   </div>
-  {include 'file:chunks/rd/header.tpl'}
+  {include 'file:chunks/rd/header.tpl' nomain=1}
 
   <div class="rd-container rd-hero__inner">
     <div class="rd-hero__content">

@@ -1098,7 +1098,8 @@ $pt-logo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' widt
 
   // цитата: слова «проявляются» по мере прокрутки (rd-wow.js пишет --q; у слова --i — номер)
   .rd-mind__quote {
-    .rd-qw {
+    // слова бледные, только когда цитата подъезжает к экрану (.rd-qw-on — rd-wow.js, splitFlow)
+    .rd-qw-on .rd-qw {
       opacity: calc(0.14 + 0.86 * clamp(0, var(--q, 0) - var(--i, 0), 1));
     }
 

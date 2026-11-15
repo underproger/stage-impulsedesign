@@ -191,7 +191,8 @@
   line-height: normal;
 
   &__item {
-    opacity: 0.3;
+    // неактивный язык приглушён, но читается (контраст ≥ 4.5:1 и на тёмной шапке, и на белой; было 0.3 — 2.6:1)
+    opacity: 0.6;
     transition: opacity $dur $ease;
 
     &.is-active {

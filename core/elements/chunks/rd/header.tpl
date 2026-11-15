@@ -108,7 +108,7 @@
           </li>
         {/foreach}
       </ul>
-      <div class="rd-lang" aria-label="{$t.lang}">
+      <div class="rd-lang" role="group" aria-label="{$t.lang}">
         <a class="rd-lang__item{if !$isRu} is-active{/if}" href="{$ukUrl}" hreflang="uk" lang="uk"{if !$isRu} aria-current="true"{/if}>Ua</a>
         <span class="rd-lang__sep" aria-hidden="true"></span>
         <a class="rd-lang__item{if $isRu} is-active{/if}" href="{$ruUrl}" hreflang="ru" lang="ru"{if $isRu} aria-current="true"{/if}>Ru</a>
@@ -171,7 +171,7 @@
           {/if}
         {/foreach}
 
-        <div class="rd-lang" aria-label="{$t.lang}">
+        <div class="rd-lang" role="group" aria-label="{$t.lang}">
           <a class="rd-lang__item{if !$isRu} is-active{/if}" href="{$ukUrl}" hreflang="uk" lang="uk">Ua</a>
           <span class="rd-lang__sep" aria-hidden="true"></span>
           <a class="rd-lang__item{if $isRu} is-active{/if}" href="{$ruUrl}" hreflang="ru" lang="ru">Ru</a>
@@ -197,3 +197,11 @@
     </div>
   </div>
 </header>
+{* основная часть страницы — <main> (ориентир для экранных дикторов и проверок доступности); закрывает footer.tpl.
+   Не открывается: в шапке внутри первого экрана главной (nomain=1 — <main> открыл hero.tpl до своего <section>)
+   и в старых шаблонах 3, 7, 8, 13, 14 (там шапка внутри обёрток — <main> разорвал бы их) *}
+{set $legacyTpl = [3, 7, 8, 13, 14]}
+{* in list — по значениям (просто in в Fenom смотрит ещё и ключи: шаблон 4 «нашёлся» бы в списке из пяти) *}
+{if !$nomain? && !(($_modx->resource.template | int) in list $legacyTpl)}
+<main class="rd-main" id="rd-main">{$_modx->setPlaceholder('rd.main', 1)}
+{/if}

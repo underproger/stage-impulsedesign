@@ -542,7 +542,8 @@ $ease-in-q: cubic-bezier(0.55, 0, 0.75, 0.2); // разгон — «улетае
   }
 
   // абзац «проявляется» словами по очереди, кнопка — следом
-  .rd-seo__intro .rd-qw {
+  // слова бледные, только когда абзац подъезжает к экрану (.rd-qw-on — rd-wow.js, splitFlow)
+  .rd-seo__intro.rd-qw-on .rd-qw {
     opacity: 0.12;
     transition: opacity 0.6s $ease;
     transition-delay: calc(var(--i) * 18ms + 250ms);

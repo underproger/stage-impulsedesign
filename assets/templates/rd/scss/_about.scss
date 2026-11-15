@@ -876,7 +876,8 @@ $ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   // цитата: слова «проявляются» по мере прокрутки (rd-wow.js пишет --q; у слова --i — номер)
   .rd-about__quote {
-    .rd-qw {
+    // слова бледные, только когда цитата подъезжает к экрану (.rd-qw-on — rd-wow.js, splitFlow)
+    .rd-qw-on .rd-qw {
       opacity: calc(0.14 + 0.86 * clamp(0, var(--q, 0) - var(--i, 0), 1));
     }
 
