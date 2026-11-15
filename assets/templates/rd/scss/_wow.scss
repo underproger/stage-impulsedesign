@@ -52,28 +52,6 @@ $ease-io: cubic-bezier(0.77, 0, 0.18, 1);
     filter: blur(0);
   }
 
-  // заголовок уже был на экране целым: rd-wow.js разбивает его на буквы только после первой отрисовки (первый кадр
-  // не пустой — PageSpeed: FCP / LCP). Тогда буквы не пропадают разом, а по очереди «перерождаются»: волна слева
-  // направо — буква растворяется в размытии и материализуется снова (тот же сдвиг, поворот, размытие)
-  .rd-hero__title.is-painted {
-    .rd-ch {
-      opacity: 1;
-      translate: 0 0;
-      rotate: 0deg;
-      filter: blur(0);
-      transition: none;
-    }
-
-    .rd-hero__pill {
-      transition-delay: calc(var(--i, 20) * 32ms + 200ms);
-    }
-  }
-
-  &.rd-wow-in .rd-hero__title.is-painted .rd-ch {
-    animation: rd-ch-reform 1.25s backwards;
-    animation-delay: calc(var(--i) * 32ms);
-  }
-
   // «таблетка» раскрывается слева направо
   .rd-hero__pill {
     clip-path: inset(0 100% 0 0 round 50px);
@@ -1935,31 +1913,6 @@ $pt-logo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' widt
   from {
     opacity: 0;
     transform: scale(0.6);
-  }
-}
-
-@keyframes rd-ch-reform {
-  0% {
-    opacity: 1;
-    translate: 0 0;
-    rotate: 0deg;
-    filter: blur(0);
-    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
-  }
-
-  22% {
-    opacity: 0;
-    translate: 0 0.5em;
-    rotate: 8deg;
-    filter: blur(12px);
-    animation-timing-function: $ease-expo;
-  }
-
-  100% {
-    opacity: 1;
-    translate: 0 0;
-    rotate: 0deg;
-    filter: blur(0);
   }
 }
 
