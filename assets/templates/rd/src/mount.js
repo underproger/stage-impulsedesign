@@ -1,7 +1,8 @@
 /*
  * Общий запуск 3D-модулей: все блоки модуля на странице (на «Послуги студії» их несколько).
- * Один блок — запускается сразу, как и раньше (первый экран, SEO-блок, спираль section 6);
- * несколько — каждый, когда подъезжает к экрану (за экран до него): лишние WebGL-контексты не создаются заранее.
+ * Каждый блок запускается, когда подъезжает к экрану (за полэкрана до него): объект первого экрана — сразу,
+ * остальные — по мере прокрутки; лишние WebGL-контексты и шейдеры не собираются при загрузке страницы.
+ * Грузит модуль rd.js — только при видеокарте (не программный рендер) и не на слабых устройствах.
  * Без WebGL / при reduced motion ничего не запускается — остаются картинки.
  */
 let webgl;
@@ -31,17 +32,19 @@ export function mountAll(selector, make) {
         /* без WebGL остаётся картинка */
       }
     };
-    if (els.length === 1 || !('IntersectionObserver' in window)) {
+    if (!('IntersectionObserver' in window)) {
       els.forEach(start);
       return;
     }
+    // каждый блок — когда подъезжает к экрану (за полэкрана до него): объект первого экрана стартует сразу,
+    // спираль и икосаэдр внизу главной не собираются при загрузке страницы, пока до них не докрутили
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
         if (!e.isIntersecting) return;
         io.unobserve(e.target);
         start(e.target);
       });
-    }, { rootMargin: '100% 0px' });
+    }, { rootMargin: '50% 0px' });
     els.forEach((el) => io.observe(el));
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);

@@ -68,20 +68,51 @@
   }
 
   /* ---------- 3D-объекты (первый экран главной, узел услуги, спираль section 6, икосаэдр section 9): один WebGL-модуль, грузится после загрузки страницы ---------- */
+  // 3D запускается только там, где его тянет видеокарта. Без неё (программная отрисовка: SwiftShader, llvmpipe —
+  // так рисуют Lighthouse / PageSpeed Insights и компьютеры без драйвера) каждый кадр считает процессор: страница
+  // «замирает» на десятки секунд. Там же и на слабых устройствах (память ≤ 2 ГБ, режим экономии трафика) и при
+  // reduced motion rd-blob.js (≈130 КБ gzip) не грузится вовсе — остаются картинки-заглушки.
+  // Проверить 3D на таком компьютере: адрес с ?rd3d=1.
+  var gpu3d = function () {
+    if (/[?&]rd3d=1(&|$)/.test(location.search)) return true;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+    var nav = navigator;
+    if (nav.connection && nav.connection.saveData) return false;
+    if (nav.deviceMemory && nav.deviceMemory < 4) return false;
+    try {
+      var c = document.createElement('canvas');
+      var opts = { failIfMajorPerformanceCaveat: true }; // программный рендер → контекст не создаётся
+      var gl = c.getContext('webgl', opts) || c.getContext('experimental-webgl', opts);
+      if (!gl) return false;
+      var info = gl.getExtension('WEBGL_debug_renderer_info');
+      var name = String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || '');
+      var lose = gl.getExtension('WEBGL_lose_context');
+      if (lose) lose.loseContext();
+      return !/swiftshader|llvmpipe|lavapipe|softpipe|software|basic render/i.test(name);
+    } catch (er) {
+      return false;
+    }
+  };
   var glob = document.querySelector('[data-rd-glob], [data-rd-knot], [data-rd-3d], [data-rd-ico]');
-  if (glob && glob.dataset.src && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    var loadBlob = function () {
-      var s = document.createElement('script');
-      s.src = glob.dataset.src;
-      s.async = true;
-      document.body.appendChild(s);
-    };
-    var whenIdle = function () {
-      if ('requestIdleCallback' in window) window.requestIdleCallback(loadBlob, { timeout: 1500 });
-      else setTimeout(loadBlob, 200);
-    };
-    if (document.readyState === 'complete') whenIdle();
-    else window.addEventListener('load', whenIdle);
+  if (glob && glob.dataset.src) {
+    if (gpu3d()) {
+      var loadBlob = function () {
+        var s = document.createElement('script');
+        s.src = glob.dataset.src;
+        s.async = true;
+        document.body.appendChild(s);
+      };
+      var whenIdle = function () {
+        if ('requestIdleCallback' in window) window.requestIdleCallback(loadBlob, { timeout: 1500 });
+        else setTimeout(loadBlob, 200);
+      };
+      if (document.readyState === 'complete') whenIdle();
+      else window.addEventListener('load', whenIdle);
+    } else {
+      // без 3D картинка первого экрана — сразу (в «вау» она иначе ждёт WebGL до 3 с: rd-wow.js, .is-fallback)
+      document.documentElement.classList.add('rd-no3d');
+      Array.prototype.forEach.call(document.querySelectorAll('.rd-hero__glob'), function (el) { el.classList.add('is-fallback'); });
+    }
   }
 
   /* ---------- Круглые кнопки («Останні роботи», «Обговорити проект»): плавают за курсором ---------- */
