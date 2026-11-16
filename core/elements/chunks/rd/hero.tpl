@@ -88,7 +88,11 @@
       <div class="rd-hero__glob" data-rd-glob data-src="/assets/templates/rd/js/rd-blob.js?v={$.php.filemtime($.const.MODX_ASSETS_PATH ~ 'templates/rd/js/rd-blob.js')}">
         <span class="rd-hero__halo"></span>
         <picture>
-          <source srcset="{$img}hero-liquid.webp" type="image/webp">
+          {* размеры на экране: 360–385 (телефон), 560 (планшет — 1365), 680 (до 1919), 900 (1920), 47vw выше.
+             Телефону — 450 при любой плотности экрана: картинку видно только без видеокарты (иначе — 3D), а грузится
+             она всем, рано и с высоким приоритетом — чем легче, тем лучше (PageSpeed: «Улучшите загрузку изображений») *}
+          <source media="(max-width: 767px)" srcset="{$img}hero-liquid-450.webp" type="image/webp">
+          <source srcset="{$img}hero-liquid-700.webp 700w, {$img}hero-liquid.webp 900w" sizes="(max-width: 1365px) 560px, (max-width: 1919px) 680px, 47vw" type="image/webp">
           <img class="rd-hero__blob" src="{$img}hero-liquid.png" width="900" height="900" alt="" fetchpriority="high" loading="eager">
         </picture>
       </div>
