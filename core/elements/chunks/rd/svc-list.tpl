@@ -96,13 +96,14 @@
           {if $obj == 'knot' || $obj == 'pyramid'}
             <div class="rd-svcl__obj rd-svcl__obj--{$obj}" aria-hidden="true">
               <div class="rd-svcl__float" data-rd-knot="{$obj == 'pyramid' ? 'pyramid' : ''}" data-src="{$blob}">
-                <img src="{$img}{$obj}.webp" width="600" height="600" alt="" loading="lazy" decoding="async">
+                {* первая карточка — на первом экране компьютера (кандидат в LCP): картинка сразу, а не «лениво» *}
+                <img src="{$img}{$obj}.webp" width="600" height="600" alt="" loading="{$ci ? 'lazy' : 'eager'}" decoding="async">
               </div>
             </div>
           {else}
             <div class="rd-svcl__obj rd-svcl__obj--{$obj}" {$obj == 'ico' ? 'data-rd-ico' : 'data-rd-3d'} data-src="{$blob}" aria-hidden="true">
               <div class="rd-svcl__float">
-                <img src="{$img}{$obj}.webp" width="600" height="600" alt="" loading="lazy" decoding="async">
+                <img src="{$img}{$obj}.webp" width="600" height="600" alt="" loading="{$ci ? 'lazy' : 'eager'}" decoding="async">
               </div>
             </div>
           {/if}

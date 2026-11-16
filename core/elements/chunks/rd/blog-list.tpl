@@ -67,7 +67,7 @@
   {* ----- шапка ----- *}
   <section class="rd-blog__top">
     <div class="rd-blog__hero">
-    <div class="rd-blog__bg" aria-hidden="true"><img src="{$img}blog-hero.webp" width="1920" height="915" alt="" fetchpriority="high"></div>
+    <div class="rd-blog__bg" aria-hidden="true"><img src="{$img}blog-hero.webp" width="1920" height="915" alt="" fetchpriority="high" loading="eager"></div>
     <div class="rd-container rd-blog__hero-in">
       <nav class="rd-crumbs rd-blog__crumbs" aria-label="{$t.crumbs}">
         <ol class="rd-crumbs__list" itemscope itemtype="https://schema.org/BreadcrumbList">

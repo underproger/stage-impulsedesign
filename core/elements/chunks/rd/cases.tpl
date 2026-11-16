@@ -48,7 +48,7 @@
           {if !$link}{set $link = $r.id | url}{/if}
           {set $tags = $item.tags | preg_replace : '/#|^\s+|\s+$/u' : '' | preg_split : '/\s*,\s{0,9}/u'}
           <article class="rd-case rd-case--row{if $i % 2} rd-case--flip{/if}"{if $item.bg} style="--rd-case-bg: {$item.bg | strip_tags | escape}"{/if}{if $i >= $per} data-rd-more{/if}>
-            {include 'file:chunks/rd/case-media.tpl' item=$item link=$link}
+            {include 'file:chunks/rd/case-media.tpl' item=$item link=$link first=($i == 0)}
             <div class="rd-case__desc">
               <div class="rd-case__heading">
                 {if $item.tags}

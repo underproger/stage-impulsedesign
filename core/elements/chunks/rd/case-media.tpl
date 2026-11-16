@@ -3,7 +3,12 @@
   {include 'file:chunks/rd/case-media.tpl' item=$item link=$link}
   item — элемент MIGX «rd_portfolio»: image / image_mob — композиция, layers — устройства слоями, screen — скриншот
   сайта (показывается в ноутбуке, если нет ни слоёв, ни композиции), word — надпись на фоне, hover — фото при наведении.
+  first=1 — первый кейс на экране (страница портфолио): картинка грузится сразу и с высоким приоритетом (иначе плагин
+  addLazyToImg ставит loading="lazy", и в PageSpeed картинка — LCP — приходит поздно: 8.8 с на телефоне). Мобильная
+  композиция при слоях — в <picture>: от 600 px вместо неё пустой пиксель (она там скрыта), чтобы не качать зря.
 *}
+{set $eager = ''}
+{if $first?}{set $eager = ' loading="eager" fetchpriority="high"'}{/if}
 {set $src = $item.image}
 {if $src && !($src | preg_match : '~^(https?:)?/~')}{set $src = '/' ~ $src}{/if}
 {set $mob = $item.image_mob}
@@ -32,7 +37,9 @@
           {/if}
         {/foreach}
       </span>
-      {if $mob}<img class="rd-case__img rd-case__img--mob" src="{$mob}" alt="{$item.title | strip_tags | escape}" width="320" height="220" decoding="async" draggable="false">{/if}
+      {if $mob && $first?}
+        <picture><source media="(min-width: 600px)" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="><img class="rd-case__img rd-case__img--mob" src="{$mob}" alt="{$item.title | strip_tags | escape}" width="320" height="220" decoding="async" draggable="false"{$eager}></picture>
+      {elseif $mob}<img class="rd-case__img rd-case__img--mob" src="{$mob}" alt="{$item.title | strip_tags | escape}" width="320" height="220" decoding="async" draggable="false">{/if}
     </span>
   {elseif $screen && !$src}
     {* скриншот сайта в ноутбуке (кейсы без готовой композиции) *}
@@ -48,7 +55,7 @@
     <span class="rd-case__layer">
       <picture>
         {if $mob}<source media="(max-width: 599px)" srcset="{$mob}">{/if}
-        <img class="rd-case__img" src="{$src}" alt="{$item.title | strip_tags | escape}" width="1240" height="487" decoding="async" draggable="false">
+        <img class="rd-case__img" src="{$src}" alt="{$item.title | strip_tags | escape}" width="1240" height="487" decoding="async" draggable="false"{$eager}>
       </picture>
     </span>
   {/if}
